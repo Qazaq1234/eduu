@@ -180,7 +180,7 @@
       const email = $('regEmail').value.trim();
       const password = $('regPassword').value;
 
-      if(!centerName  !email  !password){
+      if(!centerName || !email || !password){
         setBusy('registerBtn', false);
         return notice('Орталық атауы, email, пароль толтыр', 'err');
       }
