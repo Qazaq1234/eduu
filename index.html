@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bilim Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--bg:#f5f5f7;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#0071e3;--soft:#eef4ff;--shadow:0 8px 30px rgba(0,0,0,.06)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .container{max-width:1240px;margin:0 auto;padding:16px}.card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+    .grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+    .row{display:flex;gap:8px;flex-wrap:wrap}.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.nav button.active{background:#111;color:#fff}
+    button{border:none;background:var(--brand);color:#fff;padding:11px 15px;border-radius:12px;cursor:pointer;font:inherit}.secondary{background:#fff;color:#111;border:1px solid var(--line)}
+    input,select,textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#fff}textarea{min-height:90px;resize:vertical}
+    .muted{color:var(--muted)}.small{font-size:12px}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--soft);font-size:12px}
+    .kpi{font-size:30px;font-weight:800}.list-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+    .notice{padding:12px 14px;border-radius:12px;margin-bottom:12px}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}.hidden{display:none}
+    .skeleton{height:18px;border-radius:8px;background:#ececec;margin:8px 0;animation:pulse 1.2s infinite}@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  </style>
+</head>
+<body>
+  <div id="app" class="container"></div>
+  <script>
+    const SUPABASE_URL = 'https://sexswcmpqgtvsdvbqmkh.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNleHN3Y21wcWd0dnNkdmJxbWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MTAyNzIsImV4cCI6MjA4NjM4NjI3Mn0.Bm59DEF7jJ_YmKfJO493XNffWLJDoQD7_CzPHyRvTgY';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const CACHE = 'bilim-portal-v3-';
+    const state = {user:null,profile:null,currentView:'dashboard',monthlyFeeDefault:30000,students:[],payments:[],attendance:[],branches:[],cashbox:[],parentStudent:null,parentAttendance:[],parentPayments:[]};
+
+    const $ = (id)=>document.getElementById(id);
+    const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const money = (v)=>new Intl.NumberFormat('ru-RU').format(Number(v||0))+' ₸';
+    const cacheKey=(name)=>CACHE+(state.user?.id||'guest')+'-'+name;
+    const saveCache=(name,data)=>localStorage.setItem(cacheKey(name),JSON.stringify(data));
+    const loadCache=(name,fallback=[])=>{try{return JSON.parse(localStorage.getItem(cacheKey(name))||JSON.stringify(fallback))}catch{return fallback}};
+    const ym=(d)=>String(d||new Date().toISOString().slice(0,7)).slice(0,7);
+    const today=()=>new Date().toISOString().slice(0,10);
+    const branchName=(id)=>state.branches.find(b=>b.id===id)?.name||'-';
+    const parentCodeInput=()=>$('parentCodeAuth')||$('parentCode');
+    const parentPinInput=()=>$('parentPinAuth')||$('parentPin');
+
+    function notice(msg,type='ok'){const el=$('notice'); if(!el)return; el.className='notice '+(type==='ok'?'ok':'err'); el.textContent=msg; el.classList.remove('hidden')}
+    function clearNotice(){const el=$('notice'); if(!el)return; el.className='notice hidden'; el.textContent=''}
+    function setBusy(id,busy,textBusy='Сақталуда...'){const btn=$(id); if(!btn)return; if(!btn.dataset.text) btn.dataset.text=btn.textContent; btn.disabled=busy; btn.textContent=busy?textBusy:btn.dataset.text}
+
+    function renderAuth(){
+      app.innerHTML = `
+      <div id="notice" class="notice hidden"></div>
+      <div class="grid g2" style="max-width:1080px;margin:32px auto 0">
+        <div class="card">
+          <h2 style="margin-top:0">Директор кіруі</h2>
+          <input id="loginEmail" placeholder="Email">
+          <input id="loginPassword" type="password" placeholder="Пароль">
+          <button id="loginBtn" onclick="loginDirector()">Кіру</button>
+        </div>
+        <div class="card">
+          <h2 style="margin-top:0">Директор тіркелуі</h2>
+          <input id="regCenter" placeholder="Орталық атауы">
+          <input id="regBranch" placeholder="Бірінші филиал атауы">
+          <input id="regCity" placeholder="Қала">
+          <input id="regName" placeholder="Директор аты">
+          <input id="regEmail" placeholder="Email">
+          <input id="regPassword" type="password" placeholder="Пароль">
+          <button id="registerBtn" onclick="registerDirector()">Тіркелу</button>
+        </div>
+        <div class="card" style="grid-column:1/-1">
+          <h2 style="margin-top:0">Ата-ана кіруі</h2>
+          <div class="grid g2">
+            <div><input id="parentCodeAuth" placeholder="Student code"></div>
+            <div><input id="parentPinAuth" placeholder="PIN"></div>
+          </div>
+          <button id="parentLoginBtn" onclick="parentLogin()">Кіру</button>
+        </div>
+      </div>`;
+    }
+
+    async function registerDirector(){
+      clearNotice(); setBusy('registerBtn',true,'Тіркелуде...');
+      const center=$('regCenter').value.trim(), branch=$('regBranch').value.trim()||'Бас филиал', city=$('regCity').value.trim(), full_name=$('regName').value.trim(), email=$('regEmail').value.trim(), password=$('regPassword').value;
+      if(!center||!email||!password){setBusy('registerBtn',false); return notice('Орталық атауы, email, пароль толтыр','err')}
+      const auth=await sb.auth.signUp({email,password});
+      if(auth.error){setBusy('registerBtn',false); return notice(auth.error.message,'err')}
+      const userId=auth.data.user?.id||auth.data.session?.user?.id;
+      if(!userId){setBusy('registerBtn',false); return notice('Тіркелді. Енді email-пен кіріңіз.')}
+      const p=await sb.from('profiles').upsert({user_id:userId,center_name:center,full_name,city,role:'director',status:'active'},{onConflict:'user_id'});
+      if(p.error){setBusy('registerBtn',false); return notice(p.error.message,'err')}
+      const b=await sb.from('branches').insert([{name:branch,city,user_id:userId}]);
+      setBusy('registerBtn',false);
+      if(b.error) return notice(b.error.message,'err');
+      notice('Тіркелді. Енді кіру бөлімінен кіріңіз.');
+    }
+
+    async function loginDirector(){
+      clearNotice(); setBusy('loginBtn',true,'Кірілуде...');
+      const email=$('loginEmail').value.trim(), password=$('loginPassword').value;
+      const {data,error}=await sb.auth.signInWithPassword({email,password});
+      setBusy('loginBtn',false);
+      if(error) return notice(error.message,'err');
+      state.user=data.user; openShell(); renderDashboardSkeleton(); await bootDirector(); view('dashboard');
+    }
+
+    async function logout(){await sb.auth.signOut(); state.user=null; state.profile=null; state.parentStudent=null; state.parentAttendance=[]; state.parentPayments=[]; renderAuth();}
+
+    function openShell(){
+      app.innerHTML = `
+      <div id="notice" class="notice hidden"></div>
+      <div class="card topbar">
+        <div><div style="font-size:28px;font-weight:800">Bilim Portal</div><div class="muted">Жылдам бизнес версия</div></div>
+        <div class="row"><span class="badge" id="whoami">...</span><button class="secondary" onclick="logout()">Шығу</button></div>
+      </div>
+      <div class="nav">
+        <button onclick="view('dashboard')">Dashboard</button>
+        <button onclick="view('students')">Оқушылар</button>
+        <button onclick="view('payments')">Төлем</button>
+        <button onclick="view('attendance')">Журнал</button>
+        <button onclick="view('finance')">Кіріс/Шығыс</button>
+        <button onclick="view('branches')">Филиал</button>
+        <button onclick="view('parent')">Ата-ана</button>
+        <button onclick="view('reports')">Есеп</button>
+      </div>
+      <div id="content"></div>`;
+      $('whoami').textContent=state.user?.email||'director';
+    }
+
+    async function bootDirector(){await loadProfile(); preloadFromCache(); renderDashboard(); await loadMainData();}
+    async function loadProfile(){const {data,error}=await sb.from('profiles').select('*').eq('user_id',state.user.id).maybeSingle(); if(error) return notice(error.message,'err'); state.profile=data||null;}
+    function preloadFromCache(){state.students=loadCache('students',[]); state.payments=loadCache('payments',[]); state.attendance=loadCache('attendance',[]); state.branches=loadCache('branches',[]); state.cashbox=loadCache('cashbox',[]);}
+
+    async function loadMainData(){
+      const uid=state.user.id;
+      const [students,payments,attendance,branches,cashbox]=await Promise.all([
+        sb.from('students').select('id,name,student_code,pin_code,branch_id,user_id,monthly_fee,debt_amount').eq('user_id',uid).limit(300),
+        sb.from('payments').select('id,name,student_id,amount,note,user_id,created_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(300),
+        sb.from('attendance').select('id,name,student_id,status,note,user_id,created_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(300),
+        sb.from('branches').select('id,name,city,user_id').eq('user_id',uid).limit(50),
+        sb.from('cashbox').select('id,type,amount,category,note,user_id,created_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(300)
+      ]);
+      if(students.error) return notice(students.error.message,'err');
+      if(payments.error) return notice(payments.error.message,'err');
+      if(attendance.error) return notice(attendance.error.message,'err');
+      if(branches.error) return notice(branches.error.message,'err');
+      if(cashbox.error) return notice(cashbox.error.message,'err');
+      state.students=students.data||[]; state.payments=payments.data||[]; state.attendance=attendance.data||[]; state.branches=branches.data||[]; state.cashbox=cashbox.data||[];
+      saveCache('students',state.students); saveCache('payments',state.payments); saveCache('attendance',state.attendance); saveCache('branches',state.branches); saveCache('cashbox',state.cashbox);
+      view(state.currentView);
+    }
+
+    function setActiveNav(){document.querySelectorAll('.nav button').forEach(btn=>btn.classList.remove('active')); const idx={dashboard:0,students:1,payments:2,attendance:3,finance:4,branches:5,parent:6,reports:7}[state.currentView]; const btns=document.querySelectorAll('.nav button'); if(btns[idx]) btns[idx].classList.add('active')}
+    function view(v){state.currentView=v; setActiveNav(); clearNotice(); if(v==='dashboard') return renderDashboard(); if(v==='students') return renderStudents(); if(v==='payments') return renderPayments(); if(v==='attendance') return renderAttendance(); if(v==='finance') return renderFinance(); if(v==='branches') return renderBranches(); if(v==='parent') return renderParentPanel(); if(v==='reports') return renderReports();}
+    function renderDashboardSkeleton(){$('content').innerHTML=`<div class="grid g4">${Array(4).fill('<div class="card"><div class="skeleton"></div><div class="skeleton"></div></div>').join('')}</div>`}
+
+    function renderDashboard(){
+      const income=state.cashbox.filter(x=>x.type==='Кіріс').reduce((s,x)=>s+Number(x.amount||0),0);
+      const expense=state.cashbox.filter(x=>x.type==='Шығыс').reduce((s,x)=>s+Number(x.amount||0),0);
+      const debt=state.students.reduce((s,x)=>s+Number(x.debt_amount||0),0);
+      $('content').innerHTML=`<div class="grid g4">
+        <div class="card"><div class="muted">Оқушылар</div><div class="kpi">${state.students.length}</div></div>
+        <div class="card"><div class="muted">Кіріс</div><div class="kpi">${money(income)}</div></div>
+        <div class="card"><div class="muted">Шығыс</div><div class="kpi">${money(expense)}</div></div>
+        <div class="card"><div class="muted">Жалпы қарыз</div><div class="kpi">${money(debt)}</div></div>
+      </div>`;
+    }
+
+    function renderStudents(){
+      $('content').innerHTML=`<div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Оқушы қосу</h3>
+          <input id="sname" placeholder="Аты">
+          <input id="scode" placeholder="Student code">
+          <input id="spin" placeholder="PIN">
+          <input id="sfee" type="number" placeholder="Айлық төлем" value="${state.monthlyFeeDefault}">
+          <select id="sbranch"><option value="">Филиал</option>${state.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select>
+          <button id="addStudentBtn" onclick="addStudent()">Қосу</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Оқушылар</h3>
+          ${state.students.length?state.students.map(s=>`<div class="list-row"><div><strong>${esc(s.name)}</strong><div class="muted small">${esc(s.student_code||'')} / ${esc(s.pin_code||'')}</div><div class="muted small">Айлық: ${money(s.monthly_fee||0)} · Қарыз: ${money(s.debt_amount||0)}</div></div><div class="muted">${esc(branchName(s.branch_id))}</div></div>`).join(''):'<div class="muted">Оқушы жоқ</div>'}
+        </div>
+      </div>`;
+    }
+
+    async function addStudent(){
+      setBusy('addStudentBtn',true);
+      const monthly=Number($('sfee').value||state.monthlyFeeDefault||0);
+      const payload={name:$('sname').value.trim(),student_code:$('scode').value.trim()||null,pin_code:$('spin').value.trim()||null,branch_id:$('sbranch').value||null,monthly_fee:monthly,debt_amount:monthly,user_id:state.user.id};
+      if(!payload.name){setBusy('addStudentBtn',false); return notice('Оқушы атын енгіз','err')}
+      const {data,error}=await sb.from('students').insert([payload]).select('id,name,student_code,pin_code,branch_id,user_id,monthly_fee,debt_amount');
+      setBusy('addStudentBtn',false);
+      if(error) return notice(error.message,'err');
+      state.students.unshift(data[0]); saveCache('students',state.students); renderStudents(); notice('Оқушы сақталды');
+    }
+
+    function renderPayments(){
+      $('content').innerHTML=`<div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Төлем қосу</h3>
+          <input id="pname" placeholder="Оқушы аты">
+          <input id="pamount" type="number" placeholder="Сома">
+          <input id="pnote" placeholder="Ескерту">
+          <button id="addPaymentBtn" onclick="addPayment()">Қосу</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Төлемдер</h3>
+          ${state.payments.length?state.payments.map(p=>`<div class="list-row"><div><strong>${esc(p.name)}</strong><div class="muted small">${esc(p.note||'')}</div></div><div>${money(p.amount)}</div></div>`).join(''):'<div class="muted">Төлем жоқ</div>'}
+        </div>
+      </div>`;
+    }
+
+    async function addPayment(){
+      setBusy('addPaymentBtn',true);
+      const studentName=$('pname').value.trim(), amount=Number($('pamount').value||0), note=$('pnote').value.trim();
+      if(!studentName||!amount){setBusy('addPaymentBtn',false); return notice('Оқушы және сома керек','err')}
+      const student=state.students.find(s=>s.name===studentName)||null;
+      const payload={name:studentName,student_id:student?.id||null,amount,note,user_id:state.user.id};
+      const {data,error}=await sb.from('payments').insert([payload]).select('id,name,student_id,amount,note,user_id,created_at');
+      if(error){setBusy('addPaymentBtn',false); return notice(error.message,'err')}
+      state.payments.unshift(data[0]); saveCache('payments',state.payments);
+      if(student){
+        const nextDebt=Math.max(Number(student.debt_amount||0)-amount,0);
+        const upd=await sb.from('students').update({debt_amount:nextDebt}).eq('id',student.id).select('id,name,student_code,pin_code,branch_id,user_id,monthly_fee,debt_amount').single();
+        if(!upd.error && upd.data){const idx=state.students.findIndex(x=>x.id===student.id); if(idx>=0) state.students[idx]=upd.data; saveCache('students',state.students);}
+      }
+      await sb.from('cashbox').insert([{type:'Кіріс',amount,category:'Төлем',note:studentName+' төлемі',user_id:state.user.id}]);
+      setBusy('addPaymentBtn',false); await loadMainData(); notice('Төлем сақталды');
+    }
+
+    function renderAttendance(){
+      $('content').innerHTML=`<div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Журнал белгілеу</h3>
+          <input id="aname" placeholder="Оқушы аты">
+          <select id="astatus"><option value="Келді">Келді</option><option value="Келмеді">Келмеді</option></select>
+          <input id="anote" placeholder="Ескерту">
+          <button id="addAttendanceBtn" onclick="addAttendance()">Сақтау</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Қатысу</h3>
+          ${state.attendance.length?state.attendance.map(a=>`<div class="list-row"><div><strong>${esc(a.name)}</strong><div class="muted small">${esc(a.status||'')}</div></div><div class="muted">${a.created_at?new Date(a.created_at).toLocaleDateString('kk-KZ'):'-'}</div></div>`).join(''):'<div class="muted">Журнал бос</div>'}
+        </div>
+      </div>`;
+    }
+
+    async function addAttendance(){
+      setBusy('addAttendanceBtn',true);
+      const studentName=$('aname').value.trim();
+      const student=state.students.find(s=>s.name===studentName)||null;
+      const payload={name:studentName,student_id:student?.id||null,status:$('astatus').value,note:$('anote').value.trim(),user_id:state.user.id};
+      if(!payload.name){setBusy('addAttendanceBtn',false); return notice('Оқушы атын енгіз','err')}
+      const {data,error}=await sb.from('attendance').insert([payload]).select('id,name,student_id,status,note,user_id,created_at');
+      setBusy('addAttendanceBtn',false);
+      if(error) return notice(error.message,'err');
+      state.attendance.unshift(data[0]); saveCache('attendance',state.attendance); renderAttendance(); notice('Журнал сақталды');
+    }
+
+    function renderFinance(){
+      const income=state.cashbox.filter(x=>x.type==='Кіріс').reduce((s,x)=>s+Number(x.amount||0),0);
+      const expense=state.cashbox.filter(x=>x.type==='Шығыс').reduce((s,x)=>s+Number(x.amount||0),0);
+      $('content').innerHTML=`<div class="grid g4">
+        <div class="card"><div class="muted">Кіріс</div><div class="kpi">${money(income)}</div></div>
+        <div class="card"><div class="muted">Шығыс</div><div class="kpi">${money(expense)}</div></div>
+        <div class="card"><div class="muted">Қалдық</div><div class="kpi">${money(income-expense)}</div></div>
+        <div class="card"><div class="muted">Жазба саны</div><div class="kpi">${state.cashbox.length}</div></div>
+      </div>
+      <div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Кіріс / Шығыс қосу</h3>
+          <select id="ctype"><option value="Кіріс">Кіріс</option><option value="Шығыс">Шығыс</option></select>
+          <input id="camount" type="number" placeholder="Сома">
+          <input id="ccategory" placeholder="Категория">
+          <textarea id="cnote" placeholder="Ескерту"></textarea>
+          <button id="addCashboxBtn" onclick="addCashbox()">Сақтау</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Қаржы ағыны</h3>
+          ${state.cashbox.length?state.cashbox.map(c=>`<div class="list-row"><div><strong>${esc(c.type)}</strong><div class="muted small">${esc(c.category||'-')} · ${esc(c.note||'')}</div></div><div>${money(c.amount)}</div></div>`).join(''):'<div class="muted">Жазба жоқ</div>'}
+        </div>
+      </div>`;
+    }
+
+    async function addCashbox(){
+      setBusy('addCashboxBtn',true);
+      const payload={type:$('ctype').value,amount:Number($('camount').value||0),category:$('ccategory').value.trim(),note:$('cnote').value.trim(),user_id:state.user.id};
+      if(!payload.amount){setBusy('addCashboxBtn',false); return notice('Сома енгіз','err')}
+      const {data,error}=await sb.from('cashbox').insert([payload]).select('id,type,amount,category,note,user_id,created_at');
+      setBusy('addCashboxBtn',false);
+      if(error) return notice(error.message,'err');
+      state.cashbox.unshift(data[0]); saveCache('cashbox',state.cashbox); renderFinance(); notice('Қаржы жазбасы сақталды');
+    }
+
+    function renderBranches(){
+      $('content').innerHTML=`<div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Филиал қосу</h3>
+          <input id="bname" placeholder="Филиал атауы">
+          <input id="bcity" placeholder="Қала">
+          <button id="addBranchBtn" onclick="addBranch()">Қосу</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Филиалдар</h3>
+          ${state.branches.length?state.branches.map(b=>`<div class="list-row"><div>${esc(b.name)}</div><div class="muted">${esc(b.city||'')}</div></div>`).join(''):'<div class="muted">Филиал жоқ</div>'}
+        </div>
+      </div>`;
+    }
+
+    async function addBranch(){
+      setBusy('addBranchBtn',true);
+      const payload={name:$('bname').value.trim(),city:$('bcity').value.trim(),user_id:state.user.id};
+      if(!payload.name){setBusy('addBranchBtn',false); return notice('Филиал атауын енгіз','err')}
+      const {data,error}=await sb.from('branches').insert([payload]).select('id,name,city,user_id');
+      setBusy('addBranchBtn',false);
+      if(error) return notice(error.message,'err');
+      state.branches.unshift(data[0]); saveCache('branches',state.branches); renderBranches(); notice('Филиал сақталды');
+    }
+
+    function renderParentPanel(){
+      $('content').innerHTML=`<div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Ата-ана кіруі</h3>
+          <input id="parentCode" placeholder="Student code">
+          <input id="parentPin" placeholder="PIN">
+          <button id="parentPanelLoginBtn" onclick="parentLogin()">Кіру</button>
+        </div>
+        <div class="card">${drawParentCabinet()}</div>
+      </div>`;
+    }
+
+    function drawParentCabinet(){
+      if(!state.parentStudent) return '<div class="muted">Code пен PIN енгізіңіз</div>';
+      return `<h3 style="margin-top:0">${esc(state.parentStudent.name)}</h3>
+        <div class="badge">Қарыз: ${money(state.parentStudent.debt_amount||0)}</div>
+        <div class="badge">Қатысу: ${state.parentAttendance.length}</div>
+        <div class="badge">Төлем: ${state.parentPayments.length}</div>
+        <div style="margin-top:10px"><strong>Соңғы 5 қатысу</strong>${state.parentAttendance.length?state.parentAttendance.slice(0,5).map(a=>`<div class="list-row"><div>${esc(a.status||'')}</div><div>${a.created_at?new Date(a.created_at).toLocaleDateString('kk-KZ'):'-'}</div></div>`).join(''):'<div class="muted">Жоқ</div>'}</div>
+        <div style="margin-top:14px"><strong>Соңғы 5 төлем</strong>${state.parentPayments.length?state.parentPayments.slice(0,5).map(p=>`<div class="list-row"><div>${money(p.amount)}</div><div>${p.created_at?new Date(p.created_at).toLocaleDateString('kk-KZ'):'-'}</div></div>`).join(''):'<div class="muted">Жоқ</div>'}</div>`;
+    }
+
+    async function parentLogin(){
+      clearNotice();
+      const code=parentCodeInput()?.value?.trim()||'', pin=parentPinInput()?.value?.trim()||'';
+      if(!code||!pin) return notice('Code және PIN енгіз','err');
+      setBusy('parentLoginBtn',true,'Кірілуде...'); setBusy('parentPanelLoginBtn',true,'Кірілуде...');
+      const studentRes=await sb.rpc('parent_login_check',{p_code:code,p_pin:pin});
+      if(studentRes.error){setBusy('parentLoginBtn',false); setBusy('parentPanelLoginBtn',false); return notice(studentRes.error.message,'err')}
+      if(!studentRes.data||!studentRes.data.length){setBusy('parentLoginBtn',false); setBusy('parentPanelLoginBtn',false); return notice('Code/PIN қате','err')}
+      state.parentStudent=studentRes.data[0];
+      const [attRes,payRes]=await Promise.all([sb.rpc('parent_attendance',{p_code:code,p_pin:pin}), sb.rpc('parent_payments',{p_code:code,p_pin:pin})]);
+      setBusy('parentLoginBtn',false); setBusy('parentPanelLoginBtn',false);
+      if(attRes.error) return notice(attRes.error.message,'err');
+      if(payRes.error) return notice(payRes.error.message,'err');
+      state.parentAttendance=attRes.data||[]; state.parentPayments=payRes.data||[];
+      openParentShell();
+    }
+
+    function openParentShell(){
+      app.innerHTML=`<div id="notice" class="notice hidden"></div>
+      <div class="card topbar"><div><div style="font-size:28px;font-weight:800">Bilim Portal</div><div class="muted">Ата-ана кабинеті</div></div><div class="row"><button class="secondary" onclick="parentLogout()">Шығу</button></div></div>
+      <div id="content"></div>`;
+      renderParentDashboard();
+    }
+
+    function parentLogout(){state.parentStudent=null; state.parentAttendance=[]; state.parentPayments=[]; renderAuth();}
+
+    function renderParentDashboard(){
+      const s=state.parentStudent, attendance=state.parentAttendance||[], payments=state.parentPayments||[];
+      if(!s){$('content').innerHTML='<div class="card"><div class="muted">Оқушы табылмады</div></div>'; return}
+      const totalPaid=payments.reduce((sum,p)=>sum+Number(p.amount||0),0), presentCount=attendance.filter(a=>(a.status||'')==='Келді').length, absentCount=attendance.filter(a=>(a.status||'')==='Келмеді').length;
+      $('content').innerHTML=`<div class="grid g4">
+        <div class="card"><div class="muted">Оқушы</div><div class="kpi" style="font-size:22px">${esc(s.name)}</div></div>
+        <div class="card"><div class="muted">Айлық төлем</div><div class="kpi">${money(s.monthly_fee||0)}</div></div>
+        <div class="card"><div class="muted">Қарыз</div><div class="kpi">${money(s.debt_amount||0)}</div></div>
+        <div class="card"><div class="muted">Жалпы төленген</div><div class="kpi">${money(totalPaid)}</div></div>
+      </div>
+      <div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Қатысу</h3><div class="badge">Келді: ${presentCount}</div> <div class="badge">Келмеді: ${absentCount}</div>
+          <div style="margin-top:10px">${attendance.length?attendance.map(a=>`<div class="list-row"><div><strong>${esc(a.status||'')}</strong><div class="muted small">${esc(a.note||'')}</div></div><div class="muted">${a.created_at?new Date(a.created_at).toLocaleDateString('kk-KZ'):'-'}</div></div>`).join(''):'<div class="muted">Қатысу тарихы жоқ</div>'}</div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Төлем тарихы</h3>
+          <div style="margin-top:10px">${payments.length?payments.map(p=>`<div class="list-row"><div><strong>${money(p.amount||0)}</strong><div class="muted small">${esc(p.note||'')}</div></div><div class="muted">${p.created_at?new Date(p.created_at).toLocaleDateString('kk-KZ'):'-'}</div></div>`).join(''):'<div class="muted">Төлем тарихы жоқ</div>'}</div>
+        </div>
+      </div>`;
+    }
+
+    async function generateMonthlyDebt(){for(const s of state.students){const nextDebt=Number(s.debt_amount||0)+Number(s.monthly_fee||state.monthlyFeeDefault||0); await sb.from('students').update({debt_amount:nextDebt}).eq('id',s.id)} await loadMainData(); notice('Айлық қарыз қосылды');}
+
+    function renderReports(){
+      const month=ym(), monthlyPayments=state.payments.filter(p=>ym(p.created_at||today())===month).reduce((s,p)=>s+Number(p.amount||0),0), monthlyIncome=state.cashbox.filter(c=>c.type==='Кіріс'&&ym(c.created_at||today())===month).reduce((s,c)=>s+Number(c.amount||0),0), monthlyExpense=state.cashbox.filter(c=>c.type==='Шығыс'&&ym(c.created_at||today())===month).reduce((s,c)=>s+Number(c.amount||0),0), debt=state.students.reduce((s,x)=>s+Number(x.debt_amount||0),0);
+      const msg=`Айлық есеп
+Ай: ${month}
+Оқушы саны: ${state.students.length}
+Төлем: ${money(monthlyPayments)}
+Кіріс: ${money(monthlyIncome)}
+Шығыс: ${money(monthlyExpense)}
+Қалдық: ${money(monthlyIncome-monthlyExpense)}
+Жалпы қарыз: ${money(debt)}`;
+      $('content').innerHTML=`<div class="grid g2">
+        <div class="card">
+          <h3 style="margin-top:0">Айлық есеп</h3>
+          <div class="badge">Ай: ${month}</div> <div class="badge">Оқушы: ${state.students.length}</div> <div class="badge">Төлем: ${money(monthlyPayments)}</div> <div class="badge">Кіріс: ${money(monthlyIncome)}</div> <div class="badge">Шығыс: ${money(monthlyExpense)}</div> <div class="badge">Қалдық: ${money(monthlyIncome-monthlyExpense)}</div> <div class="badge">Қарыз: ${money(debt)}</div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Еске салу / Есеп</h3>
+          <textarea id="reportText">${esc(msg)}</textarea>
+          <div class="row"><button onclick="copyReport()">Көшіру</button><button onclick="generateMonthlyDebt()">Айлық қарыз қосу</button></div>
+        </div>
+      </div>`;
+    }
+
+    function copyReport(){navigator.clipboard.writeText($('reportText').value).then(()=>notice('Есеп көшірілді')).catch(()=>notice('Көшіру болмады','err'))}
+
+    async function boot(){const {data}=await sb.auth.getSession(); if(data.session?.user){state.user=data.session.user; openShell(); renderDashboardSkeleton(); await bootDirector(); view('dashboard'); return} renderAuth();}
+
+    window.loginDirector=loginDirector; window.registerDirector=registerDirector; window.logout=logout; window.view=view; window.addStudent=addStudent; window.addPayment=addPayment; window.addAttendance=addAttendance; window.addCashbox=addCashbox; window.addBranch=addBranch; window.parentLogin=parentLogin; window.parentLogout=parentLogout; window.generateMonthlyDebt=generateMonthlyDebt; window.copyReport=copyReport;
+    boot();
+  </script>
+</body>
+</html>
