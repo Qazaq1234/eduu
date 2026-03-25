@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="kk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EduKZ CRM Portal</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+<html lang="kk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EduKZ CRM + Online Portal</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 :root{--bg:#f4f7fb;--card:#fff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;--primary:#2563eb;--primary2:#1d4ed8;--green:#16a34a;--purple:#7c3aed;--shadow:0 18px 40px rgba(15,23,42,.08);--radius:22px}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,#f8fbff 0%,var(--bg) 100%);color:var(--text)}.hidden{display:none!important}.app{display:flex;min-height:100vh}.sidebar{width:260px;background:#0f172a;color:#fff;padding:20px;height:100vh;overflow:auto;position:sticky;top:0}.brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}.logo{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:grid;place-items:center;font-weight:900}.side-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);border-radius:18px;padding:14px;margin-bottom:16px}.nav-btn{width:100%;text-align:left;border:none;background:transparent;color:#fff;padding:12px 14px;border-radius:14px;cursor:pointer;font:inherit;font-weight:700;margin-bottom:6px}.nav-btn.active,.nav-btn:hover{background:rgba(255,255,255,.1)}.main{flex:1;padding:22px}.topbar,.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;margin-bottom:16px}.card{padding:18px}.grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}.g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.input,.select,.textarea,.btn,.chip{padding:12px 14px;border-radius:14px;border:1px solid var(--line);font:inherit;background:#fff}.input,.select,.textarea{width:100%}.textarea{min-height:96px}.btn{cursor:pointer;font-weight:800}.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:none}.btn.green{background:var(--green);color:#fff;border:none}.btn.purple{background:var(--purple);color:#fff;border:none}.hero{display:grid;gap:16px;grid-template-columns:1fr 1fr;margin:16px}.form-row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.section{display:none}.section.active{display:block}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px}table{width:100%;border-collapse:collapse;min-width:800px}th,td{padding:12px;border-bottom:1px solid #edf2f7;text-align:left}th{font-size:12px;color:var(--muted);background:#fafcff;text-transform:uppercase}.kpi .label{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase}.kpi .value{font-size:28px;font-weight:900;margin-top:8px}.search-bar{margin-bottom:14px}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day-name,.day-cell{border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center;background:#fff}.day-name{font-size:12px;color:var(--muted);font-weight:700;background:#f8fafc}.day-cell{cursor:pointer;min-height:72px}.day-cell.active{outline:2px solid var(--primary);background:#eff6ff}.notice{border:1px dashed rgba(37,99,235,.25);background:rgba(37,99,235,.05);border-radius:16px;padding:12px;font-size:13px;line-height:1.5}@media (max-width:980px){.app{display:block}.sidebar{width:auto;height:auto;position:relative}.hero{grid-template-columns:1fr}.main{padding:16px}}
 
 body{overflow-x:hidden}
@@ -13,7 +13,7 @@ body{overflow-x:hidden}
 #payments table{min-width:900px}
 </style></head><body>
 <div id="authShell"><div class="hero"><div class="card"><h3>Кіру</h3><div class="form-row"><input id="loginEmail" class="input" placeholder="Email"><input id="loginPassword" class="input" type="password" placeholder="Құпиясөз"></div><div class="form-row" style="margin-top:12px"><button id="loginBtn" class="btn primary">Кіру</button><button id="logoutBtnTop" class="btn">Шығу</button></div></div><div class="card"><h3>Директор тіркелуі</h3><div class="form-row"><input id="suName" class="input" placeholder="Аты-жөні"><input id="suEmail" class="input" placeholder="Email"></div><div class="form-row" style="margin-top:12px"><input id="suPassword" class="input" type="password" placeholder="Құпиясөз"><input id="suTenant" class="input" placeholder="Орталық атауы"></div><div class="form-row" style="margin-top:12px"><input id="suCity" class="input" placeholder="Қала"><input id="suDirection" class="input" placeholder="Бағыт"><input id="suBranch" class="input" placeholder="Бас филиал"></div><button id="signUpDirectorBtn" class="btn primary" style="margin-top:12px">Тіркелу</button></div></div><div class="card" style="margin:16px"><h3>Ата-ана кіруі</h3><div class="form-row"><input id="parentCode" class="input" placeholder="Student code"><input id="parentPin" class="input" placeholder="PIN"><button id="parentLoginBtn" class="btn primary">Кіру</button></div></div></div>
-<div id="appShell" class="app hidden"><aside class="sidebar"><div class="brand"><div class="logo">EK</div><div><h1 style="margin:0">EduKZ CRM</h1><p id="sideRole" style="margin:4px 0 0;color:#a5b4fc;font-size:12px">—</p></div></div><div class="side-card"><div id="sideTenant">Орталық: —</div><div id="sideBranch" style="margin-top:6px;color:#cbd5e1">Филиал: —</div></div><button class="nav-btn active" data-section="dashboard">Басты бет</button><button class="nav-btn" data-section="crm">CRM / Лидтер</button><button class="nav-btn" data-section="students">Оқушылар</button><button class="nav-btn" data-section="groups">Топтар</button><button class="nav-btn" data-section="journal">Журнал</button><button class="nav-btn" data-section="payments">Төлем</button><button class="nav-btn" data-section="progress">Прогресс</button><button class="nav-btn" data-section="staff">Қызметкерлер</button><button class="nav-btn" data-section="branches">Филиалдар</button><button class="nav-btn" data-section="owner">Ие панелі</button><button class="nav-btn" data-section="parent">Ата-ана панелі</button></aside><main class="main"><div class="topbar"><div><h2 id="pageTitle" style="margin:0 0 4px;font-size:30px">Басты бет</h2><p id="pageSub" style="margin:0;color:#6b7280">Жалпы аналитика</p></div><div><span class="chip" id="tenantChip">Орталық: —</span> <span class="chip" id="branchChip">Филиал: —</span> <button id="logoutBtn" class="btn">Шығу</button></div></div>
+<div id="appShell" class="app hidden"><aside class="sidebar"><div class="brand"><div class="logo">EK</div><div><h1 style="margin:0">EduKZ CRM+</h1><p id="sideRole" style="margin:4px 0 0;color:#a5b4fc;font-size:12px">—</p></div></div><div class="side-card"><div id="sideTenant">Орталық: —</div><div id="sideBranch" style="margin-top:6px;color:#cbd5e1">Филиал: —</div></div><button class="nav-btn active" data-section="dashboard">Басты бет</button><button class="nav-btn" data-section="crm">CRM / Лидтер</button><button class="nav-btn" data-section="students">Оқушылар</button><button class="nav-btn" data-section="groups">Топтар</button><button class="nav-btn" data-section="journal">Журнал</button><button class="nav-btn" data-section="payments">Төлем</button><button class="nav-btn" data-section="progress">Прогресс</button><button class="nav-btn" data-section="onlineCourses">Онлайн курстар</button><button class="nav-btn" data-section="onlineBuilder">Онлайн сабақ жүктеу</button><button class="nav-btn" data-section="onlineStudents">Онлайн оқушылар</button><button class="nav-btn" data-section="staff">Қызметкерлер</button><button class="nav-btn" data-section="branches">Филиалдар</button><button class="nav-btn" data-section="owner">Ие панелі</button><button class="nav-btn" data-section="parent">Ата-ана панелі</button></aside><main class="main"><div class="topbar"><div><h2 id="pageTitle" style="margin:0 0 4px;font-size:30px">Басты бет</h2><p id="pageSub" style="margin:0;color:#6b7280">Жалпы аналитика</p></div><div><span class="chip" id="tenantChip">Орталық: —</span> <span class="chip" id="branchChip">Филиал: —</span> <button id="logoutBtn" class="btn">Шығу</button></div></div>
 <section id="dashboard" class="section active"><div class="grid g4" id="dashboardKpis"></div></section>
 <section id="crm" class="section"><div class="card"><h3>Лид қосу</h3><div class="form-row"><input id="leadName" class="input" placeholder="Аты"><input id="leadPhone" class="input" placeholder="Телефон"><input id="leadDirection" class="input" placeholder="Бағыт"><select id="leadSource" class="select"><option>Instagram</option><option>WhatsApp</option><option>TikTok</option><option>Ұсыныс</option></select><select id="leadStage" class="select"><option>Жаңа клиент</option><option>Ойлап жүр</option><option>Пробный</option><option>Клиент болды</option></select></div><textarea id="leadNote" class="textarea" placeholder="Ескерту"></textarea><button id="saveLeadBtn" class="btn primary">Сақтау</button></div><div class="card"><input id="leadSearch" class="input search-bar" placeholder="Іздеу..."><div class="table-wrap"><table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Қайдан</th><th>Кезең</th><th>Ескерту</th><th>Сақтау</th><th>Өшіру</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div><div class="card"><h3>Клиентке дожим хабарламасы</h3><div class="form-row"><input id="crmMsgPhone" class="input" placeholder="WhatsApp нөмірі"><input id="crmMsgName" class="input" placeholder="Клиент аты"></div><textarea id="crmMsgBody" class="textarea" placeholder="Сәлеметсіз бе! Пробный сабақ туралы шешім қабылдадыңыз ба?"></textarea><button id="crmMsgSend" class="btn purple">WhatsApp ашу</button></div></section>
 <section id="students" class="section"><div class="card"><h3>Оқушы тіркеу</h3><div class="form-row"><input id="studentName" class="input" placeholder="Аты-жөні"><input id="studentParent" class="input" placeholder="Ата-ана аты"><input id="studentPhone" class="input" placeholder="Телефон"><input id="studentDirection" class="input" placeholder="Бағыт"><input id="studentCode" class="input" placeholder="Student code"><input id="studentPin" class="input" placeholder="PIN"><input id="studentBirthDate" class="input" type="date"><input id="studentAge" class="input" readonly placeholder="Жасы автоматты"><input id="studentFee" class="input" type="number" placeholder="Айлық төлем"><input id="studentNextPayment" class="input" type="date" title="Келесі төлем күні"><select id="studentBranch" class="select"></select></div><button id="saveStudentBtn" class="btn primary">Сақтау</button></div><div class="card"><input id="studentSearch" class="input search-bar" placeholder="Іздеу..."><div class="table-wrap"><table><thead><tr><th>Оқушы</th><th>Ата-ана</th><th>Бағыт</th><th>Туған күні</th><th>Жасы</th><th>Код</th><th>PIN</th><th>Айлық төлем</th><th>Статус</th><th>Қарыз</th><th>Сақтау</th><th>Төлем</th><th>Тарих</th><th>Өшіру</th></tr></thead><tbody id="studentsBody"></tbody></table></div></div></section>
@@ -123,6 +123,10 @@ body{overflow-x:hidden}
 </section>
 
 <section id="progress" class="section"><div class="grid g2"><div class="card"><h3>Прогресс енгізу</h3><div class="form-row"><select id="progStudent" class="select"></select><input id="progHomework" class="input" placeholder="Үй тапсырмасы"><input id="progScore" class="input" type="number" placeholder="Тест балы"><select id="progStatus" class="select"><option>Төмен</option><option>Орташа</option><option>Жақсы</option><option>Өте жақсы</option></select></div><textarea id="progComment" class="textarea" placeholder="Мұғалім пікірі"></textarea><button id="saveProgBtn" class="btn primary">Сақтау</button></div><div class="card"><input id="progSearch" class="input search-bar" placeholder="Іздеу..."><div class="table-wrap"><table><thead><tr><th>Оқушы</th><th>Үй тапсырмасы</th><th>Тест</th><th>Прогресс</th><th>Пікір</th><th>Сақтау</th><th>Өшіру</th></tr></thead><tbody id="progressBody"></tbody></table></div></div></div></section>
+
+<section id="onlineCourses" class="section"><div class="grid g2"><div class="card"><h3>Онлайн курстар</h3><div class="notice">Бұл бөлімде CRM мен Online біріккен. Курс, модуль, сабақ және тестті осы жерден басқарасың. Оқушы бөлек Edukz Online Student Portal арқылы кіреді.</div><div class="table-wrap"><table><thead><tr><th>Курс</th><th>Мұғалім</th><th>Бағасы</th><th>Модуль</th><th>Сабақ</th><th>Оқушы</th></tr></thead><tbody id="onlineCoursesBody"></tbody></table></div></div><div class="card"><h3>Онлайн төлемдер мен enrollment</h3><div class="table-wrap"><table><thead><tr><th>Оқушы</th><th>Курс</th><th>Сома</th><th>Күні</th><th>CRM student</th></tr></thead><tbody id="onlinePaymentsBody"></tbody></table></div></div></div></section>
+<section id="onlineBuilder" class="section"><div class="grid g2"><div class="card"><h3>Курс жасау</h3><div class="form-row"><input id="courseTitle" class="input" placeholder="Курс атауы"><input id="coursePrice" class="input" type="number" placeholder="Бағасы"><textarea id="courseDesc" class="textarea" placeholder="Сипаттама"></textarea></div><button id="saveCourseBtn" class="btn primary" style="margin-top:12px">Курс сақтау</button></div><div class="card"><h3>Модуль және сабақ жүктеу</h3><div class="form-row"><select id="builderCourse" class="select"></select><input id="moduleTitle" class="input" placeholder="Модуль атауы"><button id="saveModuleBtn" class="btn primary">Модуль қосу</button></div><hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"><div class="form-row"><select id="builderModule" class="select"></select><input id="lessonTitleInput" class="input" placeholder="Сабақ атауы"><input id="lessonDurationInput" class="input" placeholder="Ұзақтығы"><select id="lessonMode" class="select"><option value="youtube">YouTube</option><option value="upload">Файл / ссылка</option></select><input id="youtubeUrl" class="input" placeholder="https://youtube.com/watch?v=..."><input id="videoUrl" class="input hidden" placeholder="https://...mp4"><input id="videoFile" class="input hidden" type="file" accept="video/*"></div><button id="saveLessonBtn" class="btn green" style="margin-top:12px">Сабақ қосу</button></div></div><div class="card" style="margin-top:16px"><h3>Тест жасау</h3><div class="form-row"><select id="testLesson" class="select"></select><input id="testQuestion" class="input" placeholder="Сұрақ"><input id="testA" class="input" placeholder="Жауап 1"><input id="testB" class="input" placeholder="Жауап 2"><input id="testC" class="input" placeholder="Жауап 3"><select id="testCorrect" class="select"><option value="0">1-дұрыс</option><option value="1">2-дұрыс</option><option value="2">3-дұрыс</option></select></div><button id="saveTestBtn" class="btn purple" style="margin-top:12px">Тест сұрағын қосу</button><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Сабақ</th><th>Тест саны</th></tr></thead><tbody id="testsBody"></tbody></table></div></div></section>
+<section id="onlineStudents" class="section"><div class="grid g2"><div class="card"><h3>Online оқушылар</h3><div class="notice">Edukz Online-да тіркелген оқушы осы жерге автоматты түрде түседі, ал CRM students-қа да автоматом жазылады.</div><div class="table-wrap"><table><thead><tr><th>Аты</th><th>Телефон</th><th>Email</th><th>CRM code</th><th>PIN</th><th>Курстар</th></tr></thead><tbody id="onlineStudentsBody"></tbody></table></div></div><div class="card"><h3>Онлайн прогресс</h3><div class="table-wrap"><table><thead><tr><th>Оқушы</th><th>Сабақ</th><th>Видео</th><th>Тест</th><th>Статус</th></tr></thead><tbody id="onlineProgressBody"></tbody></table></div></div></div></section>
 <section id="staff" class="section"><div class="grid g2"><div class="card"><h3>Қызметкер шақыру</h3><div class="form-row"><input id="inviteName" class="input" placeholder="Аты"><input id="inviteEmail" class="input" placeholder="Email"><select id="inviteRole" class="select"><option>admin</option><option>accountant</option><option>marketing</option><option>teacher</option><option>parent</option></select><input id="invitePassword" class="input" placeholder="Уақытша пароль"><select id="inviteBranch" class="select"></select></div><button id="saveInviteBtn" class="btn primary">Сақтау</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Аты</th><th>Email</th><th>Рөлі</th><th>Филиал</th></tr></thead><tbody id="profilesBody"></tbody></table></div></div></div></section>
 <section id="branches" class="section"><div class="grid g2"><div class="card"><h3>Филиал қосу</h3><div class="form-row"><input id="branchName" class="input" placeholder="Филиал атауы"><input id="branchCity" class="input" placeholder="Қала"><input id="branchAddress" class="input" placeholder="Мекенжай"><input id="branchPhone" class="input" placeholder="Телефон"></div><button id="saveBranchBtn" class="btn primary">Сақтау</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Атауы</th><th>Қала</th><th>Мекенжай</th><th>Телефон</th><th>Сақтау</th><th>Өшіру</th></tr></thead><tbody id="branchesBody"></tbody></table></div></div></div></section>
 <section id="owner" class="section"><div class="grid g4" id="ownerKpis"></div><div class="card" style="margin-top:16px"><div class="table-wrap"><table><thead><tr><th>Орталық</th><th>Қала</th><th>Бағыт</th><th>Статус</th><th>Құрылған</th></tr></thead><tbody id="tenantsBody"></tbody></table></div></div></section>
@@ -1124,6 +1128,167 @@ ${profile.role==='parent'?'':`<td><button class="btn green" onclick="updateRow('
 
   const originalBootstrap = bootstrap;
   bootstrap = async function(){ await originalBootstrap(); bindDebouncedSearches(); };
+})();
+</script>
+
+
+<script>
+(function(){
+  const originalLoadAll = loadAll;
+  const originalRenderAll = renderAll;
+  titles.onlineCourses=['Онлайн курстар','CRM ішінен online platform басқару'];
+  titles.onlineBuilder=['Онлайн сабақ жүктеу','Курс, модуль, сабақ және тест'];
+  titles.onlineStudents=['Онлайн оқушылар','Student portal-дан келген база'];
+  ['director','admin','teacher'].forEach(role=>{ if(roleSections[role]) roleSections[role].splice(roleSections[role].indexOf('staff'),0,'onlineCourses','onlineBuilder','onlineStudents'); });
+  Object.assign(data,{online_students:[],online_courses:[],online_modules:[],online_lessons:[],online_tests:[],online_enrollments:[],online_payments:[],online_progress:[]});
+
+  loadAll = async function(){
+    await originalLoadAll();
+    const rs = await Promise.all([
+      sb.from('online_students').select('*').order('created_at',{ascending:false}),
+      sb.from('online_courses').select('*').order('created_at',{ascending:false}),
+      sb.from('online_modules').select('*').order('created_at',{ascending:false}),
+      sb.from('online_lessons').select('*').order('created_at',{ascending:false}),
+      sb.from('online_tests').select('*').order('created_at',{ascending:false}),
+      sb.from('online_enrollments').select('*').order('created_at',{ascending:false}),
+      sb.from('online_payments').select('*').order('created_at',{ascending:false}),
+      sb.from('online_progress').select('*').order('created_at',{ascending:false})
+    ]);
+    [data.online_students,data.online_courses,data.online_modules,data.online_lessons,data.online_tests,data.online_enrollments,data.online_payments,data.online_progress]=rs.map(x=>x.data||[]);
+  };
+
+  function myTenantId(){ return profile?.tenant_id || parentStudent?.tenant_id || null; }
+  function myCourses(){ return (data.online_courses||[]).filter(x=>x.tenant_id===myTenantId()); }
+  function myModules(courseId){ return (data.online_modules||[]).filter(x=>x.course_id===courseId); }
+  function myLessons(moduleId){ return (data.online_lessons||[]).filter(x=>x.module_id===moduleId); }
+  function lessonTests(lessonId){ return (data.online_tests||[]).filter(x=>x.lesson_id===lessonId); }
+  function crmStudentByOnline(onlineStudent){ return (data.students||[]).find(x=>x.id===onlineStudent.crm_student_id) || (data.students||[]).find(x=>x.phone && x.phone===onlineStudent.phone && x.tenant_id===onlineStudent.tenant_id); }
+
+  function fillBuilder(){
+    const courses = myCourses();
+    const bc=document.getElementById('builderCourse');
+    const bm=document.getElementById('builderModule');
+    const tl=document.getElementById('testLesson');
+    if(!bc||!bm||!tl) return;
+    bc.innerHTML = courses.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('') || '<option value="">Курс жоқ</option>';
+    const current=bc.value || courses[0]?.id || '';
+    bm.innerHTML = myModules(current).map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('') || '<option value="">Модуль жоқ</option>';
+    const lessons = courses.flatMap(c=>myModules(c.id).flatMap(m=>myLessons(m.id)));
+    tl.innerHTML = lessons.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('') || '<option value="">Сабақ жоқ</option>';
+  }
+
+  async function saveCourse(){
+    const title=val('courseTitle'), price=Number(val('coursePrice')||0), description=val('courseDesc');
+    if(!title || !myTenantId()) return alert('Курс атауын толтыр');
+    const r=await sb.from('online_courses').insert({tenant_id:myTenantId(),title,price,description,teacher_name:profile?.full_name||'Teacher',status:'active'});
+    if(r.error) return alert(r.error.message);
+    await loadAll(); renderAll();
+  }
+  async function saveModule(){
+    const course_id=document.getElementById('builderCourse')?.value, title=val('moduleTitle');
+    if(!course_id||!title) return alert('Модуль толтыр');
+    const r=await sb.from('online_modules').insert({tenant_id:myTenantId(),course_id,title});
+    if(r.error) return alert(r.error.message);
+    await loadAll(); renderAll();
+  }
+  async function saveLesson(){
+    const module_id=document.getElementById('builderModule')?.value;
+    const title=val('lessonTitleInput');
+    const duration=val('lessonDurationInput');
+    const video_mode=document.getElementById('lessonMode')?.value || 'youtube';
+    const youtube_url=val('youtubeUrl');
+    const video_url=val('videoUrl');
+    const file=document.getElementById('videoFile')?.files?.[0];
+    if(!module_id || !title) return alert('Сабақ атауын толтыр');
+    if(video_mode==='upload' && file){
+      const reader=new FileReader();
+      reader.onload=async ()=>{
+        const r=await sb.from('online_lessons').insert({tenant_id:myTenantId(),module_id,title,duration,video_mode,video_data:reader.result});
+        if(r.error) return alert(r.error.message);
+        await loadAll(); renderAll();
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+    const r=await sb.from('online_lessons').insert({tenant_id:myTenantId(),module_id,title,duration,video_mode,youtube_url:video_mode==='youtube'?youtube_url:null,video_url:video_mode==='upload'?video_url:null});
+    if(r.error) return alert(r.error.message);
+    await loadAll(); renderAll();
+  }
+  async function saveTest(){
+    const lesson_id=document.getElementById('testLesson')?.value;
+    const question=val('testQuestion');
+    const answer_a=val('testA');
+    const answer_b=val('testB');
+    const answer_c=val('testC');
+    const correct_index=Number(document.getElementById('testCorrect')?.value||0);
+    if(!lesson_id||!question) return alert('Сұрақ енгіз');
+    const r=await sb.from('online_tests').insert({tenant_id:myTenantId(),lesson_id,question,answer_a,answer_b,answer_c,correct_index});
+    if(r.error) return alert(r.error.message);
+    await loadAll(); renderAll();
+  }
+
+  function renderOnlineCourses(){
+    const body=document.getElementById('onlineCoursesBody');
+    const paysBody=document.getElementById('onlinePaymentsBody');
+    if(!body||!paysBody) return;
+    const rows=myCourses();
+    body.innerHTML = rows.map(c=>{
+      const modules=myModules(c.id); const lessons=modules.flatMap(m=>myLessons(m.id)); const students=(data.online_enrollments||[]).filter(x=>x.course_id===c.id && x.status==='active').length;
+      return `<tr><td>${esc(c.title)}</td><td>${esc(c.teacher_name||'')}</td><td>${money(c.price||0)}</td><td>${modules.length}</td><td>${lessons.length}</td><td>${students}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Курс жоқ</td></tr>';
+    const payRows=(data.online_payments||[]).filter(x=>x.tenant_id===myTenantId()).slice().reverse();
+    paysBody.innerHTML = payRows.map(x=>{
+      const student=(data.online_students||[]).find(s=>s.id===x.online_student_id);
+      const crm=student?crmStudentByOnline(student):null;
+      return `<tr><td>${esc(x.student_name||student?.full_name||'')}</td><td>${esc(x.course_title||'')}</td><td>${money(x.amount||0)}</td><td>${esc((x.created_at||'').slice(0,10))}</td><td>${esc(crm?.student_code||'—')}</td></tr>`;
+    }).join('') || '<tr><td colspan="5">Төлем жоқ</td></tr>';
+  }
+
+  function renderOnlineStudents(){
+    const body=document.getElementById('onlineStudentsBody');
+    const pbody=document.getElementById('onlineProgressBody');
+    if(!body||!pbody) return;
+    const rows=(data.online_students||[]).filter(x=>x.tenant_id===myTenantId());
+    body.innerHTML = rows.map(s=>{
+      const crm=crmStudentByOnline(s); const enrolls=(data.online_enrollments||[]).filter(x=>x.online_student_id===s.id && x.status==='active');
+      const pins=crm?`${esc(crm.student_code||'')} / ${esc(crm.pin_code||'')}`:'—';
+      return `<tr><td>${esc(s.full_name)}</td><td>${esc(s.phone||'')}</td><td>${esc(s.email||'')}</td><td>${pins}</td><td>${esc(crm?.pin_code||'—')}</td><td>${enrolls.length}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Оқушы жоқ</td></tr>';
+    const progRows=(data.online_progress||[]).slice().reverse().filter(p=>{
+      const s=(data.online_students||[]).find(x=>x.id===p.online_student_id); return s && s.tenant_id===myTenantId();
+    });
+    pbody.innerHTML = progRows.map(p=>{
+      const s=(data.online_students||[]).find(x=>x.id===p.online_student_id); const l=(data.online_lessons||[]).find(x=>x.id===p.lesson_id);
+      return `<tr><td>${esc(s?.full_name||'')}</td><td>${esc(l?.title||'')}</td><td>${p.watched_video?'қарады':'жоқ'}</td><td>${Number(p.test_score||0)}</td><td>${p.completed?'аяқталды':'процесс'}</td></tr>`;
+    }).join('') || '<tr><td colspan="5">Прогресс жоқ</td></tr>';
+  }
+
+  function renderTestsMini(){
+    const tb=document.getElementById('testsBody');
+    if(!tb) return;
+    const lessons=myCourses().flatMap(c=>myModules(c.id).flatMap(m=>myLessons(m.id)));
+    tb.innerHTML=lessons.map(l=>`<tr><td>${esc(l.title)}</td><td>${lessonTests(l.id).length}</td></tr>`).join('') || '<tr><td colspan="2">Тест жоқ</td></tr>';
+  }
+
+  renderAll = function(){
+    originalRenderAll();
+    fillBuilder();
+    renderOnlineCourses();
+    renderOnlineStudents();
+    renderTestsMini();
+  };
+
+  bindClick('saveCourseBtn',saveCourse);
+  bindClick('saveModuleBtn',saveModule);
+  bindClick('saveLessonBtn',saveLesson);
+  bindClick('saveTestBtn',saveTest);
+  const bc=document.getElementById('builderCourse'); if(bc) bc.onchange=fillBuilder;
+  const lm=document.getElementById('lessonMode'); if(lm) lm.onchange=()=>{
+    const mode=lm.value;
+    document.getElementById('youtubeUrl')?.classList.toggle('hidden',mode!=='youtube');
+    document.getElementById('videoUrl')?.classList.toggle('hidden',mode!=='upload');
+    document.getElementById('videoFile')?.classList.toggle('hidden',mode!=='upload');
+  };
 })();
 </script>
 
