@@ -1,84 +1,658 @@
-<!doctype html><html lang="kk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Edukz CRM</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="edukz_config.example.js"></script>
-<style>
-:root{--bg:#f5f7fb;--card:#fff;--line:#dfe6ef;--text:#162033;--muted:#6c778a;--blue:#245cff;--nav:#111827}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
-button,input,select,textarea{font:inherit}.wrap{display:flex;min-height:100vh}.side{width:250px;background:var(--nav);color:#fff;padding:18px 14px;display:none}.side h2{font-size:22px;margin:0 0 14px}.side button{width:100%;text-align:left;background:#1f2937;color:#fff;border:0;padding:11px 12px;border-radius:10px;margin:0 0 8px}.side button.off{opacity:.45}.main{flex:1;padding:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 24px rgba(15,23,42,.05);margin-bottom:16px}.grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.hidden{display:none}.auth{max-width:980px;margin:22px auto}.tabs{display:flex;gap:8px;margin-bottom:14px}.tabs button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff}.tabs .active{background:var(--blue);color:#fff}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.muted{color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}input,select,textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#fff}textarea{min-height:90px}.btn{background:var(--blue);color:#fff;border:0;padding:11px 14px;border-radius:12px}.btn.alt{background:#fff;color:var(--text);border:1px solid var(--line)}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef4ff;color:#1743ce;font-size:12px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}@media(max-width:900px){.side{position:fixed;inset:0 auto 0 0;z-index:10}.g2,.g3,.summary{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
-</style></head><body>
-<div id="auth" class="auth">
-  <div class="card"><h1>Edukz CRM Portal</h1><div class="tabs"><button class="active" data-tab="login">Кіру</button><button data-tab="register">Директор тіркелу</button><button data-tab="parent">Ата-ана кіру</button></div>
-    <div id="tab-login" class="grid g2"><input id="login-email" placeholder="Email"><input id="login-pass" type="password" placeholder="Құпия сөз"><button class="btn" id="login-btn">Кіру</button></div>
-    <div id="tab-register" class="grid g2 hidden"><input id="reg-name" placeholder="Аты-жөні"><input id="reg-email" placeholder="Email"><input id="reg-pass" type="password" placeholder="Құпия сөз"><input id="reg-center" placeholder="Орталық атауы"><input id="reg-city" placeholder="Қаласы"><input id="reg-direction" placeholder="Бағыты"><input id="reg-main-branch" placeholder="Бас филиал"><input id="reg-payment-link" placeholder="Банк төлем ссылкасы"><button class="btn" id="register-btn">Тіркелу</button></div>
-    <div id="tab-parent" class="grid g2 hidden"><input id="parent-code" placeholder="Оқушы логин"><input id="parent-pin" placeholder="Пин код"><button class="btn" id="parent-btn">Кіру</button><div id="parent-result" class="card hidden"></div></div>
-    <div id="auth-msg" class="muted"></div>
-  </div>
-</div>
-<div id="app" class="wrap hidden">
-  <aside class="side" id="sidebar"><h2>Edukz CRM</h2><div id="menu"></div><button id="logout-btn">Шығу</button></aside>
-  <main class="main">
-    <div class="top"><div><h1 id="center-title">Орталық</h1><div class="muted" id="center-meta"></div></div><div class="row"><span class="pill" id="tariff-pill">demo</span><button class="btn alt" id="refresh-btn">Жаңарту</button></div></div>
-    <section id="section-content"></section>
-  </main>
-</div>
-<script>
-const {createClient}=supabase; const cfg=window.EDUKZ_CONFIG||{}; const sb=createClient(cfg.supabaseUrl,cfg.supabaseAnonKey); let state={user:null,profile:null,center:null,tariffModules:[],demo:false};
-const modules=[['home','Басты бет'],['tariffs','Тариф таңдау'],['leads','Срм лидтар'],['students','Оқушылар'],['groups','Топтар'],['journal','Журнал'],['progress','Прогресс'],['payments','Төлем'],['online_courses','Онлайн курстар'],['online_upload','Онлайн сабақ жүктеу'],['online_students','Онлайн оқушылар'],['online_journal','Онлайн журнал'],['online_payments','Онлайн төлемдер'],['employees','Қызметкерлер'],['branches','Филиалдар'],['cashflow','Кіріс/шығыс']];
-const tariffMap={econom:['students','groups','journal','employees','branches'],standard:['leads','students','groups','journal','progress','payments','employees','branches','cashflow'],pro:['leads','students','groups','journal','progress','payments','online_courses','online_upload','online_students','online_journal','online_payments','employees','branches','cashflow'],online_only:['online_courses','online_upload','online_students','online_journal','online_payments']};
-function qs(i){return document.getElementById(i)} function showMsg(t){qs('auth-msg').textContent=t||''}
-function ageFromDate(v){ if(!v) return ''; const d=new Date(v),n=new Date(); let a=n.getFullYear()-d.getFullYear(); const m=n.getMonth()-d.getMonth(); if(m<0||(m===0&&n.getDate()<d.getDate())) a--; return a; }
-function waLink(phone,text){ return `https://wa.me/${(phone||'').replace(/\D/g,'')}?text=${encodeURIComponent(text||'')}`; }
-function fmtMoney(v){ return new Intl.NumberFormat('kk-KZ').format(Number(v||0))+' ₸'; }
-function can(mod){return state.demo || state.tariffModules.includes(mod) || mod==='home' || mod==='tariffs';}
-function input(id,ph,type='text'){return `<input id="${id}" type="${type}" placeholder="${ph}">`;}
-function menu(){const m=qs('menu'); m.innerHTML=''; modules.forEach(([k,t])=>{const b=document.createElement('button'); b.textContent=t; if(!can(k)) b.className='off'; b.onclick=()=>render(k); m.appendChild(b);});}
-function shell(){qs('auth').classList.add('hidden'); qs('app').classList.remove('hidden'); qs('sidebar').style.display='block'; qs('center-title').textContent=state.center.center_name; qs('center-meta').textContent=`${state.center.city||''} • ${state.center.direction||''}`; qs('tariff-pill').textContent=`${state.center.tariff_code} / ${state.center.tariff_status}`; menu(); render('home');}
-async function init(){const {data:{session}}=await sb.auth.getSession(); if(session?.user){await loadProfile(); shell();}}
-async function loadProfile(){ const {data:prof}=await sb.from('profiles').select('*').eq('id',(await sb.auth.getUser()).data.user.id).single(); state.profile=prof; state.user=(await sb.auth.getUser()).data.user; const {data:center}=await sb.from('centers').select('*').eq('id',prof.center_id).single(); state.center=center; state.demo=center.tariff_status!=='active'; state.tariffModules=tariffMap[center.tariff_code]||[]; }
-async function registerDirector(){showMsg(''); const email=qs('reg-email').value.trim(), password=qs('reg-pass').value.trim(); const payload={full_name:qs('reg-name').value.trim(),center_name:qs('reg-center').value.trim(),city:qs('reg-city').value.trim(),direction:qs('reg-direction').value.trim(),main_branch:qs('reg-main-branch').value.trim(),payment_link:qs('reg-payment-link').value.trim()}; const {data,error}=await sb.auth.signUp({email,password}); if(error) return showMsg(error.message); const uid=data.user.id; const {data:center,error:e1}=await sb.from('centers').insert({owner_user_id:uid,director_name:payload.full_name,director_email:email,center_name:payload.center_name,city:payload.city,direction:payload.direction,main_branch:payload.main_branch,payment_link:payload.payment_link,tariff_code:'econom',tariff_status:'demo'}).select().single(); if(e1) return showMsg(e1.message); await sb.from('profiles').insert({id:uid,center_id:center.id,full_name:payload.full_name,email,role:'director'}); if(payload.main_branch) await sb.from('branches').insert({center_id:center.id,name:payload.main_branch,city:payload.city}); await sb.from('owner_requests').insert({center_id:center.id,requested_tariff:'econom',request_status:'Күтуде'}); showMsg('Тіркелді. Email confirmation болса раста. Кейін кір.');}
-async function loginDirector(){const {error}=await sb.auth.signInWithPassword({email:qs('login-email').value.trim(),password:qs('login-pass').value.trim()}); if(error) return showMsg(error.message); await loadProfile(); shell();}
-async function parentLookup(){const {data,error}=await sb.rpc('parent_lookup',{p_student_code:qs('parent-code').value.trim(),p_pin:qs('parent-pin').value.trim()}); const box=qs('parent-result'); box.classList.remove('hidden'); if(error||!data?.length){box.innerHTML='<b>Табылмады</b>'; return;} const p=data[0]; box.innerHTML=`<h3>${p.full_name}</h3><div>Келесі төлем: ${p.next_payment||'-'}</div><div>Қарыз: ${fmtMoney(p.debt_amount)}</div><div>Соңғы төлем: ${p.last_payment||'-'}</div><div>Келген күндер саны: ${p.attendance_count}</div><div>Келмеген күндер саны: ${p.missed_count}</div>`;}
-async function saveRow(table,obj,id){ if(!can(sectionToModule[currentSection])) return alert('Бұл бөлім тарифте жабық'); let q=sb.from(table); const res=id? await q.update(obj).eq('id',id) : await q.insert(obj); if(res.error) alert(res.error.message); else render(currentSection); }
-async function delRow(table,id){ if(!confirm('Өшіру?'))return; const res=await sb.from(table).delete().eq('id',id); if(res.error) alert(res.error.message); else render(currentSection); }
-const sectionToModule={home:'home',tariffs:'tariffs',leads:'leads',students:'students',groups:'groups',journal:'journal',progress:'progress',payments:'payments',online_courses:'online_courses',online_upload:'online_upload',online_students:'online_students',online_journal:'online_journal',online_payments:'online_payments',employees:'employees',branches:'branches',cashflow:'cashflow'};
-let currentSection='home';
-async function render(section){currentSection=section; const el=qs('section-content'); if(!can(sectionToModule[section])){el.innerHTML='<div class="card"><h2>Бұл бөлім жабық</h2><div class="muted">Тариф сатып алынғанда ашылады.</div></div>'; return;}
-if(section==='home'){ const [students,groups,payments,enrolls]=await Promise.all([sb.from('students').select('id',{count:'exact',head:true}).eq('center_id',state.center.id),sb.from('groups').select('id',{count:'exact',head:true}).eq('center_id',state.center.id),sb.from('payments').select('amount,status').eq('center_id',state.center.id),sb.from('online_enrollments').select('id',{count:'exact',head:true}).eq('center_id',state.center.id)]); const total=(payments.data||[]).filter(x=>x.status==='Төленді').reduce((a,b)=>a+Number(b.amount||0),0); el.innerHTML=`<div class="summary"><div class="card"><b>Оқушылар</b><div>${students.count||0}</div></div><div class="card"><b>Топтар</b><div>${groups.count||0}</div></div><div class="card"><b>Түскен төлем</b><div>${fmtMoney(total)}</div></div><div class="card"><b>Онлайн доступ</b><div>${enrolls.count||0}</div></div></div><div class="card"><h3>Демо/нақты режим</h3><div>${state.demo?'Қазір демо режим. Сақтау шектеулі. Тариф активтелсе толық ашылады.':'Тариф актив. Барлық рұқсатты бөлімдер жұмыс істейді.'}</div></div>`; return; }
-if(section==='tariffs'){ const {data:tr}=await sb.from('tariffs').select('*'); const {data:reqs}=await sb.from('owner_requests').select('*').eq('center_id',state.center.id).order('created_at',{ascending:false}); el.innerHTML=`<div class="grid g2">${tr.map(t=>`<div class="card"><h3>${t.title}</h3><div class="muted">${t.code}</div><div>${t.modules.join(', ')}</div><button class="btn" onclick="requestTariff('${t.code}')">Сатып алу / доступ сұрау</button></div>`).join('')}</div><div class="card"><h3>Өтінімдер</h3><table><tr><th>Тариф</th><th>Статус</th><th>Күні</th></tr>${(reqs||[]).map(r=>`<tr><td>${r.requested_tariff}</td><td>${r.request_status}</td><td>${new Date(r.created_at).toLocaleString()}</td></tr>`).join('')}</table></div>`; return; }
-if(section==='leads'){const {data}=await sb.from('leads').select('*').eq('center_id',state.center.id).order('created_at',{ascending:false}); el.innerHTML=`<div class="card"><h3>Лид қосу</h3><div class="grid g3">${input('lead-name','Аты')} ${input('lead-phone','Телефон')} ${input('lead-dir','Бағыты')} ${input('lead-source','Қайдан келгені')} <select id="lead-status"><option>Жаңа клиент</option><option>Ойланып жүр</option><option>Пробный</option></select><textarea id="lead-note" placeholder="Ескерту"></textarea></div><div class="row"><button class="btn" onclick="addLead()">Сақтау</button></div></div><div class="card"><h3>Лид тізімі</h3><table><tr><th>Аты</th><th>Телефон</th><th>Статус</th><th>WhatsApp</th><th></th></tr>${data.map(x=>`<tr><td>${x.full_name}</td><td>${x.phone||''}</td><td>${x.status||''}</td><td><a target="_blank" href="${waLink(x.phone,'Сәлеметсіз бе! Edukz орталығынан жазып отырмыз.')}">Ашу</a></td><td><button onclick="delRow('leads','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='students'){const {data:branches}=await sb.from('branches').select('*').eq('center_id',state.center.id); const {data}=await sb.from('students').select('*').eq('center_id',state.center.id).order('created_at',{ascending:false}); el.innerHTML=`<div class="card"><h3>Оқушы тіркеу</h3><div class="grid g3">${input('st-name','Аты')} ${input('st-parent','Ата-ана')} ${input('st-phone','Телефон')} ${input('st-dir','Бағыт')} ${input('st-code','Оқушы коды')} ${input('st-pin','Оқушы пин коды')} <input id="st-birth" type="date"> ${input('st-age','Жасы','number')} ${input('st-fee','Айлық төлем','number')} <select id="st-branch"><option value="">Филиал</option>${branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div><button class="btn" onclick="addStudent()">Сақтау</button></div><div class="card"><table><tr><th>Аты</th><th>Телефон</th><th>Код</th><th>Пин</th><th>Жасы</th><th></th></tr>${data.map(x=>`<tr><td>${x.full_name}</td><td>${x.phone||''}</td><td>${x.student_code}</td><td>${x.pin_code}</td><td>${x.age||''}</td><td><button onclick="delRow('students','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; qs('st-birth').onchange=e=>qs('st-age').value=ageFromDate(e.target.value); return;}
-if(section==='groups'){const {data:branches}=await sb.from('branches').select('*').eq('center_id',state.center.id); const {data}=await sb.from('groups').select('*').eq('center_id',state.center.id).order('created_at',{ascending:false}); el.innerHTML=`<div class="card"><div class="grid g3">${input('gp-name','Топ атауы')} ${input('gp-dir','Бағыт')} ${input('gp-teacher','Мұғалім')} ${input('gp-schedule','Кесте')} ${input('gp-room','Аудитория')} <select id="gp-branch"><option value="">Филиал</option>${branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div><button class="btn" onclick="addGroup()">Сақтау</button></div><div class="card"><table><tr><th>Топ</th><th>Бағыт</th><th>Мұғалім</th><th>Кесте</th><th></th></tr>${data.map(x=>`<tr><td>${x.name}</td><td>${x.direction||''}</td><td>${x.teacher_name||''}</td><td>${x.schedule||''}</td><td><button onclick="delRow('groups','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='journal'){const [groups,students,data]=await Promise.all([sb.from('groups').select('*').eq('center_id',state.center.id),sb.from('students').select('*').eq('center_id',state.center.id),sb.from('attendance_journal').select('*, students(full_name), groups(name)').eq('center_id',state.center.id).order('lesson_date',{ascending:false})]); el.innerHTML=`<div class="card"><div class="grid g3"><select id="jn-group"><option value="">Топ</option>${groups.data.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}</select><select id="jn-student"><option value="">Оқушы</option>${students.data.map(s=>`<option value="${s.id}">${s.full_name}</option>`).join('')}</select><input id="jn-date" type="date"><input id="jn-topic" placeholder="Тақырып"><select id="jn-status"><option>Келді</option><option>Келмеді</option><option>Себепті</option></select></div><button class="btn" onclick="addJournal()">Сақтау</button></div><div class="card"><table><tr><th>Күні</th><th>Топ</th><th>Оқушы</th><th>Тақырып</th><th>Статус</th><th></th></tr>${data.data.map(x=>`<tr><td>${x.lesson_date||''}</td><td>${x.groups?.name||''}</td><td>${x.students?.full_name||''}</td><td>${x.topic||''}</td><td>${x.status}</td><td><button onclick="delRow('attendance_journal','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='progress'){const [students,data]=await Promise.all([sb.from('students').select('*').eq('center_id',state.center.id),sb.from('progress_entries').select('*, students(full_name)').eq('center_id',state.center.id).order('created_at',{ascending:false})]); el.innerHTML=`<div class="card"><div class="grid g3"><select id="pr-student"><option value="">Оқушы</option>${students.data.map(s=>`<option value="${s.id}">${s.full_name}</option>`).join('')}</select><textarea id="pr-homework" placeholder="Үй тапсырма"></textarea><textarea id="pr-note" placeholder="Мұғалім пікірі"></textarea><input id="pr-score" placeholder="Оценка"><input id="pr-test" placeholder="Тест нәтижесі"><input id="pr-week" placeholder="Апта деңгейі"><input id="pr-month" placeholder="Ай деңгейі"></div><button class="btn" onclick="addProgress()">Сақтау</button></div><div class="card"><table><tr><th>Оқушы</th><th>Баға</th><th>Тест</th><th>Апта</th><th>Ай</th><th></th></tr>${data.data.map(x=>`<tr><td>${x.students?.full_name||''}</td><td>${x.manual_score||''}</td><td>${x.test_result||''}</td><td>${x.weekly_level||''}</td><td>${x.monthly_level||''}</td><td><button onclick="delRow('progress_entries','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='payments'){const [students,data]=await Promise.all([sb.from('students').select('*').eq('center_id',state.center.id),sb.from('payments').select('*, students(full_name)').eq('center_id',state.center.id).order('created_at',{ascending:false})]); el.innerHTML=`<div class="card"><div class="grid g3"><select id="pay-student"><option value="">Оқушы</option>${students.data.map(s=>`<option value="${s.id}">${s.full_name}</option>`).join('')}</select><input id="pay-paid" type="date"><input id="pay-due" type="date"><input id="pay-amount" type="number" placeholder="Төлем суммасы"><input id="pay-discount" type="number" placeholder="Жеңілдік"><select id="pay-status"><option>Төленбеген</option><option>Төленді</option></select><input id="pay-note" placeholder="Ескерту"></div><button class="btn" onclick="addPayment()">Төлемді сақтау</button></div><div class="card"><table><tr><th>Оқушы</th><th>Сумма</th><th>Статус</th><th>Due</th><th>WhatsApp</th><th></th></tr>${data.data.map(x=>`<tr><td>${x.students?.full_name||''}</td><td>${fmtMoney(x.amount)}</td><td>${x.status}</td><td>${x.due_date||''}</td><td><button onclick="sendPaymentWa('${x.student_id}','${x.due_date||''}','${x.amount||0}')">Ата-анаға хабарлама</button></td><td><button onclick="delRow('payments','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='cashflow'){const {data}=await sb.from('cashflow_entries').select('*').eq('center_id',state.center.id).order('entry_date',{ascending:false}); const totalIn=data.filter(x=>x.type==='Кіріс').reduce((a,b)=>a+Number(b.amount||0),0); const totalOut=data.filter(x=>x.type!=='Кіріс').reduce((a,b)=>a+Number(b.amount||0),0); el.innerHTML=`<div class="summary"><div class="card"><b>Кіріс</b><div>${fmtMoney(totalIn)}</div></div><div class="card"><b>Шығыс</b><div>${fmtMoney(totalOut)}</div></div><div class="card"><b>Айналым</b><div>${fmtMoney(totalIn-totalOut)}</div></div></div><div class="card"><div class="grid g3"><select id="cf-type"><option>Кіріс</option><option>Шығыс</option><option>Жалақы</option></select><input id="cf-amount" type="number" placeholder="Суммасы"><input id="cf-date" type="date"><input id="cf-counterparty" placeholder="Кімге/неге/кімнен"><input id="cf-category" placeholder="Категория"><input id="cf-note" placeholder="Ескерту"></div><button class="btn" onclick="addCashflow()">Сақтау</button></div><div class="card"><table><tr><th>Түрі</th><th>Сумма</th><th>Дата</th><th>Категория</th><th></th></tr>${data.map(x=>`<tr><td>${x.type}</td><td>${fmtMoney(x.amount)}</td><td>${x.entry_date||''}</td><td>${x.category||''}</td><td><button onclick="delRow('cashflow_entries','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='online_courses'){const {data}=await sb.from('online_courses').select('*').eq('center_id',state.center.id).order('created_at',{ascending:false}); el.innerHTML=`<div class="card"><div class="grid g3">${input('oc-title','Курс')} ${input('oc-teacher','Мұғалім')} ${input('oc-price','Бағасы','number')} <textarea id="oc-desc" placeholder="Сипаттамасы"></textarea></div><div class="row"><button class="btn" onclick="addCourse()">Сақтау</button><a target="_blank" href="${cfg.onlinePortalUrl||'#'}">Порталға ссылка</a></div></div><div class="card"><table><tr><th>Курс</th><th>Мұғалім</th><th>Бағасы</th><th></th></tr>${data.map(x=>`<tr><td>${x.title}</td><td>${x.teacher_name||''}</td><td>${fmtMoney(x.price)}</td><td><button onclick="delRow('online_courses','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='online_upload'){const [courses,mods,lessons,tests]=await Promise.all([sb.from('online_courses').select('*').eq('center_id',state.center.id),sb.from('online_modules').select('*, online_courses!inner(center_id,title)').eq('online_courses.center_id',state.center.id),sb.from('online_lessons').select('*, online_modules!inner(title,course_id)').order('created_at',{ascending:false}),sb.from('online_test_questions').select('*, online_lessons!inner(title)').order('created_at',{ascending:false})]); el.innerHTML=`<div class="card"><h3>Курс жасау</h3><div class="muted">Алдымен Онлайн курстар бөлімінде курс аш.</div></div><div class="card"><h3>Модуль қосу</h3><div class="grid g2"><select id="om-course"><option value="">Курс</option>${courses.data.map(c=>`<option value="${c.id}">${c.title}</option>`).join('')}</select>${input('om-title','Модуль')}</div><button class="btn" onclick="addModule()">Модуль қосу</button></div><div class="card"><h3>Сабақ қосу</h3><div class="grid g3"><select id="ol-module"><option value="">Модуль</option>${mods.data.map(m=>`<option value="${m.id}">${m.title}</option>`).join('')}</select>${input('ol-title','Сабақ атауы')}${input('ol-duration','Ұзақтығы')}${input('ol-youtube','Ютуб ссылка')}${input('ol-file','Файл ссылка')}${input('ol-external','Сыртқы ссылка')}</div><button class="btn" onclick="addLesson()">Сабақ қосу</button></div><div class="card"><h3>Тест жасау</h3><div class="grid g3"><select id="ot-lesson"><option value="">Сабақ аты</option>${lessons.data.map(l=>`<option value="${l.id}">${l.title}</option>`).join('')}</select>${input('ot-q','Сұрақ')}${input('ot-a1','Жауап 1')}${input('ot-a2','Жауап 2')}${input('ot-a3','Жауап 3')}${input('ot-a4','Жауап 4')}${input('ot-correct','Дұрыс жауап')}</div><button class="btn" onclick="addTest()">Тест сұрақ қосу</button></div><div class="card"><table><tr><th>Сабақ</th><th>Ютуб</th><th></th></tr>${lessons.data.map(x=>`<tr><td>${x.title}</td><td>${x.youtube_url||x.file_url||x.external_url||''}</td><td><button onclick="delRow('online_lessons','${x.id}')">Өшіру</button></td></tr>`).join('')}</table><h3>Тесттер</h3><table><tr><th>Сабақ</th><th>Сұрақ</th><th></th></tr>${tests.data.map(x=>`<tr><td>${x.online_lessons?.title||''}</td><td>${x.question}</td><td><button onclick="delRow('online_test_questions','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='online_students'){const {data}=await sb.from('online_students').select('*, online_enrollments(course_id,access_status,payment_status), students:linked_student_id(student_code,pin_code)').eq('center_id',state.center.id).order('created_at',{ascending:false}); el.innerHTML=`<div class="card"><table><tr><th>Аты</th><th>Телефон</th><th>Email</th><th>Код/Пин</th><th>Курсы</th></tr>${data.map(x=>`<tr><td>${x.full_name}</td><td>${x.phone||''}</td><td>${x.email}</td><td>${x.students?x.students.student_code+' / '+x.students.pin_code:''}</td><td>${(x.online_enrollments||[]).map(e=>e.access_status).join(', ')}</td></tr>`).join('')}</table></div>`; return;}
-if(section==='online_payments'){const {data}=await sb.from('online_enrollments').select('*, online_students(full_name), online_courses(title)').eq('center_id',state.center.id).order('requested_at',{ascending:false}); el.innerHTML=`<div class="card"><table><tr><th>Оқушы</th><th>Курс</th><th>Суммасы</th><th>Статус</th><th>Әрекет</th></tr>${data.map(x=>`<tr><td>${x.online_students?.full_name||''}</td><td>${x.online_courses?.title||''}</td><td>${fmtMoney(x.payment_amount)}</td><td>${x.payment_status} / ${x.access_status}</td><td><button onclick="approvePayment('${x.id}')">Доступ ашу</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='online_journal'){const {data}=await sb.from('online_progress').select('*, online_enrollments!inner(center_id, online_students(full_name), online_courses(title)), online_lessons(title)').eq('online_enrollments.center_id',state.center.id).order('viewed_at',{ascending:false}); el.innerHTML=`<div class="card"><table><tr><th>Оқушы</th><th>Курс</th><th>Сабақ</th><th>Уақыты</th><th>Тест</th></tr>${data.data.map(x=>`<tr><td>${x.online_enrollments.online_students?.full_name||''}</td><td>${x.online_enrollments.online_courses?.title||''}</td><td>${x.online_lessons?.title||''}</td><td>${new Date(x.viewed_at).toLocaleString()}</td><td>${x.test_result||''}</td></tr>`).join('')}</table></div>`; return;}
-if(section==='employees'){const [branches,data]=await Promise.all([sb.from('branches').select('*').eq('center_id',state.center.id),sb.from('employees').select('*, branches(name)').eq('center_id',state.center.id).order('created_at',{ascending:false})]); el.innerHTML=`<div class="card"><div class="grid g3">${input('em-name','Аты')}${input('em-email','Email')}${input('em-role','Рөлі')}${input('em-pass','Құпия сөз')}
-<select id="em-branch"><option value="">Филиал</option>${branches.data.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div><button class="btn" onclick="addEmployee()">Сақтау</button></div><div class="card"><table><tr><th>Аты</th><th>Email</th><th>Рөл</th><th>Филиал</th><th></th></tr>${data.data.map(x=>`<tr><td>${x.full_name}</td><td>${x.email}</td><td>${x.role}</td><td>${x.branches?.name||''}</td><td><button onclick="delRow('employees','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-if(section==='branches'){const {data}=await sb.from('branches').select('*').eq('center_id',state.center.id).order('created_at',{ascending:false}); el.innerHTML=`<div class="card"><div class="grid g3">${input('br-name','Аты')}${input('br-city','Қала')}${input('br-address','Мекенжай')}${input('br-phone','Телефон')}</div><button class="btn" onclick="addBranch()">Сақтау</button></div><div class="card"><table><tr><th>Аты</th><th>Қала</th><th>Телефон</th><th></th></tr>${data.map(x=>`<tr><td>${x.name}</td><td>${x.city||''}</td><td>${x.phone||''}</td><td><button onclick="delRow('branches','${x.id}')">Өшіру</button></td></tr>`).join('')}</table></div>`; return;}
-}
-async function requestTariff(code){ const res=await sb.from('owner_requests').insert({center_id:state.center.id,requested_tariff:code}); if(res.error) alert(res.error.message); else alert('Өтінім owner порталға түсті'); render('tariffs'); }
-async function addLead(){await saveRow('leads',{center_id:state.center.id,full_name:qs('lead-name').value,phone:qs('lead-phone').value,direction:qs('lead-dir').value,source:qs('lead-source').value,status:qs('lead-status').value,note:qs('lead-note').value});}
-async function addStudent(){await saveRow('students',{center_id:state.center.id,full_name:qs('st-name').value,parent_name:qs('st-parent').value,phone:qs('st-phone').value,direction:qs('st-dir').value,student_code:qs('st-code').value,pin_code:qs('st-pin').value,birth_date:qs('st-birth').value||null,age:Number(qs('st-age').value||0),monthly_fee:Number(qs('st-fee').value||0),branch_id:qs('st-branch').value||null});}
-async function addGroup(){await saveRow('groups',{center_id:state.center.id,name:qs('gp-name').value,direction:qs('gp-dir').value,teacher_name:qs('gp-teacher').value,schedule:qs('gp-schedule').value,room:qs('gp-room').value,branch_id:qs('gp-branch').value||null});}
-async function addJournal(){await saveRow('attendance_journal',{center_id:state.center.id,group_id:qs('jn-group').value||null,student_id:qs('jn-student').value||null,lesson_date:qs('jn-date').value,topic:qs('jn-topic').value,status:qs('jn-status').value});}
-async function addProgress(){await saveRow('progress_entries',{center_id:state.center.id,student_id:qs('pr-student').value,homework:qs('pr-homework').value,teacher_note:qs('pr-note').value,manual_score:qs('pr-score').value,test_result:qs('pr-test').value,weekly_level:qs('pr-week').value,monthly_level:qs('pr-month').value});}
-async function addPayment(){await saveRow('payments',{center_id:state.center.id,student_id:qs('pay-student').value,paid_date:qs('pay-paid').value||null,due_date:qs('pay-due').value||null,amount:Number(qs('pay-amount').value||0),discount:Number(qs('pay-discount').value||0),status:qs('pay-status').value,note:qs('pay-note').value,payment_type:'offline'});}
-async function sendPaymentWa(studentId,due,amount){ const {data}=await sb.from('students').select('parent_whatsapp,full_name').eq('id',studentId).single(); if(!data) return; location.href=waLink(data.parent_whatsapp||'',`${data.full_name} үшін төлем уақыты келді. Сома: ${fmtMoney(amount)}. Мерзімі: ${due||'-'}`); }
-async function addCashflow(){await saveRow('cashflow_entries',{center_id:state.center.id,type:qs('cf-type').value,amount:Number(qs('cf-amount').value||0),entry_date:qs('cf-date').value||null,counterparty:qs('cf-counterparty').value,category:qs('cf-category').value,note:qs('cf-note').value});}
-async function addCourse(){await saveRow('online_courses',{center_id:state.center.id,title:qs('oc-title').value,teacher_name:qs('oc-teacher').value,price:Number(qs('oc-price').value||0),description:qs('oc-desc').value});}
-async function addModule(){await saveRow('online_modules',{course_id:qs('om-course').value,title:qs('om-title').value});}
-async function addLesson(){await saveRow('online_lessons',{module_id:qs('ol-module').value,title:qs('ol-title').value,duration_text:qs('ol-duration').value,content_type:'mixed',youtube_url:qs('ol-youtube').value,file_url:qs('ol-file').value,external_url:qs('ol-external').value});}
-async function addTest(){await saveRow('online_test_questions',{lesson_id:qs('ot-lesson').value,question:qs('ot-q').value,answer1:qs('ot-a1').value,answer2:qs('ot-a2').value,answer3:qs('ot-a3').value,answer4:qs('ot-a4').value,correct_answer:qs('ot-correct').value});}
-async function approvePayment(id){ const res=await sb.from('online_enrollments').update({payment_status:'Төленді',access_status:'Ашық',approved_at:new Date().toISOString()}).eq('id',id); if(res.error) alert(res.error.message); else render('online_payments'); }
-async function addEmployee(){await saveRow('employees',{center_id:state.center.id,full_name:qs('em-name').value,email:qs('em-email').value,role:qs('em-role').value,password_hint:qs('em-pass').value,branch_id:qs('em-branch').value||null});}
-async function addBranch(){await saveRow('branches',{center_id:state.center.id,name:qs('br-name').value,city:qs('br-city').value,address:qs('br-address').value,phone:qs('br-phone').value});}
-window.requestTariff=requestTariff; window.addLead=addLead; window.addStudent=addStudent; window.addGroup=addGroup; window.addJournal=addJournal; window.addProgress=addProgress; window.addPayment=addPayment; window.sendPaymentWa=sendPaymentWa; window.addCashflow=addCashflow; window.addCourse=addCourse; window.addModule=addModule; window.addLesson=addLesson; window.addTest=addTest; window.addEmployee=addEmployee; window.addBranch=addBranch; window.delRow=delRow; window.approvePayment=approvePayment;
-qs('login-btn').onclick=loginDirector; qs('register-btn').onclick=registerDirector; qs('parent-btn').onclick=parentLookup; qs('logout-btn').onclick=async()=>{await sb.auth.signOut(); location.reload()}; qs('refresh-btn').onclick=()=>render(currentSection);
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); ['login','register','parent'].forEach(t=>qs('tab-'+t).classList.add('hidden')); qs('tab-'+b.dataset.tab).classList.remove('hidden');});
-init();
-</script></body></html>
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EdukZ CRM Portal</title>
+  <style>
+    :root{
+      --bg:#f4f7fb; --card:#fff; --line:#e6ebf2; --text:#111827; --muted:#6b7280;
+      --brand:#2155ff; --brand2:#4f46e5; --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+      --shadow:0 14px 40px rgba(17,24,39,.08); --radius:24px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(180deg,#f8fbff 0%, var(--bg) 100%);color:var(--text)}
+    .hidden{display:none!important}
+    .auth-shell{max-width:1240px;margin:26px auto;padding:0 16px;display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    .panel,.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .hero{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#fff;padding:30px}
+    .hero h1{font-size:44px;line-height:1.04;margin:0 0 10px}
+    .hero p{margin:0;color:#dbeafe;font-size:18px;line-height:1.55}
+    .auth-card{padding:22px}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .tab,.btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font:inherit;font-weight:800;cursor:pointer}
+    .tab{background:#fff;border:1px solid var(--line);color:#111827}
+    .tab.active,.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+    .btn.secondary{background:#fff;border:1px solid var(--line)}
+    .btn.ok{background:var(--ok);color:#fff}
+    .btn.warn{background:var(--warn);color:#fff}
+    .btn.danger{background:var(--danger);color:#fff}
+    .form-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+    .input,.select,.textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit}
+    .textarea{min-height:94px}
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700}
+    .notice{padding:12px 14px;border-radius:16px;background:#eff6ff;color:#1d4ed8;margin-bottom:12px}
+    .shell{display:flex;min-height:100vh}
+    .side{width:275px;background:#0f172a;color:#fff;padding:20px;height:100vh;overflow:auto;position:sticky;top:0}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+    .logo{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--brand),#7c3aed);display:grid;place-items:center;font-weight:900}
+    .side-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);padding:14px;border-radius:18px;margin-bottom:16px}
+    .nav-btn{width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;color:#fff;border-radius:14px;cursor:pointer;font:inherit;font-weight:700;margin-bottom:6px}
+    .nav-btn.active,.nav-btn:hover{background:rgba(255,255,255,.1)}
+    .nav-btn.disabled{opacity:.35;pointer-events:none}
+    .main{flex:1;padding:22px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;margin-bottom:16px}
+    .grid{display:grid;gap:16px}
+    .g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+    .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+    .g4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+    .kpi .label{font-size:12px;text-transform:uppercase;color:var(--muted);font-weight:800}
+    .kpi .value{font-size:30px;font-weight:900;margin-top:8px}
+    .section{display:none}
+    .section.active{display:block}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px}
+    table{width:100%;border-collapse:collapse;min-width:780px}
+    th,td{padding:11px;border-bottom:1px solid #edf2f7;text-align:left}
+    th{font-size:12px;color:var(--muted);text-transform:uppercase;background:#fafcff}
+    .plan{padding:18px;border:1px solid var(--line);border-radius:20px;background:#fff}
+    .plan.active{border:2px solid var(--brand)}
+    .plan ul{padding-left:18px;margin:12px 0 0}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .status-ok{color:var(--ok);font-weight:700}
+    .status-warn{color:var(--warn);font-weight:700}
+    .status-danger{color:var(--danger);font-weight:700}
+    @media (max-width:980px){
+      .auth-shell{grid-template-columns:1fr}
+      .shell{display:block}
+      .side{width:auto;height:auto;position:relative}
+      .main{padding:16px}
+      .two-col{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div id="authView" class="auth-shell">
+    <div class="panel hero">
+      <h1>EdukZ CRM Portal</h1>
+      <p>Оқу орталығы, филиал, журнал, төлем, прогресс және онлайн курстарды бір жерден басқаруға арналған толық CRM интерфейс.</p>
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+        <span class="pill">CRM</span>
+        <span class="pill">Online</span>
+        <span class="pill">Parent view</span>
+        <span class="pill">Tariff access</span>
+      </div>
+    </div>
 
+    <div class="panel auth-card">
+      <div class="tabs">
+        <button class="tab active" data-auth="login">Кіру</button>
+        <button class="tab" data-auth="register">Директор тіркелу</button>
+        <button class="tab" data-auth="parent">Ата-ана кіру</button>
+      </div>
+
+      <div id="loginBox">
+        <div class="form-grid">
+          <input class="input" placeholder="Email" />
+          <input class="input" type="password" placeholder="Құпия сөз" />
+        </div>
+        <button class="btn primary" style="margin-top:12px" onclick="openPortal()">Кіру</button>
+      </div>
+
+      <div id="registerBox" class="hidden">
+        <div class="form-grid">
+          <input class="input" placeholder="Аты жөні" />
+          <input class="input" placeholder="Email" />
+          <input class="input" type="password" placeholder="Құпия сөз" />
+          <input class="input" placeholder="Орталық атауы" />
+          <input class="input" placeholder="Қаласы" />
+          <input class="input" placeholder="Бағыты" />
+          <input class="input" placeholder="Бас филиал" />
+          <input class="input" placeholder="Банк төлеміне ссылка" />
+        </div>
+        <button class="btn primary" style="margin-top:12px" onclick="openPortal()">Тіркелу</button>
+      </div>
+
+      <div id="parentBox" class="hidden">
+        <div class="form-grid">
+          <input class="input" placeholder="Оқушы логин" />
+          <input class="input" placeholder="Пин код" />
+        </div>
+        <button class="btn primary" style="margin-top:12px" onclick="alert('Parent panel бөлек логикамен ашылады')">Кіру</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="portalView" class="shell hidden">
+    <aside class="side">
+      <div class="brand">
+        <div class="logo">EZ</div>
+        <div>
+          <div style="font-size:22px;font-weight:900">EdukZ CRM</div>
+          <div class="muted" style="color:#cbd5e1">Market-ready UI</div>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div style="font-weight:800">Demo / Product режим</div>
+        <div class="muted" style="color:#cbd5e1;margin-top:6px">Тарифке қарай бөлім ашылады</div>
+        <select id="tariffSelect" class="select" style="margin-top:10px" onchange="applyTariff()">
+          <option value="demo">Demo</option>
+          <option value="econom">Эконом</option>
+          <option value="standard">Стандарт</option>
+          <option value="pro">Про</option>
+          <option value="online">Онлайн орталықтар</option>
+        </select>
+      </div>
+
+      <button class="nav-btn active" data-section="dashboard">Басты бет</button>
+      <button class="nav-btn" data-section="tariff">Тариф таңдау</button>
+      <button class="nav-btn" data-section="leads">CRM лидтар</button>
+      <button class="nav-btn" data-section="students">Оқушылар</button>
+      <button class="nav-btn" data-section="groups">Топтар</button>
+      <button class="nav-btn" data-section="journal">Журнал</button>
+      <button class="nav-btn" data-section="progress">Прогресс</button>
+      <button class="nav-btn" data-section="payments">Төлем</button>
+      <button class="nav-btn" data-section="finance">Кіріс/шығыс</button>
+      <button class="nav-btn" data-section="online-courses">Онлайн курстар</button>
+      <button class="nav-btn" data-section="online-upload">Онлайн сабақ жүктеу</button>
+      <button class="nav-btn" data-section="online-students">Онлайн оқушылар</button>
+      <button class="nav-btn" data-section="online-journal">Онлайн журнал</button>
+      <button class="nav-btn" data-section="online-payments">Онлайн төлемдер</button>
+      <button class="nav-btn" data-section="staff">Қызметкерлер</button>
+      <button class="nav-btn" data-section="branches">Филиалдар</button>
+      <button class="nav-btn" data-section="parent">Ата-ана панелі</button>
+    </aside>
+
+    <main class="main">
+      <div class="topbar card">
+        <div>
+          <div id="pageTitle" style="font-size:30px;font-weight:900">Басты бет</div>
+          <div class="muted" id="pageSub">CRM толық басқару панелі</div>
+        </div>
+        <div>
+          <span class="pill" id="tariffChip">Тариф: Demo</span>
+          <span class="pill" id="modeChip">Режим: Read only</span>
+        </div>
+      </div>
+
+      <section id="dashboard" class="section active">
+        <div class="grid g4">
+          <div class="card kpi"><div class="label">Оқушылар</div><div class="value">248</div></div>
+          <div class="card kpi"><div class="label">Топтар</div><div class="value">19</div></div>
+          <div class="card kpi"><div class="label">Айлық төлем</div><div class="value">3 240 000 ₸</div></div>
+          <div class="card kpi"><div class="label">Онлайн курс</div><div class="value">12</div></div>
+        </div>
+        <div class="grid g2" style="margin-top:16px">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Жылдам шолу</div>
+            <div class="notice">Тариф сатып алмаған кезде портал demo/read-only режимінде көрінеді. Тариф белсенді болған соң бөлімдерге сай толық өзгерту, сақтау, өшіру ашылады.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Орталық ақпараты</div>
+            <div class="two-col">
+              <div class="item"><strong>Орталық</strong><div class="muted">Demo EdukZ</div></div>
+              <div class="item"><strong>Қала</strong><div class="muted">Өскемен</div></div>
+              <div class="item"><strong>Бағыт</strong><div class="muted">Робототехника</div></div>
+              <div class="item"><strong>Банк ссылка</strong><div class="muted">https://pay.kaspi.kz</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tariff" class="section">
+        <div class="grid g2">
+          <div class="plan" data-plan="econom">
+            <div style="font-size:24px;font-weight:900">Эконом</div>
+            <ul><li>Оқушылар</li><li>Топтар</li><li>Журнал</li><li>Қызметкерлер</li><li>Филиалдар</li></ul>
+          </div>
+          <div class="plan" data-plan="standard">
+            <div style="font-size:24px;font-weight:900">Стандарт</div>
+            <ul><li>CRM лидтар</li><li>Оқушылар</li><li>Топтар</li><li>Журнал</li><li>Прогресс</li><li>Төлем</li><li>Қызметкерлер</li><li>Филиалдар</li></ul>
+          </div>
+          <div class="plan" data-plan="pro">
+            <div style="font-size:24px;font-weight:900">Про</div>
+            <ul><li>CRM</li><li>Онлайн курстар</li><li>Онлайн сабақ жүктеу</li><li>Онлайн оқушылар</li><li>Онлайн журнал</li><li>Онлайн төлемдер</li></ul>
+          </div>
+          <div class="plan" data-plan="online">
+            <div style="font-size:24px;font-weight:900">Онлайн орталықтар</div>
+            <ul><li>Онлайн курстар</li><li>Онлайн сабақ жүктеу</li><li>Онлайн оқушылар</li><li>Онлайн журнал</li><li>Онлайн төлемдер</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="leads" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Лид қосу</div>
+            <div class="form-grid">
+              <input class="input" placeholder="Аты" />
+              <input class="input" placeholder="Телефон" />
+              <input class="input" placeholder="Бағыты" />
+              <input class="input" placeholder="Қайдан келгені" />
+              <select class="select"><option>Жаңа клиент</option><option>Ойланып жүр</option><option>Пробный</option></select>
+              <textarea class="textarea" placeholder="Ескерту"></textarea>
+            </div>
+            <button class="btn primary" style="margin-top:12px">Сақтау</button>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Клиент дожим хабарламасы</div>
+            <input class="input" placeholder="WhatsApp номер" />
+            <textarea class="textarea" style="margin-top:12px" placeholder="Клиентке жазу мәтіні"></textarea>
+            <button class="btn ok" style="margin-top:12px">WhatsApp ашу</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="between"><div style="font-size:22px;font-weight:900">Лид тізімі</div><input class="input" style="max-width:260px" placeholder="Іздеу" /></div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Статус</th><th>Әрекет</th></tr></thead>
+              <tbody>
+                <tr><td>Аружан</td><td>+7 777 111 22 33</td><td>Робототехника</td><td><span class="status-ok">Жаңа</span></td><td>Редакт / Сақтау / Өшіру</td></tr>
+                <tr><td>Нұрбол</td><td>+7 701 555 99 11</td><td>Химия</td><td><span class="status-warn">Ойланып жүр</span></td><td>Редакт / Сақтау / Өшіру</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="students" class="section">
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">Оқушы тіркеу</div>
+          <div class="form-grid">
+            <input class="input" placeholder="Аты" />
+            <input class="input" placeholder="Ата ана" />
+            <input class="input" placeholder="Телефон" />
+            <input class="input" placeholder="Бағыт" />
+            <input class="input" placeholder="Оқушы коды" />
+            <input class="input" placeholder="Оқушы пин коды" />
+            <input class="input" type="date" />
+            <input class="input" placeholder="Жасы автоматом" />
+            <input class="input" placeholder="Айлық төлем сумма" />
+            <select class="select"><option>Филиал</option></select>
+          </div>
+          <button class="btn primary" style="margin-top:12px">Сақтау</button>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="between"><div style="font-size:22px;font-weight:900">Оқушылар тізімі</div><input class="input" style="max-width:260px" placeholder="Іздеу" /></div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Код</th><th>PIN</th><th>Филиал</th><th>Әрекет</th></tr></thead>
+              <tbody>
+                <tr><td>Айсана</td><td>+7 777 000 00 00</td><td>Робототехника</td><td>EDU1001</td><td>1111</td><td>Орталық 1</td><td>Редакт / Сақтау / Өшіру</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="groups" class="section">
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">Топ қосу</div>
+          <div class="form-grid">
+            <input class="input" placeholder="Топ атауы" />
+            <input class="input" placeholder="Бағыт" />
+            <input class="input" placeholder="Мұғалім" />
+            <input class="input" placeholder="Кесте" />
+            <input class="input" placeholder="Аудитория" />
+            <select class="select"><option>Филиал</option></select>
+          </div>
+          <button class="btn primary" style="margin-top:12px">Сақтау</button>
+        </div>
+      </section>
+
+      <section id="journal" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Журнал жазу</div>
+            <div class="form-grid">
+              <select class="select"><option>Топ</option></select>
+              <select class="select"><option>Оқушы</option></select>
+              <input class="input" type="date" />
+              <input class="input" placeholder="Тақырып" />
+              <select class="select"><option>Келді</option><option>Келмеді</option><option>Себепті</option></select>
+            </div>
+            <button class="btn primary" style="margin-top:12px">Сақтау</button>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Күнтізбе бойынша қатысу</div>
+            <div class="notice">Үлкен календарь блок осында ашылады. Күнді басқанда сол күнгі балалардың тобы, тақырыбы, келді/келмеді тізімі шығады.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="progress" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Прогресс еңгізу</div>
+            <div class="form-grid">
+              <select class="select"><option>Оқушы</option></select>
+              <input class="input" placeholder="Үй тапсырма" />
+              <input class="input" placeholder="Мұғалім пікірі" />
+              <input class="input" placeholder="Оценка ручной" />
+              <input class="input" placeholder="Апта нәтижесі" />
+              <input class="input" placeholder="Ай нәтижесі" />
+            </div>
+            <button class="btn primary" style="margin-top:12px">Сақтау</button>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Прогресс тізімі</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Оқушы</th><th>Үй тапсырма</th><th>Тест</th><th>Әрекет</th></tr></thead>
+                <tbody><tr><td>Айсана</td><td>Орындады</td><td>87%</td><td>Редакт / Өшіру / Прогресс беті</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="payments" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Төлем еңгізу</div>
+            <div class="form-grid">
+              <select class="select"><option>Оқушы</option></select>
+              <input class="input" type="date" />
+              <input class="input" type="date" />
+              <input class="input" placeholder="Төлем суммасы" />
+              <input class="input" placeholder="Жеңілдік" />
+              <select class="select"><option>Төленді</option><option>Қарыз</option><option>Күтілуде</option></select>
+              <textarea class="textarea" placeholder="Ескерту"></textarea>
+            </div>
+            <button class="btn primary" style="margin-top:12px">Төлемді сақтау</button>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Ата анаға хабарлама</div>
+            <select class="select"><option>Оқушы</option></select>
+            <textarea class="textarea" style="margin-top:12px" placeholder="Төлем уақыты келді / қарыз қалды"></textarea>
+            <button class="btn ok" style="margin-top:12px">WhatsApp ашу</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="between"><div style="font-size:22px;font-weight:900">Төлем тарихы</div><button class="btn secondary">PDF жүктеу</button></div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Оқушы</th><th>Төлеген күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th></tr></thead>
+              <tbody><tr><td>Айсана</td><td>2026-03-01</td><td>2026-04-01</td><td>25 000 ₸</td><td class="status-ok">Төленді</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="finance" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Кіріс / Шығыс / Жалақы</div>
+            <div class="form-grid">
+              <select class="select"><option>Кіріс</option><option>Шығыс</option><option>Жалақы</option></select>
+              <input class="input" placeholder="Суммасы" />
+              <input class="input" type="date" />
+              <input class="input" placeholder="Кімге/неге/кімнен" />
+              <input class="input" placeholder="Категория" />
+              <textarea class="textarea" placeholder="Ескерту"></textarea>
+            </div>
+            <button class="btn primary" style="margin-top:12px">Сақтау</button>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Есеп жүйесі</div>
+            <div class="grid g3">
+              <div class="item"><strong>Кіріс</strong><div class="muted">1 250 000 ₸</div></div>
+              <div class="item"><strong>Шығыс</strong><div class="muted">430 000 ₸</div></div>
+              <div class="item"><strong>Таза</strong><div class="muted">820 000 ₸</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="online-courses" class="section">
+        <div class="card">
+          <div class="between"><div style="font-size:22px;font-weight:900">Онлайн курстар</div><button class="btn secondary">Portal ссылка: https://eduonline-delta.vercel.app/</button></div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Курс</th><th>Мұғалім</th><th>Бағасы</th><th>Модуль</th></tr></thead>
+              <tbody><tr><td>Робототехника</td><td>Teacher</td><td>44 444 ₸</td><td>3</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="online-upload" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Курс жасау</div>
+            <div class="form-grid">
+              <input class="input" placeholder="Курс атауы" />
+              <input class="input" placeholder="Бағасы" />
+              <textarea class="textarea" placeholder="Сипаттамасы"></textarea>
+            </div>
+            <button class="btn primary" style="margin-top:12px">Сақтау</button>
+          </div>
+
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Модуль және жүктеу</div>
+            <div class="form-grid">
+              <select class="select"><option>Курс</option></select>
+              <input class="input" placeholder="Модуль" />
+              <button class="btn secondary">Модуль қосу</button>
+              <input class="input" placeholder="Сабақ атауы" />
+              <input class="input" placeholder="Ұзақтығы" />
+              <select class="select"><option>YouTube</option><option>Файл</option><option>Ссылка</option></select>
+              <input class="input" placeholder="YouTube ссылка" />
+              <input class="input" type="file" />
+            </div>
+            <button class="btn ok" style="margin-top:12px">Сабақ қосу</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">Тест жасау</div>
+          <div class="form-grid">
+            <select class="select"><option>Сабақ аты</option></select>
+            <input class="input" placeholder="Сұрақ" />
+            <input class="input" placeholder="Жауап 1" />
+            <input class="input" placeholder="Жауап 2" />
+            <input class="input" placeholder="Жауап 3" />
+            <input class="input" placeholder="Жауап 4" />
+            <input class="input" placeholder="Дұрыс жауап" />
+          </div>
+          <button class="btn purple" style="margin-top:12px">Тест сұрақ қосу</button>
+        </div>
+      </section>
+
+      <section id="online-students" class="section">
+        <div class="card">
+          <div class="between"><div style="font-size:22px;font-weight:900">Онлайн оқушылар</div><input class="input" style="max-width:260px" placeholder="Іздеу" /></div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Аты</th><th>Телефон</th><th>Email</th><th>Код</th><th>Пин</th><th>Курсы</th><th>Онлайн прогресі</th></tr></thead>
+              <tbody><tr><td>Demo Student</td><td>+7 777 123 45 67</td><td>demo@mail.com</td><td>EDU1001</td><td>1111</td><td>Робототехника</td><td>64%</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="online-journal" class="section">
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">Онлайн журнал</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Оқушы</th><th>Сабақ</th><th>Күні</th><th>Уақыты</th><th>Статус</th></tr></thead>
+              <tbody><tr><td>Demo Student</td><td>Модуль 1</td><td>2026-03-28</td><td>14:20</td><td class="status-ok">Оқыды</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="online-payments" class="section">
+        <div class="card">
+          <div class="between"><div style="font-size:22px;font-weight:900">Онлайн төлемдер</div><input class="input" style="max-width:260px" placeholder="Іздеу" /></div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Оқушы</th><th>Курс</th><th>Суммасы</th><th>Күні</th><th>Әрекет</th></tr></thead>
+              <tbody><tr><td>Demo Student</td><td>Робототехника</td><td>44 444 ₸</td><td>2026-03-28</td><td><button class="btn ok">Доступ ашу</button></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="staff" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Қызметкер шақыру</div>
+            <div class="form-grid">
+              <input class="input" placeholder="Аты" />
+              <input class="input" placeholder="Email" />
+              <select class="select"><option>Рөлі</option><option>Директор</option><option>Мұғалім</option><option>Админ</option></select>
+              <input class="input" type="password" placeholder="Құпия сөз" />
+              <select class="select"><option>Филиал</option></select>
+            </div>
+            <button class="btn primary" style="margin-top:12px">Сақтау</button>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Қызметкерлер тізімі</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Аты</th><th>Email</th><th>Рөл</th><th>Филиал</th><th>Әрекет</th></tr></thead>
+                <tbody><tr><td>Ержан</td><td>teacher@edu.kz</td><td>Мұғалім</td><td>Бас филиал</td><td>Редакт / Сақтау / Өшіру</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="branches" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Филиал қосу</div>
+            <div class="form-grid">
+              <input class="input" placeholder="Аты" />
+              <input class="input" placeholder="Қала" />
+              <input class="input" placeholder="Мекенжай" />
+              <input class="input" placeholder="Телефон" />
+            </div>
+            <button class="btn primary" style="margin-top:12px">Сақтау</button>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Филиалдар тізімі</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Аты</th><th>Қала</th><th>Мекенжай</th><th>Телефон</th><th>Әрекет</th></tr></thead>
+                <tbody><tr><td>Бас филиал</td><td>Өскемен</td><td>Абай 1</td><td>+7 777 000 00 00</td><td>Редакт / Сақтау / Өшіру</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="parent" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Ата-ана панелі</div>
+            <div class="grid g3">
+              <div class="item"><strong>Қатысқан күні</strong><div class="muted">2026-03-28</div></div>
+              <div class="item"><strong>Келесі төлем</strong><div class="muted">2026-04-01</div></div>
+              <div class="item"><strong>Қарыз</strong><div class="muted">0 ₸</div></div>
+              <div class="item"><strong>Соңғы төлем</strong><div class="muted">25 000 ₸</div></div>
+              <div class="item"><strong>Тест нәтижесі</strong><div class="muted">87%</div></div>
+              <div class="item"><strong>Мұғалім пікірі</strong><div class="muted">Жақсы</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Төлем жасау</div>
+            <div class="notice">Банк ссылкасы арқылы төлемге өтеді.</div>
+            <button class="btn ok">Төлем ссылкасын ашу</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const authTabs = document.querySelectorAll('.tab[data-auth]');
+    const authMap = {
+      login:'loginBox',
+      register:'registerBox',
+      parent:'parentBox'
+    };
+    authTabs.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        authTabs.forEach(x=>x.classList.remove('active'));
+        btn.classList.add('active');
+        Object.values(authMap).forEach(id=>document.getElementById(id).classList.add('hidden'));
+        document.getElementById(authMap[btn.dataset.auth]).classList.remove('hidden');
+      });
+    });
+
+    const nav = document.querySelectorAll('.nav-btn[data-section]');
+    const sections = document.querySelectorAll('.section');
+    const titleMap = {
+      dashboard:['Басты бет','CRM толық басқару панелі'],
+      tariff:['Тариф таңдау','Тарифке байланысты доступ'],
+      leads:['CRM лидтар','Лид басқару'],
+      students:['Оқушылар','Оқушы базасы'],
+      groups:['Топтар','Топ және кесте'],
+      journal:['Журнал','Күнтізбе және қатысу'],
+      progress:['Прогресс','Үй тапсырма, тест, пікір'],
+      payments:['Төлем','Тарих және PDF'],
+      finance:['Кіріс/шығыс','Ақша айналымы'],
+      'online-courses':['Онлайн курстар','Портал ссылка'],
+      'online-upload':['Онлайн сабақ жүктеу','Курс, модуль, тест'],
+      'online-students':['Онлайн оқушылар','Online тізім'],
+      'online-journal':['Онлайн журнал','Оқу уақыты'],
+      'online-payments':['Онлайн төлемдер','Доступ ашу'],
+      staff:['Қызметкерлер','Рөл және филиал'],
+      branches:['Филиалдар','Филиал басқару'],
+      parent:['Ата-ана панелі','Екі порталдағы ақпарат']
+    };
+    nav.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        if(btn.classList.contains('disabled')) return;
+        nav.forEach(x=>x.classList.remove('active'));
+        btn.classList.add('active');
+        sections.forEach(s=>s.classList.remove('active'));
+        document.getElementById(btn.dataset.section).classList.add('active');
+        document.getElementById('pageTitle').textContent = titleMap[btn.dataset.section][0];
+        document.getElementById('pageSub').textContent = titleMap[btn.dataset.section][1];
+      });
+    });
+
+    function openPortal(){
+      document.getElementById('authView').classList.add('hidden');
+      document.getElementById('portalView').classList.remove('hidden');
+      applyTariff();
+    }
+
+    const tariffFeatures = {
+      demo: [],
+      econom: ['students','groups','journal','staff','branches'],
+      standard: ['leads','students','groups','journal','progress','payments','staff','branches','finance'],
+      pro: ['leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','staff','branches','tariff'],
+      online: ['online-courses','online-upload','online-students','online-journal','online-payments','tariff']
+    };
+
+    function applyTariff(){
+      const t = document.getElementById('tariffSelect').value;
+      const active = tariffFeatures[t] || [];
+      document.getElementById('tariffChip').textContent = 'Тариф: ' + t;
+      document.getElementById('modeChip').textContent = t === 'demo' ? 'Режим: Read only' : 'Режим: Full access';
+      document.querySelectorAll('.plan').forEach(p=>p.classList.toggle('active',p.dataset.plan===t));
+
+      document.querySelectorAll('.nav-btn[data-section]').forEach(btn=>{
+        const key = btn.dataset.section;
+        if(key === 'dashboard' || key === 'parent'){
+          btn.classList.remove('disabled');
+          return;
+        }
+        if(t === 'demo'){
+          btn.classList.add('disabled');
+        } else if(active.includes(key)){
+          btn.classList.remove('disabled');
+        } else {
+          btn.classList.add('disabled');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
