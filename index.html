@@ -1,181 +1,761 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="kk">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Edukz CRM Portal</title>
-<style>
-:root{--bg:#f4f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--green:#16a34a;--orange:#ea580c;--red:#dc2626;--nav:#0f172a}
-*{box-sizing:border-box} body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
-.header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
-.wrap{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 61px)}
-.sidebar{background:var(--nav);color:#fff;padding:18px}
-.brand{font-size:28px;font-weight:800;margin-bottom:18px}.center-pill{padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:14px;font-size:14px;margin-bottom:12px}
-.menu button{display:block;width:100%;text-align:left;background:transparent;color:#cbd5e1;border:0;padding:11px 12px;border-radius:12px;font-size:15px;cursor:pointer;margin-bottom:6px}.menu button.active,.menu button:hover{background:rgba(255,255,255,.1);color:#fff}
-.main{padding:20px}.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
-.kpi{font-size:30px;font-weight:800}.muted{color:var(--muted)}h2{margin:0 0 12px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.btn{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:11px 14px;font-weight:700;cursor:pointer}.btn.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}.btn.green{background:var(--green)}.btn.orange{background:var(--orange)}.btn.red{background:var(--red)}
-input,select,textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;font-size:15px;background:#fff} textarea{min-height:100px}
-.form2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:top}.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}.b-pending{background:#fff7ed;color:#c2410c}.b-open{background:#eff6ff;color:#1d4ed8}.b-paid{background:#ecfdf5;color:#166534}.b-closed{background:#f1f5f9;color:#475569}.b-lock{background:#fef2f2;color:#b91c1c}
-.two{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.hidden{display:none}@media(max-width:960px){.wrap{grid-template-columns:1fr}.sidebar{display:none}.two{grid-template-columns:1fr}}
-.note{padding:12px 14px;border-radius:14px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe}
-.small{font-size:13px}.module-lock{opacity:.6;pointer-events:none;filter:grayscale(0.1)}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EduKZ Online Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f4f7fb;--card:#fff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;
+      --primary:#2563eb;--primary2:#1d4ed8;--green:#16a34a;--purple:#7c3aed;--red:#dc2626;
+      --shadow:0 18px 40px rgba(15,23,42,.08);--radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,#f8fbff 0%,var(--bg) 100%);color:var(--text)}
+    .hidden{display:none!important}
+    .auth-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+    .auth-card{width:min(1100px,100%);display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .card,.topbar{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card{padding:18px}
+    .hero{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff}
+    .hero h1{font-size:34px;margin:0 0 10px}
+    .hero p{color:#cbd5e1;line-height:1.55}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .tabs button,.btn{padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;cursor:pointer;font:inherit;font-weight:800}
+    .tabs button.active,.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:none}
+    .btn.green{background:var(--green);color:#fff;border:none}.btn.purple{background:var(--purple);color:#fff;border:none}.btn.red{background:var(--red);color:#fff;border:none}
+    .input,.select,.textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit}
+    .textarea{min-height:96px}
+    .grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}.g4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+    .form-row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+    .notice{padding:12px 14px;border-radius:14px;margin-bottom:12px;font-size:14px}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}
+    .app{display:flex;min-height:100vh}.sidebar{width:270px;background:#0f172a;color:#fff;padding:20px;height:100vh;overflow:auto;position:sticky;top:0}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}.logo{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:grid;place-items:center;font-weight:900}
+    .side-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);border-radius:18px;padding:14px;margin-bottom:16px}
+    .nav-btn{width:100%;text-align:left;border:none;background:transparent;color:#fff;padding:12px 14px;border-radius:14px;cursor:pointer;font:inherit;font-weight:700;margin-bottom:6px}
+    .nav-btn.active,.nav-btn:hover{background:rgba(255,255,255,.1)}
+    .main{flex:1;padding:22px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;margin-bottom:16px}
+    .section{display:none}.section.active{display:block}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px} table{width:100%;border-collapse:collapse;min-width:720px}
+    th,td{padding:12px;border-bottom:1px solid #edf2f7;text-align:left} th{font-size:12px;color:var(--muted);background:#fafcff;text-transform:uppercase}
+    .kpi .label{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase}.kpi .value{font-size:28px;font-weight:900;margin-top:8px}
+    .video-box{width:100%;aspect-ratio:16/9;border-radius:18px;background:#0f172a;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff}
+    .video-box iframe,.video-box video{width:100%;height:100%;border:none;background:#000}
+    .progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}.progress>div{height:100%;background:#111827}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px}
+    .small{font-size:12px;color:var(--muted)}
+    .item{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+    .between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    @media (max-width: 980px){
+      .auth-card{grid-template-columns:1fr}
+      .app{display:block}.sidebar{width:auto;height:auto;position:relative}.main{padding:16px}
+    }
+  </style>
 </head>
 <body>
-<div class="header">
-  <div><strong>Edukz CRM Portal</strong> <span class="muted">• орталық басқару</span></div>
-  <div id="topSummary" class="muted small"></div>
+<div id="authShell" class="auth-wrap">
+  <div class="auth-card">
+    <div class="card hero">
+      <h1>EduKZ Online Portal</h1>
+      <p>Онлайн курс, видео сабақ, тест, төлем және CRM-мен байланыс. Директор, мұғалім, админ — EduKZ CRM аккаунтымен кіреді. Оқушы — онлайн портал арқылы тіркеледі.</p>
+      <div class="small" style="color:#cbd5e1">Бір auth — екі портал. Staff логині бөлек емес.</div>
+    </div>
+    <div class="card">
+      <div id="authNotice" class="notice hidden"></div>
+      <div class="tabs">
+        <button id="tabStaff" class="active">CRM staff кіруі</button>
+        <button id="tabStudentReg">Оқушы тіркелуі</button>
+        <button id="tabStudentLogin">Оқушы кіруі</button>
+      </div>
+
+      <div id="staffBox">
+        <div class="form-row">
+          <input id="staffEmail" class="input" placeholder="CRM email">
+          <input id="staffPassword" class="input" type="password" placeholder="Құпиясөз">
+        </div>
+        <button id="staffLoginBtn" class="btn primary" style="margin-top:12px">Кіру</button>
+      </div>
+
+      <div id="studentRegBox" class="hidden">
+        <div class="form-row">
+          <input id="regName" class="input" placeholder="Аты-жөні">
+          <input id="regPhone" class="input" placeholder="Телефон">
+          <input id="regEmail" class="input" placeholder="Email">
+          <select id="regTenant" class="select"></select>
+          <input id="regPassword" class="input" type="password" placeholder="Құпиясөз">
+        </div>
+        <button id="registerBtn" class="btn primary" style="margin-top:12px">Тіркелу</button>
+      </div>
+
+      <div id="studentLoginBox" class="hidden">
+        <div class="form-row">
+          <input id="studentEmail" class="input" placeholder="Email">
+          <input id="studentPassword" class="input" type="password" placeholder="Құпиясөз">
+        </div>
+        <button id="studentLoginBtn" class="btn primary" style="margin-top:12px">Кіру</button>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="wrap">
+
+<div id="appShell" class="app hidden">
   <aside class="sidebar">
-    <div class="brand">Edukz</div>
-    <div class="center-pill" id="centerInfo"></div>
-    <div class="menu" id="menu"></div>
+    <div class="brand">
+      <div class="logo">EO</div>
+      <div><div style="font-size:22px;font-weight:900">EduKZ Online</div><div id="sideRole" class="small" style="color:#cbd5e1">—</div></div>
+    </div>
+    <div class="side-card">
+      <div id="sideTenant">Орталық: —</div>
+      <div id="sideUser" style="margin-top:6px;color:#cbd5e1">Пайдаланушы: —</div>
+    </div>
+
+    <button class="nav-btn active" data-section="dashboard">Басты бет</button>
+    <button class="nav-btn" data-section="catalog">Курстар</button>
+    <button class="nav-btn" data-section="lesson">Сабақ</button>
+    <button class="nav-btn teacher-only" data-section="builder">Курс құрастыру</button>
+    <button class="nav-btn teacher-only" data-section="tests">Тесттер</button>
+    <button class="nav-btn" data-section="payments">Төлемдер</button>
+    <button class="nav-btn teacher-only" data-section="crm">CRM sync</button>
+    <button id="logoutBtn" class="nav-btn">Шығу</button>
   </aside>
+
   <main class="main">
-    <section id="dashboard" class="page"></section>
-    <section id="students" class="page hidden"></section>
-    <section id="journal" class="page hidden"></section>
-    <section id="staff" class="page hidden"></section>
-    <section id="requests" class="page hidden"></section>
-    <section id="courses" class="page hidden"></section>
-    <section id="online_students" class="page hidden"></section>
-    <section id="settings" class="page hidden"></section>
+    <div class="topbar">
+      <div>
+        <div id="pageTitle" style="font-size:30px;font-weight:900">Басты бет</div>
+        <div id="pageSub" class="small">Online learning</div>
+      </div>
+      <div>
+        <span class="pill" id="tenantChip">Орталық: —</span>
+        <span class="pill" id="roleChip">Рөл: —</span>
+      </div>
+    </div>
+
+    <section id="dashboard" class="section active">
+      <div class="grid g4" id="dashboardKpis"></div>
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card" id="dashboardLeft"></div>
+        <div class="card" id="dashboardRight"></div>
+      </div>
+    </section>
+
+    <section id="catalog" class="section">
+      <div class="card">
+        <div style="font-size:22px;font-weight:900;margin-bottom:12px">Курстар каталогы</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Курс</th><th>Мұғалім</th><th>Баға</th><th>Әрекет</th></tr></thead>
+            <tbody id="catalogBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="lesson" class="section">
+      <div class="grid g2">
+        <div class="card">
+          <div id="lessonTitle" style="font-size:22px;font-weight:900;margin-bottom:12px">Сабақ</div>
+          <div id="lessonPlayer" class="video-box"></div>
+          <div id="lessonMeta" style="margin-top:12px"></div>
+          <div id="lessonActions" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">Сабақтар</div>
+          <div id="lessonList"></div>
+          <div id="testWrap" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="builder" class="section">
+      <div class="grid g2">
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">Курс жасау</div>
+          <div class="form-row">
+            <input id="courseTitle" class="input" placeholder="Курс атауы">
+            <input id="coursePrice" class="input" type="number" placeholder="Бағасы">
+            <textarea id="courseDesc" class="textarea" placeholder="Сипаттама"></textarea>
+          </div>
+          <button id="saveCourseBtn" class="btn primary" style="margin-top:12px">Курс сақтау</button>
+        </div>
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">Модуль және сабақ</div>
+          <div class="form-row">
+            <select id="builderCourse" class="select"></select>
+            <input id="moduleTitle" class="input" placeholder="Модуль атауы">
+            <button id="saveModuleBtn" class="btn primary">Модуль қосу</button>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+
+          <div class="form-row">
+            <select id="builderModule" class="select"></select>
+            <input id="lessonTitleInput" class="input" placeholder="Сабақ атауы">
+            <input id="lessonDurationInput" class="input" placeholder="Ұзақтығы">
+            <select id="lessonMode" class="select">
+              <option value="youtube">YouTube</option>
+              <option value="upload">Файл / ссылка</option>
+            </select>
+            <input id="youtubeUrl" class="input" placeholder="https://youtube.com/watch?v=...">
+            <input id="videoUrl" class="input hidden" placeholder="https://...mp4">
+            <input id="videoFile" class="input hidden" type="file" accept="video/*">
+          </div>
+          <button id="saveLessonBtn" class="btn green" style="margin-top:12px">Сабақ қосу</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tests" class="section">
+      <div class="card">
+        <div style="font-size:22px;font-weight:900;margin-bottom:12px">Тест жасау</div>
+        <div class="form-row">
+          <select id="testLesson" class="select"></select>
+          <input id="testQuestion" class="input" placeholder="Сұрақ">
+          <input id="testA" class="input" placeholder="Жауап 1">
+          <input id="testB" class="input" placeholder="Жауап 2">
+          <input id="testC" class="input" placeholder="Жауап 3">
+          <select id="testCorrect" class="select">
+            <option value="0">1-дұрыс</option>
+            <option value="1">2-дұрыс</option>
+            <option value="2">3-дұрыс</option>
+          </select>
+        </div>
+        <button id="saveTestBtn" class="btn purple" style="margin-top:12px">Тест сұрағын қосу</button>
+
+        <div class="table-wrap" style="margin-top:16px">
+          <table>
+            <thead><tr><th>Сабақ</th><th>Сұрақ саны</th></tr></thead>
+            <tbody id="testsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="payments" class="section">
+      <div class="card">
+        <div style="font-size:22px;font-weight:900;margin-bottom:12px">Төлемдер</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Кім</th><th>Курс</th><th>Сома</th><th>Күні</th><th>CRM</th></tr></thead>
+            <tbody id="paymentsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="crm" class="section">
+      <div class="grid g2">
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">CRM студенттері</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Аты</th><th>Телефон</th><th>Орталық</th></tr></thead>
+              <tbody id="crmStudentsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">CRM жазбалар</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Түрі</th><th>Кім</th><th>Мәні</th></tr></thead>
+              <tbody id="crmSyncBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
+
 <script>
-const LS = {
-  founder:'edukz_founder_state_v5',
-  crm:'edukz_crm_state_v5',
-  student:'edukz_student_state_v5'
+const SUPABASE_URL='https://octuoiwqmsoryglxuznt.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jdHVvaXdxbXNvcnlnbHh1em50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NjcyMjMsImV4cCI6MjA4OTA0MzIyM30.GncMSFyyQLLtMu5bUyfju-qN8-F32yky_Q2-nKMD82g';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let session=null, profile=null;
+let activeSection='dashboard';
+let currentCourseId=null, currentLessonId=null;
+
+let data={
+  tenants:[], profiles:[], students:[], payments:[], education_records:[],
+  online_students:[], online_courses:[], online_modules:[], online_lessons:[],
+  online_tests:[], online_enrollments:[], online_payments:[], online_progress:[]
 };
-function seed(){
-  if(!localStorage.getItem(LS.founder)){
-    const founder={
-      centers:[
-        {id:'c1',name:'Demo EduKZ',owner:'Altaiyr',phone:'+7 777 000 00 00',email:'demo@edukz.kz',tariff:'pro',status:'approved',paymentLink:'https://pay.kaspi.kz/pay/demo123',paymentLabel:'Kaspi төлем',modules:['students','journal','staff','requests','courses','online_students','settings']}
-      ]
-    };
-    localStorage.setItem(LS.founder,JSON.stringify(founder));
-  }
-  if(!localStorage.getItem(LS.crm)){
-    const crm={
-      activeCenterId:'c1',
-      students:[
-        {id:'s1',centerId:'c1',fullName:'Айару Т.',phone:'+7 777 111 11 11',code:'EDU1001',pin:'1111',status:'Белсенді'},
-        {id:'s2',centerId:'c1',fullName:'Нұрлан А.',phone:'+7 777 222 22 22',code:'EDU1002',pin:'2222',status:'Белсенді'}
-      ],
-      staff:[{id:'t1',centerId:'c1',name:'Teacher',role:'Мұғалім',phone:'+7 701 000 00 01'}],
-      journal:[{id:'j1',centerId:'c1',student:'Айару Т.',date:'2026-03-25',status:'Қатысты'}],
-      courses:[
-        {id:'oc1',centerId:'c1',title:'Математика 7-сынып',price:44444,teacher:'Teacher',portalUrl:'https://eduonline-delta.vercel.app/'},
-        {id:'oc2',centerId:'c1',title:'Ағылшын Beginner',price:30000,teacher:'Teacher',portalUrl:'https://eduonline-delta.vercel.app/'}
-      ],
-      requests:[
-        {id:'r1',centerId:'c1',studentId:'s1',student:'Айару Т.',courseId:'oc1',course:'Математика 7-сынып',price:44444,paymentStatus:'pending',accessStatus:'closed',proofSent:false,createdAt:new Date().toISOString()}
-      ],
-      enrollments:[]
-    };
-    localStorage.setItem(LS.crm,JSON.stringify(crm));
-  }
-  if(!localStorage.getItem(LS.student)){
-    const student={activeCenterId:'c1', profile:{centerId:'c1',fullName:'Айару Т.',phone:'+7 777 111 11 11',email:'a@edu.kz',code:'EDU1001',pin:'1111'}};
-    localStorage.setItem(LS.student,JSON.stringify(student));
-  }
-}
-seed();
-function getFounder(){return JSON.parse(localStorage.getItem(LS.founder)||'{}')}
-function getCRM(){return JSON.parse(localStorage.getItem(LS.crm)||'{}')}
-function saveCRM(v){localStorage.setItem(LS.crm,JSON.stringify(v))}
-function activeCenter(){const f=getFounder(), c=getCRM();return f.centers.find(x=>x.id===c.activeCenterId)||f.centers[0]}
-const tariffModules={
-  starter:['students','journal','staff'],
-  standard:['students','journal','staff','requests','settings'],
-  pro:['students','journal','staff','requests','courses','online_students','settings'],
-  online_only:['courses','online_students','requests','settings']
+
+const titles={
+  dashboard:['Басты бет','Жалпы шолу'],
+  catalog:['Курстар','Каталог'],
+  lesson:['Сабақ','Видео және тест'],
+  builder:['Курс құрастыру','Мұғалім панелі'],
+  tests:['Тесттер','Мұғалім панелі'],
+  payments:['Төлемдер','Онлайн төлемдер'],
+  crm:['CRM sync','CRM байланысы']
 };
-const labels={dashboard:'Басқару тақтасы',students:'Оқушылар',journal:'Журнал',staff:'Қызметкерлер',requests:'Өтінімдер / Төлем',courses:'Онлайн курс',online_students:'Онлайн оқушылар',settings:'Баптаулар'};
-function fmt(n){return new Intl.NumberFormat('kk-KZ').format(n)+' ₸'}
-function badge(type,text){return `<span class="badge ${type}">${text}</span>`}
-function renderMenu(){
-  const c=activeCenter();
-  const allowed=tariffModules[c.tariff]||[];
-  const menu=document.getElementById('menu');
-  document.getElementById('centerInfo').innerHTML=`<div><strong>${c.name}</strong></div><div class="small">Тариф: ${c.tariff}</div>`;
-  const items=['dashboard','students','journal','staff','requests','courses','online_students','settings'];
-  menu.innerHTML=items.map(id=>{
-    const locked=id!=='dashboard' && !allowed.includes(id);
-    return `<button class="${id==='dashboard'?'active':''} ${locked?'module-lock':''}" data-page="${id}">${labels[id]} ${locked?'🔒':''}</button>`;
-  }).join('');
-  menu.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.classList.contains('module-lock')) return; menu.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); showPage(b.dataset.page)})
+
+const val=id=>document.getElementById(id).value.trim();
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=v=>`${Number(v||0).toLocaleString('ru-RU')} ₸`;
+
+function showNotice(msg,type='ok'){
+  const el=document.getElementById('authNotice');
+  el.className='notice '+type;
+  el.textContent=msg;
+  el.classList.remove('hidden');
 }
-function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden')}
+function hideNotice(){
+  const el=document.getElementById('authNotice');
+  el.className='notice hidden';
+  el.textContent='';
+}
+
+function ytId(url){
+  try{
+    const u=new URL(url);
+    if(u.hostname.includes('youtu.be')) return u.pathname.slice(1);
+    return u.searchParams.get('v')||'';
+  }catch{return ''}
+}
+
+async function loadData(){
+  const res = await Promise.all([
+    sb.from('tenants').select('*').order('created_at',{ascending:false}),
+    sb.from('profiles').select('*').order('created_at',{ascending:false}),
+    sb.from('students').select('*').order('created_at',{ascending:false}),
+    sb.from('payments').select('*').order('created_at',{ascending:false}),
+    sb.from('education_records').select('*').order('created_at',{ascending:false}),
+    sb.from('online_students').select('*').order('created_at',{ascending:false}),
+    sb.from('online_courses').select('*').order('created_at',{ascending:false}),
+    sb.from('online_modules').select('*').order('created_at',{ascending:false}),
+    sb.from('online_lessons').select('*').order('created_at',{ascending:false}),
+    sb.from('online_tests').select('*').order('created_at',{ascending:false}),
+    sb.from('online_enrollments').select('*').order('created_at',{ascending:false}),
+    sb.from('online_payments').select('*').order('created_at',{ascending:false}),
+    sb.from('online_progress').select('*').order('created_at',{ascending:false})
+  ]);
+  [
+    data.tenants,data.profiles,data.students,data.payments,data.education_records,
+    data.online_students,data.online_courses,data.online_modules,data.online_lessons,
+    data.online_tests,data.online_enrollments,data.online_payments,data.online_progress
+  ] = res.map(x=>x.data||[]);
+}
+
+function allowedStaffRoles(role){
+  return ['director','teacher','admin'].includes(role);
+}
+
+function myTenantId(){
+  return profile?.tenant_id || session?.tenant_id || null;
+}
+function myTenantName(){
+  return (data.tenants.find(x=>x.id===myTenantId())||{}).name || '—';
+}
+function myCourses(){ return data.online_courses.filter(x=>x.tenant_id===myTenantId()) }
+function myModules(courseId){ return data.online_modules.filter(x=>x.course_id===courseId) }
+function myLessons(moduleId){ return data.online_lessons.filter(x=>x.module_id===moduleId) }
+function lessonTests(lessonId){ return data.online_tests.filter(x=>x.lesson_id===lessonId) }
+function myEnrollment(courseId){
+  return data.online_enrollments.find(x=>x.online_student_id===session?.online_student_id && x.course_id===courseId && x.status==='active');
+}
+function myProgress(lessonId){
+  return data.online_progress.find(x=>x.online_student_id===session?.online_student_id && x.lesson_id===lessonId);
+}
+
+function switchTab(type){
+  document.getElementById('staffBox').classList.toggle('hidden',type!=='staff');
+  document.getElementById('studentRegBox').classList.toggle('hidden',type!=='student-reg');
+  document.getElementById('studentLoginBox').classList.toggle('hidden',type!=='student-login');
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  if(type==='staff') document.getElementById('tabStaff').classList.add('active');
+  if(type==='student-reg') document.getElementById('tabStudentReg').classList.add('active');
+  if(type==='student-login') document.getElementById('tabStudentLogin').classList.add('active');
+  hideNotice();
+}
+
+async function fillTenants(){
+  await loadData();
+  const rows=data.tenants.filter(x=>x.online_enabled !== false && x.status !== 'blocked');
+  document.getElementById('regTenant').innerHTML = rows.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.city||'')}</option>`).join('') || '<option value="">Орталық жоқ</option>';
+}
+
+async function staffLogin(){
+  hideNotice();
+  const email=val('staffEmail').toLowerCase();
+  const password=val('staffPassword');
+  const auth=await sb.auth.signInWithPassword({email,password});
+  if(auth.error) return showNotice(auth.error.message,'err');
+
+  const userId=auth.data.user?.id;
+  const p=data.profiles.find(x=>x.user_id===userId && allowedStaffRoles(x.role));
+  if(!p) return showNotice('Бұл аккаунтқа online portal рұқсаты жоқ','err');
+
+  profile=p;
+  session={role:p.role, tenant_id:p.tenant_id, full_name:p.full_name, user_id:userId};
+  openApp();
+}
+
+async function registerStudent(){
+  hideNotice();
+  const full_name=val('regName');
+  const phone=val('regPhone');
+  const email=val('regEmail').toLowerCase();
+  const tenant_id=val('regTenant');
+  const password_plain=val('regPassword');
+  if(!full_name||!phone||!email||!tenant_id||!password_plain) return showNotice('Барлық өрісті толтыр','err');
+
+  const exists=data.online_students.find(x=>String(x.email||'').toLowerCase()===email);
+  if(exists) return showNotice('Бұл email бұрын тіркелген','err');
+
+  const onlineStudent = await sb.from('online_students').insert({
+    tenant_id, full_name, phone, email, password_plain, status:'active'
+  }).select().single();
+  if(onlineStudent.error) return showNotice(onlineStudent.error.message,'err');
+
+  const studentCode='ONL-'+Date.now();
+  const pin=String(Math.floor(1000+Math.random()*9000));
+  const crmStudent = await sb.from('students').insert({
+    tenant_id, full_name, phone, direction:'online', student_code:studentCode, pin_code:pin, status:'Белсенді', debt_amount:0, monthly_fee:0
+  }).select().single();
+  if(crmStudent.error) return showNotice(crmStudent.error.message,'err');
+
+  await sb.from('online_students').update({crm_student_id:crmStudent.data.id}).eq('id',onlineStudent.data.id);
+  await loadData();
+
+  session={role:'student', tenant_id, full_name, online_student_id:onlineStudent.data.id, crm_student_id:crmStudent.data.id};
+  profile={role:'student', tenant_id, full_name};
+  openApp();
+}
+
+async function studentLogin(){
+  hideNotice();
+  const email=val('studentEmail').toLowerCase();
+  const password=val('studentPassword');
+  const found=data.online_students.find(x=>String(x.email||'').toLowerCase()===email && String(x.password_plain||'')===password);
+  if(!found) return showNotice('Оқушы email немесе құпиясөз қате','err');
+
+  session={role:'student', tenant_id:found.tenant_id, full_name:found.full_name, online_student_id:found.id, crm_student_id:found.crm_student_id};
+  profile={role:'student', tenant_id:found.tenant_id, full_name:found.full_name};
+  openApp();
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  session=null; profile=null;
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('authShell').classList.remove('hidden');
+  switchTab('staff');
+}
+
+function applyRoleUI(){
+  const isStaff = allowedStaffRoles(profile?.role||session?.role);
+  document.querySelectorAll('.teacher-only').forEach(x=>x.classList.toggle('hidden',!isStaff));
+  if(!isStaff && ['builder','tests','crm'].includes(activeSection)) activeSection='dashboard';
+  document.getElementById('sideRole').textContent='Рөл: '+(profile?.role||session?.role||'—');
+  document.getElementById('sideTenant').textContent='Орталық: '+myTenantName();
+  document.getElementById('sideUser').textContent='Пайдаланушы: '+(profile?.full_name||session?.full_name||'—');
+  document.getElementById('tenantChip').textContent='Орталық: '+myTenantName();
+  document.getElementById('roleChip').textContent='Рөл: '+(profile?.role||session?.role||'—');
+  setSection(activeSection);
+}
+
+function openApp(){
+  document.getElementById('authShell').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  applyRoleUI();
+}
+
+function setSection(id){
+  activeSection=id;
+  document.querySelectorAll('.nav-btn[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===id));
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));
+  document.getElementById('pageTitle').textContent=titles[id][0];
+  document.getElementById('pageSub').textContent=titles[id][1];
+  renderAll();
+}
+
 function renderDashboard(){
-  const crm=getCRM(), c=activeCenter();
-  const reqs=crm.requests.filter(x=>x.centerId===c.id), paid=reqs.filter(x=>x.paymentStatus==='paid').length, open=reqs.filter(x=>x.accessStatus==='active').length;
-  document.getElementById('topSummary').textContent=`${c.name} • тариф: ${c.tariff}`;
-  document.getElementById('dashboard').innerHTML=`
-    <div class="grid stats">
-      <div class="card"><div class="muted">Оқушылар</div><div class="kpi">${crm.students.filter(x=>x.centerId===c.id).length}</div></div>
-      <div class="card"><div class="muted">Онлайн курстар</div><div class="kpi">${crm.courses.filter(x=>x.centerId===c.id).length}</div></div>
-      <div class="card"><div class="muted">Төлем расталды</div><div class="kpi">${paid}</div></div>
-      <div class="card"><div class="muted">Ашық доступ</div><div class="kpi">${open}</div></div>
-    </div>
-    <div class="two" style="margin-top:16px">
-      <div class="card">
-        <h2>Негізгі логика</h2>
-        <div class="note">Оқушы Student Portal-да <strong>Сатып алу</strong> басады → орталықтың <strong>Kaspi/банк ссылкасына</strong> өтеді → <strong>Төледім</strong> жібереді → CRM-да тексеріледі → админ/мұғалім <strong>доступ ашады</strong>.</div>
-      </div>
-      <div class="card">
-        <h2>Орталық төлем ссылкасы</h2>
-        <div><strong>${c.paymentLabel||'Kaspi'}</strong></div>
-        <div class="muted small" style="word-break:break-all;margin:8px 0 12px">${c.paymentLink||'Ссылка қойылмаған'}</div>
-        <button class="btn secondary" onclick="showPage('settings');document.querySelector('[data-page=settings]')?.click()">Ссылканы өзгерту</button>
-      </div>
-    </div>`;
+  const isStaff=allowedStaffRoles(profile?.role||session?.role);
+  if(isStaff){
+    const rows=myCourses();
+    const pays=data.online_payments.filter(x=>x.tenant_id===myTenantId());
+    const students=data.online_students.filter(x=>x.tenant_id===myTenantId());
+    document.getElementById('dashboardKpis').innerHTML = [
+      ['Курс',rows.length],['Оқушы',students.length],['Төлем',money(pays.reduce((a,b)=>a+Number(b.amount||0),0))],['CRM student',data.students.filter(x=>x.tenant_id===myTenantId()).length]
+    ].map(x=>`<div class="card kpi"><div class="label">${x[0]}</div><div class="value">${x[1]}</div></div>`).join('');
+    document.getElementById('dashboardLeft').innerHTML=`<div style="font-size:22px;font-weight:900;margin-bottom:12px">Курстар</div><div class="table-wrap"><table><thead><tr><th>Курс</th><th>Баға</th><th>Модуль</th></tr></thead><tbody>${rows.map(c=>`<tr><td>${esc(c.title)}</td><td>${money(c.price)}</td><td>${myModules(c.id).length}</td></tr>`).join('')||'<tr><td colspan="3">Курс жоқ</td></tr>'}</tbody></table></div>`;
+    document.getElementById('dashboardRight').innerHTML=`<div style="font-size:22px;font-weight:900;margin-bottom:12px">Online summary</div><div class="item">Директор, мұғалім, админ — CRM логинмен кіреді.</div>`;
+  } else {
+    const myEnr=data.online_enrollments.filter(x=>x.online_student_id===session.online_student_id && x.status==='active');
+    const myPays=data.online_payments.filter(x=>x.online_student_id===session.online_student_id);
+    document.getElementById('dashboardKpis').innerHTML = [
+      ['Курсым',myEnr.length],['Төледім',money(myPays.reduce((a,b)=>a+Number(b.amount||0),0))],['Орталық',myTenantName()],['Рөл','student']
+    ].map(x=>`<div class="card kpi"><div class="label">${x[0]}</div><div class="value">${x[1]}</div></div>`).join('');
+    document.getElementById('dashboardLeft').innerHTML=`<div style="font-size:22px;font-weight:900;margin-bottom:12px">Менің курстарым</div><div class="table-wrap"><table><thead><tr><th>Курс</th><th>Прогресс</th><th>Ашу</th></tr></thead><tbody>${myEnr.map(e=>{const c=data.online_courses.find(x=>x.id===e.course_id); const lessons=myModules(c.id).flatMap(m=>myLessons(m.id)); const done=lessons.filter(l=>myProgress(l.id)?.completed).length; const pct=lessons.length?Math.round(done*100/lessons.length):0; return `<tr><td>${esc(c?.title||'—')}</td><td><div class="progress"><div style="width:${pct}%"></div></div></td><td><button class="btn primary" onclick="openCourse('${c.id}')">Ашу</button></td></tr>`}).join('')||'<tr><td colspan="3">Курс жоқ</td></tr>'}</tbody></table></div>`;
+    document.getElementById('dashboardRight').innerHTML=`<div style="font-size:22px;font-weight:900;margin-bottom:12px">Түсінік</div><div class="item">Видео бітсе — тест тапсырасың. 60%-дан жоғары болса сабақ аяқталған болып шығады.</div>`;
+  }
 }
-function renderStudents(){
-  const crm=getCRM(), c=activeCenter();
-  document.getElementById('students').innerHTML=`<div class="card"><h2>Оқушылар</h2><table class="table"><tr><th>Аты-жөні</th><th>Телефон</th><th>Код</th><th>PIN</th><th>Статус</th></tr>${crm.students.filter(x=>x.centerId===c.id).map(s=>`<tr><td>${s.fullName}</td><td>${s.phone}</td><td>${s.code}</td><td>${s.pin}</td><td>${badge('b-open',s.status)}</td></tr>`).join('')}</table></div>`;
+
+function renderCatalog(){
+  const rows=myCourses();
+  const isStaff=allowedStaffRoles(profile?.role||session?.role);
+  document.getElementById('catalogBody').innerHTML=rows.map(c=>{
+    const bought=isStaff?true:!!myEnrollment(c.id);
+    const act=isStaff?`<button class="btn primary" onclick="setSection('builder')">Өңдеу</button>`:bought?`<button class="btn primary" onclick="openCourse('${c.id}')">Кіру</button>`:`<button class="btn green" onclick="payCourse('${c.id}')">Төлеу</button>`;
+    return `<tr><td>${esc(c.title)}</td><td>${esc(c.teacher_name||'—')}</td><td>${money(c.price)}</td><td>${act}</td></tr>`;
+  }).join('') || '<tr><td colspan="4">Курс жоқ</td></tr>';
 }
-function renderJournal(){
- const crm=getCRM(),c=activeCenter();
- document.getElementById('journal').innerHTML=`<div class="card"><h2>Журнал</h2><table class="table"><tr><th>Оқушы</th><th>Күні</th><th>Белгі</th></tr>${crm.journal.filter(x=>x.centerId===c.id).map(j=>`<tr><td>${j.student}</td><td>${j.date}</td><td>${j.status}</td></tr>`).join('')}</table></div>`;
+
+function openCourse(courseId){
+  currentCourseId=courseId;
+  const firstModule=myModules(courseId)[0];
+  const firstLesson=firstModule?myLessons(firstModule.id)[0]:null;
+  currentLessonId=firstLesson?.id||null;
+  setSection('lesson');
 }
-function renderStaff(){
- const crm=getCRM(),c=activeCenter();
- document.getElementById('staff').innerHTML=`<div class="card"><h2>Қызметкерлер</h2><table class="table"><tr><th>Аты</th><th>Рөлі</th><th>Телефон</th></tr>${crm.staff.filter(x=>x.centerId===c.id).map(s=>`<tr><td>${s.name}</td><td>${s.role}</td><td>${s.phone}</td></tr>`).join('')}</table></div>`;
+
+function renderLesson(){
+  const course=data.online_courses.find(x=>x.id===currentCourseId) || myCourses()[0];
+  if(!course){
+    document.getElementById('lessonTitle').textContent='Сабақ';
+    document.getElementById('lessonPlayer').innerHTML='Курс жоқ';
+    document.getElementById('lessonList').innerHTML='';
+    document.getElementById('testWrap').innerHTML='';
+    return;
+  }
+  currentCourseId=course.id;
+  const modules=myModules(course.id);
+  const allLessons=modules.flatMap(m=>myLessons(m.id));
+  const lesson=data.online_lessons.find(x=>x.id===currentLessonId) || allLessons[0];
+  currentLessonId=lesson?.id||null;
+  const isStaff=allowedStaffRoles(profile?.role||session?.role);
+
+  document.getElementById('lessonTitle').textContent=course.title;
+  if(!lesson) {
+    document.getElementById('lessonPlayer').innerHTML='Сабақ жоқ';
+    document.getElementById('lessonList').innerHTML='';
+    document.getElementById('testWrap').innerHTML='';
+    return;
+  }
+
+  if(lesson.video_mode==='youtube'){
+    const id=ytId(lesson.youtube_url||'');
+    document.getElementById('lessonPlayer').innerHTML=id?`<iframe src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>`:'YouTube қате';
+  } else {
+    const src=lesson.video_data || lesson.video_url;
+    document.getElementById('lessonPlayer').innerHTML=src?`<video controls src="${esc(src)}"></video>`:'Видео жоқ';
+  }
+  document.getElementById('lessonMeta').innerHTML=`<strong>${esc(lesson.title)}</strong><div class="small">${esc(lesson.duration||'—')} • ${esc(lesson.video_mode||'—')}</div>`;
+
+  const hasAccess=isStaff || !!myEnrollment(course.id);
+  if(isStaff){
+    document.getElementById('lessonActions').innerHTML='<span class="pill">Teacher preview</span>';
+  } else if(!hasAccess){
+    document.getElementById('lessonActions').innerHTML='<div class="notice err">Алдымен төлем жаса</div>';
+  } else {
+    document.getElementById('lessonActions').innerHTML=`<button class="btn primary" onclick="markWatched('${lesson.id}')">Видео бітті</button>`;
+  }
+
+  document.getElementById('lessonList').innerHTML=allLessons.map(l=>{
+    const p=myProgress(l.id);
+    return `<div class="item" style="margin-bottom:10px"><div class="between"><div><strong>${esc(l.title)}</strong><div class="small">${esc(l.duration||'—')}</div></div><button class="btn primary" onclick="pickLesson('${l.id}')">Ашу</button></div>${p?`<div class="small" style="margin-top:8px">Аяқталды: ${p.completed?'иә':'жоқ'} ${p.test_score!=null?'• Тест: '+p.test_score+'%':''}</div>`:''}</div>`;
+  }).join('');
+
+  if(isStaff){
+    document.getElementById('testWrap').innerHTML='';
+    return;
+  }
+  const progress=myProgress(lesson.id);
+  if(!progress?.watched_video){
+    document.getElementById('testWrap').innerHTML='<div class="notice">Алдымен видеоны бітті деп белгіле</div>';
+    return;
+  }
+  const tests=lessonTests(lesson.id);
+  document.getElementById('testWrap').innerHTML=tests.length?`
+    <div style="font-size:22px;font-weight:900;margin-bottom:12px">Тест</div>
+    ${tests.map((t,i)=>`<div class="item" style="margin-bottom:10px"><strong>${i+1}. ${esc(t.question)}</strong><div style="margin-top:10px">${[t.answer_a,t.answer_b,t.answer_c].map((a,idx)=>`<label style="display:block;margin-bottom:6px"><input type="radio" name="q_${t.id}" value="${idx}"> ${esc(a)}</label>`).join('')}</div></div>`).join('')}
+    <button class="btn purple" onclick="submitTest('${lesson.id}')">Тест тапсыру</button>
+  ` : '<div class="notice">Бұл сабақта тест жоқ</div>';
 }
-function renderRequests(){
- const crm=getCRM(),c=activeCenter();
- document.getElementById('requests').innerHTML=`<div class="card"><h2>Өтінімдер / Төлем / Доступ</h2><table class="table"><tr><th>Оқушы</th><th>Курс</th><th>Баға</th><th>Төлем</th><th>Доступ</th><th>Әрекет</th></tr>${crm.requests.filter(x=>x.centerId===c.id).map(r=>`<tr>
- <td>${r.student}</td><td>${r.course}</td><td>${fmt(r.price)}</td>
- <td>${r.paymentStatus==='paid'?badge('b-paid','Төленді'):r.proofSent?badge('b-pending','Тексерілуде'):badge('b-closed','Күтуде')}</td>
- <td>${r.accessStatus==='active'?badge('b-open','Ашық'):badge('b-lock','Жабық')}</td>
- <td>
-   <div class="toolbar">
-     <button class="btn green" onclick="markPaid('${r.id}')">Төлемді растау</button>
-     <button class="btn orange" onclick="openAccess('${r.id}')">Доступ ашу</button>
-   </div>
- </td></tr>`).join('')}</table></div>`;
+
+function pickLesson(id){
+  currentLessonId=id;
+  renderLesson();
 }
-function markPaid(id){const crm=getCRM(); const r=crm.requests.find(x=>x.id===id); if(!r) return; r.paymentStatus='paid'; saveCRM(crm); renderAll(); alert('Төлем расталды');}
-function openAccess(id){const crm=getCRM(); const r=crm.requests.find(x=>x.id===id); if(!r) return; if(r.paymentStatus!=='paid'){alert('Алдымен төлемді растау керек'); return;} r.accessStatus='active'; if(!crm.enrollments.some(e=>e.studentId===r.studentId&&e.courseId===r.courseId)){crm.enrollments.push({id:'en'+Date.now(),centerId:r.centerId,studentId:r.studentId,courseId:r.courseId,access:'active'})} saveCRM(crm); renderAll(); alert('Доступ ашылды');}
-function renderCourses(){
- const crm=getCRM(),c=activeCenter();
- document.getElementById('courses').innerHTML=`<div class="card"><h2>Онлайн курс</h2><div class="note small" style="margin-bottom:12px">Бұл тарифте онлайн курс ашық болса, төмендегі portal ссылкасын оқушыларға бере аласың: <strong>https://eduonline-delta.vercel.app/</strong></div><table class="table"><tr><th>Курс</th><th>Мұғалім</th><th>Баға</th><th>Portal</th></tr>${crm.courses.filter(x=>x.centerId===c.id).map(k=>`<tr><td>${k.title}</td><td>${k.teacher}</td><td>${fmt(k.price)}</td><td><a href="${k.portalUrl}" target="_blank">Сілтеме ашу</a></td></tr>`).join('')}</table></div>`;
+
+async function markWatched(lessonId){
+  const existing=data.online_progress.find(x=>x.online_student_id===session.online_student_id && x.lesson_id===lessonId);
+  if(existing){
+    await sb.from('online_progress').update({watched_video:true}).eq('id',existing.id);
+  } else {
+    await sb.from('online_progress').insert({tenant_id:session.tenant_id, online_student_id:session.online_student_id, lesson_id:lessonId, watched_video:true, completed:false});
+  }
+  await loadData();
+  renderLesson();
 }
-function renderOnlineStudents(){
- const crm=getCRM(), c=activeCenter();
- const list=crm.requests.filter(x=>x.centerId===c.id).map(r=>({name:r.student,course:r.course,payment:r.paymentStatus,access:r.accessStatus}));
- document.getElementById('online_students').innerHTML=`<div class="card"><h2>Онлайн оқушылар</h2><table class="table"><tr><th>Оқушы</th><th>Курс</th><th>Төлем</th><th>Доступ</th></tr>${list.map(x=>`<tr><td>${x.name}</td><td>${x.course}</td><td>${x.payment}</td><td>${x.access}</td></tr>`).join('')}</table></div>`;
+
+async function submitTest(lessonId){
+  const tests=lessonTests(lessonId);
+  if(!tests.length) return;
+  let correct=0;
+  tests.forEach(t=>{
+    const checked=document.querySelector(`input[name="q_${t.id}"]:checked`);
+    if(checked && Number(checked.value)===Number(t.correct_index)) correct++;
+  });
+  const score=Math.round(correct*100/tests.length);
+  const passed=score>=60;
+  const existing=data.online_progress.find(x=>x.online_student_id===session.online_student_id && x.lesson_id===lessonId);
+  if(existing){
+    await sb.from('online_progress').update({test_score:score,test_passed:passed,completed:passed}).eq('id',existing.id);
+  } else {
+    await sb.from('online_progress').insert({tenant_id:session.tenant_id, online_student_id:session.online_student_id, lesson_id:lessonId, watched_video:true, test_score:score, test_passed:passed, completed:passed});
+  }
+  if(session.crm_student_id){
+    await sb.from('education_records').insert({
+      tenant_id:session.tenant_id,
+      student_id:session.crm_student_id,
+      homework_status:'Онлайн сабақ',
+      test_score:score,
+      progress_status:passed?'Жақсы':'Төмен',
+      teacher_comment:'Online portal test sync'
+    });
+  }
+  await loadData();
+  renderLesson();
 }
-function renderSettings(){
- const founder=getFounder(), c=activeCenter();
- document.getElementById('settings').innerHTML=`<div class="card"><h2>Орталық баптауы</h2><div class="form2"><div><label>Орталық атауы</label><input id="set_name" value="${c.name}"></div><div><label>Төлем атауы</label><input id="set_label" value="${c.paymentLabel||''}" placeholder="Kaspi / Halyk / Freedom"></div><div style="grid-column:1/-1"><label>Төлем ссылкасы</label><input id="set_link" value="${c.paymentLink||''}" placeholder="https://pay.kaspi.kz/pay/..."></div></div><div class="toolbar" style="margin-top:12px"><button class="btn" onclick="saveSettings()">Сақтау</button></div><div class="note small">Тариф founder порталдан ашылады. Сенің тарифің: <strong>${c.tariff}</strong></div></div>`;
+
+function fillBuilder(){
+  const courseRows=myCourses();
+  document.getElementById('builderCourse').innerHTML=courseRows.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('') || '<option value="">Курс жоқ</option>';
+  const current=document.getElementById('builderCourse').value || courseRows[0]?.id || '';
+  document.getElementById('builderModule').innerHTML=myModules(current).map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('') || '<option value="">Модуль жоқ</option>';
+  const lessonRows=courseRows.flatMap(c=>myModules(c.id).flatMap(m=>myLessons(m.id)));
+  document.getElementById('testLesson').innerHTML=lessonRows.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('') || '<option value="">Сабақ жоқ</option>';
 }
-function saveSettings(){const f=getFounder(); const c=f.centers.find(x=>x.id===getCRM().activeCenterId); c.name=document.getElementById('set_name').value.trim(); c.paymentLabel=document.getElementById('set_label').value.trim(); c.paymentLink=document.getElementById('set_link').value.trim(); localStorage.setItem(LS.founder,JSON.stringify(f)); renderAll(); alert('Сақталды');}
-function renderAll(){renderMenu();renderDashboard();renderStudents();renderJournal();renderStaff();renderRequests();renderCourses();renderOnlineStudents();renderSettings();}
-window.addEventListener('storage',renderAll); renderAll();
+
+function renderBuilder(){
+  if(!allowedStaffRoles(profile?.role||session?.role)) return;
+  fillBuilder();
+}
+
+function renderTests(){
+  const lessonRows=myCourses().flatMap(c=>myModules(c.id).flatMap(m=>myLessons(m.id)));
+  document.getElementById('testsBody').innerHTML=lessonRows.map(l=>`<tr><td>${esc(l.title)}</td><td>${lessonTests(l.id).length}</td></tr>`).join('') || '<tr><td colspan="2">Тест жоқ</td></tr>';
+}
+
+function renderPayments(){
+  const isStaff=allowedStaffRoles(profile?.role||session?.role);
+  const rows=(isStaff?data.online_payments.filter(x=>x.tenant_id===myTenantId()):data.online_payments.filter(x=>x.online_student_id===session.online_student_id)).slice().reverse();
+  document.getElementById('paymentsBody').innerHTML=rows.map(x=>`<tr><td>${esc(x.student_name||session.full_name)}</td><td>${esc(x.course_title)}</td><td>${money(x.amount)}</td><td>${esc((x.created_at||'').slice(0,10))}</td><td>${x.crm_synced?'иә':'жоқ'}</td></tr>`).join('') || '<tr><td colspan="5">Төлем жоқ</td></tr>';
+}
+
+function renderCrm(){
+  const crmStudents=data.students.filter(x=>x.tenant_id===myTenantId());
+  document.getElementById('crmStudentsBody').innerHTML=crmStudents.map(x=>`<tr><td>${esc(x.full_name)}</td><td>${esc(x.phone||'')}</td><td>${esc(myTenantName())}</td></tr>`).join('') || '<tr><td colspan="3">Студент жоқ</td></tr>';
+
+  const syncRows=[
+    ...data.payments.filter(x=>x.tenant_id===myTenantId()).slice(0,6).map(x=>['Төлем',x.full_name||'—',money(x.amount)]),
+    ...data.education_records.filter(x=>x.tenant_id===myTenantId()).slice(0,6).map(x=>['Progress',String(x.student_id||'—'),String(x.test_score||0)])
+  ];
+  document.getElementById('crmSyncBody').innerHTML=syncRows.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])}</td><td>${esc(x[2])}</td></tr>`).join('') || '<tr><td colspan="3">Sync жоқ</td></tr>';
+}
+
+function renderAll(){
+  renderDashboard(); renderCatalog(); renderLesson(); renderBuilder(); renderTests(); renderPayments(); renderCrm();
+}
+
+async function saveCourse(){
+  const title=val('courseTitle'), price=Number(val('coursePrice')||0), description=val('courseDesc');
+  if(!title) return;
+  await sb.from('online_courses').insert({tenant_id:myTenantId(), title, price, description, teacher_name:profile?.full_name||session?.full_name||'Teacher', status:'active'});
+  await loadData(); renderAll();
+}
+async function saveModule(){
+  const course_id=document.getElementById('builderCourse').value;
+  const title=val('moduleTitle');
+  if(!course_id || !title) return;
+  await sb.from('online_modules').insert({tenant_id:myTenantId(), course_id, title});
+  await loadData(); renderAll();
+}
+async function saveLesson(){
+  const module_id=document.getElementById('builderModule').value;
+  const title=val('lessonTitleInput');
+  const duration=val('lessonDurationInput');
+  const video_mode=document.getElementById('lessonMode').value;
+  const youtube_url=val('youtubeUrl');
+  let video_url=val('videoUrl');
+  const file=document.getElementById('videoFile').files[0];
+  if(!module_id || !title) return;
+
+  if(video_mode==='upload' && file){
+    const reader=new FileReader();
+    reader.onload = async ()=>{
+      const video_data=reader.result;
+      await sb.from('online_lessons').insert({tenant_id:myTenantId(), module_id, title, duration, video_mode, video_data});
+      await loadData(); renderAll();
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  await sb.from('online_lessons').insert({
+    tenant_id:myTenantId(), module_id, title, duration, video_mode,
+    youtube_url:video_mode==='youtube'?youtube_url:null,
+    video_url:video_mode==='upload'?video_url:null
+  });
+  await loadData(); renderAll();
+}
+async function saveTest(){
+  const lesson_id=document.getElementById('testLesson').value;
+  const question=val('testQuestion');
+  const answer_a=val('testA');
+  const answer_b=val('testB');
+  const answer_c=val('testC');
+  const correct_index=Number(document.getElementById('testCorrect').value);
+  if(!lesson_id || !question) return;
+  await sb.from('online_tests').insert({tenant_id:myTenantId(), lesson_id, question, answer_a, answer_b, answer_c, correct_index});
+  await loadData(); renderAll();
+}
+async function payCourse(courseId){
+  const course=data.online_courses.find(x=>x.id===courseId);
+  if(!course || myEnrollment(courseId)) return;
+  await sb.from('online_payments').insert({
+    tenant_id:session.tenant_id, online_student_id:session.online_student_id, student_name:session.full_name,
+    course_id:course.id, course_title:course.title, amount:course.price, crm_synced:true
+  });
+  await sb.from('online_enrollments').insert({
+    tenant_id:session.tenant_id, online_student_id:session.online_student_id, course_id:course.id, status:'active'
+  });
+  if(session.crm_student_id){
+    await sb.from('payments').insert({
+      tenant_id:session.tenant_id, student_id:session.crm_student_id, full_name:session.full_name,
+      amount:course.price, debt_amount:0, note:'Online portal payment: '+course.title
+    });
+  }
+  await loadData(); renderAll();
+}
+
+document.getElementById('tabStaff').onclick=()=>switchTab('staff');
+document.getElementById('tabStudentReg').onclick=()=>switchTab('student-reg');
+document.getElementById('tabStudentLogin').onclick=()=>switchTab('student-login');
+document.getElementById('staffLoginBtn').onclick=staffLogin;
+document.getElementById('registerBtn').onclick=registerStudent;
+document.getElementById('studentLoginBtn').onclick=studentLogin;
+document.getElementById('logoutBtn').onclick=logout;
+document.getElementById('saveCourseBtn').onclick=saveCourse;
+document.getElementById('saveModuleBtn').onclick=saveModule;
+document.getElementById('saveLessonBtn').onclick=saveLesson;
+document.getElementById('saveTestBtn').onclick=saveTest;
+document.getElementById('builderCourse').onchange=fillBuilder;
+document.getElementById('lessonMode').onchange=()=>{
+  const mode=document.getElementById('lessonMode').value;
+  document.getElementById('youtubeUrl').classList.toggle('hidden',mode!=='youtube');
+  document.getElementById('videoUrl').classList.toggle('hidden',mode!=='upload');
+  document.getElementById('videoFile').classList.toggle('hidden',mode!=='upload');
+};
+
+fillTenants();
+switchTab('staff');
 </script>
-</body></html>
+</body>
+</html>
