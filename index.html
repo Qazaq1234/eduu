@@ -7,84 +7,167 @@
   <title>EdukZ CRM Live</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+
     :root{
-      --bg:#f4f7fb; --card:#fff; --line:#e7ebf3; --text:#111827; --muted:#6b7280;
+      --bg:#f6f8fc; --card:#ffffff; --line:#e8eef6; --text:#0f172a; --muted:#667085;
       --brand:#2563eb; --brand2:#4f46e5; --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
-      --shadow:0 14px 40px rgba(17,24,39,.08); --radius:22px;
+      --shadow:0 16px 38px rgba(15,23,42,.06); --radius:24px;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(180deg,#f8fbff 0%,var(--bg) 100%);color:var(--text)}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      margin:0;
+      font-family:Inter,Arial,sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.05), transparent 22%),
+        linear-gradient(180deg,#fbfdff 0%,var(--bg) 100%);
+      color:var(--text);
+    }
     .hidden{display:none!important}
-    .auth-shell{max-width:1240px;margin:26px auto;padding:0 16px;display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
-    .card,.panel,.topbar{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .hero{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#fff;padding:30px}
-    .hero h1{font-size:42px;line-height:1.04;margin:0 0 10px}
-    .hero p{margin:0;color:#dbeafe;font-size:18px;line-height:1.5}
+    .auth-shell{max-width:1280px;margin:26px auto;padding:0 18px;display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
+    .card,.panel,.topbar{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .card{padding:20px}
+    .panel{padding:22px}
+    .hero{
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.14), transparent 26%),
+        linear-gradient(135deg,#0f172a,#1d4ed8);
+      color:#fff;
+      padding:34px;
+      min-height:220px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+    }
+    .hero h1{font-size:42px;line-height:1.02;margin:0 0 10px;letter-spacing:-.02em}
+    .hero p{margin:0;color:#dbeafe;font-size:17px;line-height:1.6;max-width:640px}
     .auth-card{padding:22px}
     .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-    .tab,.btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font:inherit;font-weight:800;cursor:pointer}
+    .tab,.btn{
+      appearance:none;border:none;border-radius:14px;padding:12px 16px;
+      font:inherit;font-weight:800;cursor:pointer;transition:.18s ease;
+    }
     .tab{background:#fff;border:1px solid var(--line);color:#111827}
-    .tab.active,.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
-    .btn.secondary{background:#fff;border:1px solid var(--line)}
+    .tab.active,.btn.primary{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      box-shadow:0 10px 24px rgba(37,99,235,.20);
+    }
+    .btn.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}
     .btn.ok{background:var(--ok);color:#fff}
     .btn.warn{background:var(--warn);color:#fff}
     .btn.danger{background:var(--danger);color:#fff}
     .btn:disabled{opacity:.45;cursor:not-allowed}
+    .tab:hover,.btn:hover{transform:translateY(-1px)}
     .form-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
-    .input,.select,.textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit}
+    .input,.select,.textarea{
+      width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;
+      background:#fff;font:inherit;color:var(--text);outline:none;
+    }
+    .input:focus,.select:focus,.textarea:focus{border-color:#bfd3f6;box-shadow:0 0 0 4px rgba(37,99,235,.08)}
     .textarea{min-height:94px}
     .muted{color:var(--muted)}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700}
+    .small{font-size:12px}
+    .pill{
+      display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;
+      background:#eef4ff;color:#3454d1;font-size:12px;font-weight:800;border:1px solid #d9e5ff;
+    }
     .notice{padding:12px 14px;border-radius:16px;background:#eff6ff;color:#1d4ed8;margin-bottom:12px}
     .notice.err{background:#fee2e2;color:#991b1b}
     .notice.ok{background:#dcfce7;color:#166534}
     .shell{display:flex;min-height:100vh}
-    .side{width:288px;background:linear-gradient(180deg,#091225 0%,#0b1730 50%,#111827 100%);color:#fff;padding:22px;height:100vh;overflow:auto;position:sticky;top:0;border-right:1px solid rgba(255,255,255,.06)}
+    .side{
+      width:292px;
+      background:
+        radial-gradient(circle at top, rgba(59,130,246,.18), transparent 28%),
+        linear-gradient(180deg,#0a1328 0%,#101a34 55%,#121927 100%);
+      color:#fff;padding:22px;height:100vh;overflow:auto;position:sticky;top:0;
+      border-right:1px solid rgba(255,255,255,.06)
+    }
     .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}
-    .logo{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--brand),#7c3aed);display:grid;place-items:center;font-weight:900}
-    .side-card{border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.04));backdrop-filter:blur(10px);padding:16px;border-radius:20px;margin-bottom:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
-    .nav-btn{width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;color:#fff;border-radius:14px;cursor:pointer;font:inherit;font-weight:700;margin-bottom:6px}
-    .nav-btn.active,.nav-btn:hover{background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+    .logo{
+      width:58px;height:58px;border-radius:18px;
+      background:linear-gradient(135deg,var(--brand),#7c3aed);
+      display:grid;place-items:center;font-weight:900;
+      box-shadow:0 14px 28px rgba(37,99,235,.28);
+    }
+    .side-card{
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+      backdrop-filter:blur(10px);
+      padding:16px;border-radius:20px;margin-bottom:16px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06)
+    }
+    .nav-btn{
+      width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;color:#fff;
+      border-radius:14px;cursor:pointer;font:inherit;font-weight:700;margin-bottom:6px
+    }
+    .nav-btn.active,.nav-btn:hover{
+      background:rgba(255,255,255,.12);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06)
+    }
     .nav-btn.disabled{opacity:.35;pointer-events:none}
-    .main{flex:1;padding:22px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;margin-bottom:16px}
+    .main{flex:1;padding:24px}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      padding:18px 20px;margin-bottom:16px
+    }
     .grid{display:grid;gap:16px}
     .g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
     .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
     .g4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
-    .kpi .label{font-size:12px;text-transform:uppercase;color:var(--muted);font-weight:800}
-    .kpi .value{font-size:30px;font-weight:900;margin-top:8px}
+    .kpi .label{font-size:12px;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.06em}
+    .kpi .value{font-size:34px;line-height:1.05;font-weight:900;margin-top:10px}
     .section{display:none}
     .section.active{display:block}
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff}
     table{width:100%;border-collapse:collapse;min-width:780px}
-    th,td{padding:11px;border-bottom:1px solid #edf2f7;text-align:left}
-    th{font-size:12px;color:var(--muted);text-transform:uppercase;background:#fafcff}
-    .status-ok{color:var(--ok);font-weight:700}
-    .status-warn{color:var(--warn);font-weight:700}
-    .status-danger{color:var(--danger);font-weight:700}
-    .plan{padding:18px;border:1px solid var(--line);border-radius:20px;background:#fff}
-    .plan.active{border:2px solid var(--brand);box-shadow:0 16px 36px rgba(37,99,235,.18)}
+    th,td{padding:12px 13px;border-bottom:1px solid #edf2f7;text-align:left;vertical-align:top}
+    th{font-size:12px;color:var(--muted);text-transform:uppercase;background:#fafcff;letter-spacing:.05em}
+    .status-ok{color:var(--ok);font-weight:800}
+    .status-warn{color:var(--warn);font-weight:800}
+    .status-danger{color:var(--danger);font-weight:800}
+    .plan{
+      padding:20px;border:1px solid var(--line);border-radius:20px;background:#fff;
+      box-shadow:0 10px 24px rgba(15,23,42,.04)
+    }
+    .plan.active{border:2px solid var(--brand);box-shadow:0 16px 36px rgba(37,99,235,.14)}
     .plan ul{padding-left:18px;margin:12px 0 0}
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .video-box{width:100%;aspect-ratio:16/9;border-radius:18px;background:#0f172a;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff}
     .video-box iframe,.video-box video{width:100%;height:100%;border:none;background:#000}
-    .small{font-size:12px}
     .parent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .item{
+      padding:16px 18px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);
+      box-shadow:0 8px 22px rgba(15,23,42,.04);
+    }
+    .item strong{display:block;font-size:13px;color:#475467;margin-bottom:8px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+    a{color:#2563eb;text-decoration:none}
+    a:hover{text-decoration:underline}
     @media (max-width:980px){
       .auth-shell{grid-template-columns:1fr}
       .shell{display:block}
       .side{width:auto;height:auto;position:relative}
       .main{padding:16px}
       .two-col{grid-template-columns:1fr}
+      .hero h1{font-size:34px}
     }
+
   </style>
 </head>
 <body>
   <div id="authView" class="auth-shell">
     <div class="panel hero">
       <h1>EdukZ CRM Portal</h1>
-      
+      <p>Премиумға жақын таза интерфейс. Owner бекіткеннен кейін тарифке сай бөлімдер ашылады.</p>
     </div>
 
     <div class="panel auth-card">
@@ -176,6 +259,7 @@
 
     <main class="main">
       <div id="topNotice" class="notice hidden"></div>
+      <div id="lockNotice" class="notice err hidden"></div>
       <div class="topbar card">
         <div>
           <div id="pageTitle" style="font-size:30px;font-weight:900">Басты бет</div>
@@ -550,6 +634,8 @@
     let session = null;
     let profile = null;
     let parentStudent = null;
+    let accessLocked = false;
+    let lockReason = '';
     let state = {
       tenants: [], subscriptions: [], profiles: [], branches: [], students: [], leads: [], groups: [],
       journal: [], progress: [], payments: [], finance: [], staffInvites: [],
@@ -619,6 +705,7 @@
       document.getElementById('pageTitle').textContent = titleMap[id][0];
       document.getElementById('pageSub').textContent = titleMap[id][1];
       renderAll();
+      applyLockedUi();
     }
 
     function notice(msg, type='ok'){
@@ -658,140 +745,96 @@
     });
 
 
-    function fillSelects(){
-      const branchOptions = ['<option value="">Филиал</option>'].concat(
-        state.branches.map(b => `<option value="${b.id}">${esc(b.name || '')}</option>`)
-      ).join('');
-      ['studentBranch','groupBranch','staffBranch'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(el) el.innerHTML = branchOptions;
-      });
-
-      const studentOptions = ['<option value="">Оқушы</option>'].concat(
-        state.students.map(s => `<option value="${s.id}">${esc(s.full_name || '')}</option>`)
-      ).join('');
-      ['journalStudent','progressStudent','paymentStudent','paymentMsgStudent'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(el) el.innerHTML = studentOptions;
-      });
-
-      const groupOptions = ['<option value="">Топ</option>'].concat(
-        state.groups.map(g => `<option value="${g.id}">${esc(g.title || '')}</option>`)
-      ).join('');
-      const groupEl = document.getElementById('journalGroup');
-      if(groupEl) groupEl.innerHTML = groupOptions;
-
-      const teacherOptions = ['<option value="">Мұғалім</option>'].concat(
-        state.profiles.map(p => `<option value="${p.id}">${esc(p.full_name || p.email || p.role || '')}</option>`)
-      ).join('');
-      const teacherEl = document.getElementById('groupTeacher');
-      if(teacherEl) teacherEl.innerHTML = teacherOptions;
-
-      const courseOptions = ['<option value="">Курс</option>'].concat(
-        state.onlineCourses.map(c => `<option value="${c.id}">${esc(c.title || '')}</option>`)
-      ).join('');
-      const courseEl = document.getElementById('onlineCourseSelect');
-      if(courseEl) courseEl.innerHTML = courseOptions;
-
-      const selectedCourse = courseEl ? courseEl.value : '';
-      const moduleOptions = ['<option value="">Модуль</option>'].concat(
-        state.onlineModules
-          .filter(m => !selectedCourse || m.course_id === selectedCourse)
-          .map(m => `<option value="${m.id}">${esc(m.title || '')}</option>`)
-      ).join('');
-      const moduleEl = document.getElementById('onlineModuleSelect');
-      if(moduleEl) moduleEl.innerHTML = moduleOptions;
-
-      const lessonOptions = ['<option value="">Сабақ</option>'].concat(
-        state.onlineLessons.map(l => `<option value="${l.id}">${esc(l.title || '')}</option>`)
-      ).join('');
-      const testLessonEl = document.getElementById('onlineTestLesson');
-      if(testLessonEl) testLessonEl.innerHTML = lessonOptions;
-    }
-
     async function registerDirector(){
       clearAuthNotice();
-      const payload = {
-        full_name: document.getElementById('regFullName').value.trim(),
-        email: document.getElementById('regEmail').value.trim().toLowerCase(),
-        password: document.getElementById('regPassword').value.trim(),
-        center_name: document.getElementById('regCenterName').value.trim(),
-        city: document.getElementById('regCity').value.trim(),
-        direction: document.getElementById('regDirection').value.trim(),
-        main_branch: document.getElementById('regMainBranch').value.trim() || 'Бас филиал',
-        bank_payment_link: document.getElementById('regBankLink').value.trim()
-      };
-      if(!payload.full_name || !payload.email || !payload.password || !payload.center_name){
-        return authNotice('Міндетті өрістерді толтырыңыз', 'err');
-      }
+      const fullName = document.getElementById('regFullName').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const password = document.getElementById('regPassword').value.trim();
+      const centerName = document.getElementById('regCenterName').value.trim();
+      const city = document.getElementById('regCity').value.trim();
+      const direction = document.getElementById('regDirection').value.trim();
+      const mainBranch = document.getElementById('regMainBranch').value.trim() || 'Бас филиал';
+      const bankLink = document.getElementById('regBankLink').value.trim();
+      if(!fullName || !email || !password || !centerName) return authNotice('Міндетті өрістерді толтыр', 'err');
 
-      const existingUser = await sb.auth.signInWithPassword({ email: payload.email, password: payload.password });
-      if(existingUser.data?.session){
-        await sb.auth.signOut();
-        return authNotice('Бұл email бұрын қолданылған. Кіру бөлімін қолданып көріңіз.', 'err');
-      }
-
-      const authRes = await sb.auth.signUp({
-        email: payload.email,
-        password: payload.password
-      });
+      const authRes = await sb.auth.signUp({ email, password });
       if(authRes.error) return authNotice(authRes.error.message, 'err');
+
       const userId = authRes.data.user?.id;
-      if(!userId) return authNotice('Auth user жасалмады', 'err');
+      if(!userId) return authNotice('User құрылмады. Email confirm-ды өшіріп көр.', 'err');
+
+      const exists = await sb.from('profiles').select('id').eq('user_id', userId).limit(1).maybeSingle();
+      if(exists.data) return authNotice('Бұл email бұрын тіркелген. Кіру батырмасын қолданып көр.', 'err');
 
       const tenantRes = await sb.from('tenants').insert({
-        name: payload.center_name,
-        city: payload.city,
-        direction: payload.direction,
-        main_branch: payload.main_branch,
-        bank_payment_link: payload.bank_payment_link,
+        name: centerName,
+        city,
+        direction,
+        main_branch: mainBranch,
+        bank_payment_link: bankLink,
         tariff_code: 'econom',
+        tariff_mode: 'econom',
         status: 'pending',
-        online_enabled: false
+        online_enabled: false,
+        demo_enabled: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }).select().single();
       if(tenantRes.error) return authNotice(tenantRes.error.message, 'err');
 
+      const tenantId = tenantRes.data.id;
+
       const branchRes = await sb.from('branches').insert({
-        tenant_id: tenantRes.data.id,
-        name: payload.main_branch,
-        city: payload.city
+        tenant_id: tenantId,
+        name: mainBranch,
+        city,
+        address: '',
+        phone: '',
+        created_at: new Date().toISOString()
       }).select().single();
       if(branchRes.error) return authNotice(branchRes.error.message, 'err');
 
-      await sb.from('subscriptions').insert({
-        tenant_id: tenantRes.data.id,
+      const subRes = await sb.from('subscriptions').insert({
+        tenant_id: tenantId,
         tariff_code: 'econom',
         requested_tariff: 'econom',
         request_status: 'approved',
         status: 'pending',
-        read_only_demo: false
+        read_only_demo: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
+      if(subRes.error) return authNotice(subRes.error.message, 'err');
 
-      await sb.from('owner_controls').insert({
-        tenant_id: tenantRes.data.id,
+      const ownerRes = await sb.from('owner_controls').insert({
+        tenant_id: tenantId,
         opened: false,
-        note: 'Owner approval needed'
+        note: 'Director registered. Waiting owner approval.',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
+      if(ownerRes.error) return authNotice(ownerRes.error.message, 'err');
 
       const profileRes = await sb.from('profiles').insert({
         user_id: userId,
-        tenant_id: tenantRes.data.id,
+        tenant_id: tenantId,
         branch_id: branchRes.data.id,
-        full_name: payload.full_name,
-        email: payload.email,
+        full_name: fullName,
+        email,
         role: 'director',
-        status: 'active'
+        status: 'active',
+        created_at: new Date().toISOString()
       });
       if(profileRes.error) return authNotice(profileRes.error.message, 'err');
 
-      authNotice('Тіркелу сәтті. Енді Owner порталдан доступ ашылуы керек.', 'ok');
+      authNotice('Тіркелу сәтті. Енді Owner порталдан орталыққа доступ ашылуы керек.', 'ok');
     }
 
     async function staffLogin(){
       clearAuthNotice();
       const email = document.getElementById('loginEmail').value.trim().toLowerCase();
       const password = document.getElementById('loginPassword').value.trim();
-      if(!email || !password) return authNotice('Email мен құпия сөзді енгізіңіз', 'err');
+      if(!email || !password) return authNotice('Email мен құпия сөзді толтыр', 'err');
 
       const authRes = await sb.auth.signInWithPassword({ email, password });
       if(authRes.error) return authNotice(authRes.error.message, 'err');
@@ -801,46 +844,53 @@
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending:false })
         .limit(1)
         .maybeSingle();
-
       if(profileRes.error) return authNotice(profileRes.error.message, 'err');
-      if(!profileRes.data) return authNotice('Profile табылмады', 'err');
-      profile = profileRes.data;
-      session = authRes.data.session;
-
-      const [tenantRes, ownerRes, subRes] = await Promise.all([
-        sb.from('tenants').select('*').eq('id', profile.tenant_id).limit(1).maybeSingle(),
-        sb.from('owner_controls').select('*').eq('tenant_id', profile.tenant_id).limit(1).maybeSingle(),
-        sb.from('subscriptions').select('*').eq('tenant_id', profile.tenant_id).limit(1).maybeSingle()
-      ]);
-
-      if(!tenantRes.data || tenantRes.data.status !== 'active' || !ownerRes.data?.opened){
+      if(!profileRes.data){
         await sb.auth.signOut();
-        profile = null;
-        session = null;
-        return authNotice('Бұл орталыққа Owner порталдан доступ ашылмаған.', 'err');
+        return authNotice('Profile табылмады', 'err');
+      }
+
+      profile = profileRes.data;
+      session = { user_id: userId };
+
+      const [tenantRes, ownerRes] = await Promise.all([
+        sb.from('tenants').select('*').eq('id', profile.tenant_id).limit(1).maybeSingle(),
+        sb.from('owner_controls').select('*').eq('tenant_id', profile.tenant_id).limit(1).maybeSingle()
+      ]);
+      if(tenantRes.error) return authNotice(tenantRes.error.message, 'err');
+
+      accessLocked = false;
+      lockReason = '';
+      if(!tenantRes.data){
+        accessLocked = true;
+        lockReason = 'Орталық ақпараты табылмады. Қарау режимі ғана ашық.';
+      } else if(tenantRes.data.status !== 'active' || !ownerRes.data?.opened){
+        accessLocked = true;
+        lockReason = 'Owner доступты жапқан. Порталға кірдің, бірақ қазір тек қарау режимі ашық.';
       }
 
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('portalView').classList.remove('hidden');
-      document.getElementById('centerName').textContent = 'Орталық: ' + (tenantRes.data.name || '—');
+      document.getElementById('centerName').textContent = 'Орталық: ' + (tenantRes.data?.name || '—');
       document.getElementById('centerUser').textContent = 'Пайдаланушы: ' + (profile.full_name || profile.email || '—');
       document.getElementById('centerRole').textContent = 'Рөлі: ' + (profile.role || '—');
 
-      if(subRes.data) state.subscriptions = [subRes.data];
-      applyRoleUI();
       await loadTenantData();
+      applyRoleUI();
+      renderAll();
+      applyLockedUi();
     }
 
     async function parentLogin(){
       clearAuthNotice();
       const studentCode = document.getElementById('parentCode').value.trim();
       const pinCode = document.getElementById('parentPin').value.trim();
-      if(!studentCode || !pinCode) return authNotice('Код пен PIN енгізіңіз', 'err');
+      if(!studentCode || !pinCode) return authNotice('Код пен PIN толтыр', 'err');
 
-      const studentRes = await sb
+      const res = await sb
         .from('students')
         .select('*')
         .eq('student_code', studentCode)
@@ -848,62 +898,34 @@
         .limit(1)
         .maybeSingle();
 
-      if(studentRes.error || !studentRes.data) return authNotice('Код немесе PIN қате', 'err');
-      parentStudent = studentRes.data;
+      if(res.error || !res.data) return authNotice('Код немесе PIN қате', 'err');
+      parentStudent = res.data;
 
-      const [paymentsRes, onlinePaymentsRes, progressRes] = await Promise.all([
+      const [paymentsRes, journalRes, progressRes, onlinePaymentsRes, tenantRes] = await Promise.all([
         sb.from('payments').select('*').eq('student_id', parentStudent.id).order('created_at', {ascending:false}),
+        sb.from('attendance_journal').select('*').eq('student_id', parentStudent.id).order('lesson_date', {ascending:false}),
+        sb.from('education_records').select('*').eq('student_id', parentStudent.id).order('created_at', {ascending:false}),
         sb.from('online_payments').select('*').eq('crm_student_id', parentStudent.id).order('created_at', {ascending:false}),
-        sb.from('education_records').select('*').eq('student_id', parentStudent.id).order('created_at', {ascending:false})
+        sb.from('tenants').select('*').eq('id', parentStudent.tenant_id).limit(1).maybeSingle()
       ]);
+
+      const tenant = tenantRes.data || {};
+      const lastPayment = paymentsRes.data?.[0] || onlinePaymentsRes.data?.[0];
+      const nextDue = paymentsRes.data?.find(x=>x.due_date)?.due_date || '—';
+      const debt = Number(parentStudent.debt_amount || 0);
 
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('parentView').classList.remove('hidden');
-
-      const allPayments = [...(paymentsRes.data || []), ...(onlinePaymentsRes.data || []).map(x => ({
-        amount: x.amount, paid_at: (x.created_at || '').slice(0,10), status: x.status, source: 'online', course_title: x.course_title || ''
-      }))];
-
       document.getElementById('parentContent').innerHTML = `
         <div class="parent-grid">
-          <div class="card" style="padding:16px"><div class="muted small">Бала</div><div style="font-size:22px;font-weight:900;margin-top:6px">${esc(parentStudent.full_name || '')}</div></div>
-          <div class="card" style="padding:16px"><div class="muted small">Код / PIN</div><div style="font-size:22px;font-weight:900;margin-top:6px">${esc(parentStudent.student_code || '')} / ${esc(parentStudent.pin_code || '')}</div></div>
-          <div class="card" style="padding:16px"><div class="muted small">Соңғы төлем</div><div style="font-size:22px;font-weight:900;margin-top:6px">${allPayments[0] ? money(allPayments[0].amount) : '—'}</div></div>
-          <div class="card" style="padding:16px"><div class="muted small">Онлайн статус</div><div style="font-size:22px;font-weight:900;margin-top:6px">${esc(parentStudent.online_status || 'inactive')}</div></div>
-        </div>
-        <div class="grid g2" style="margin-top:16px">
-          <div class="card" style="padding:16px">
-            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Төлемдер</div>
-            <div class="table-wrap">
-              <table><thead><tr><th>Күні</th><th>Сома</th><th>Статус</th><th>Source</th></tr></thead><tbody>
-                ${allPayments.map(p => `<tr><td>${esc(p.paid_at || '')}</td><td>${money(p.amount)}</td><td>${esc(p.status || '')}</td><td>${esc(p.source || 'offline')}</td></tr>`).join('') || '<tr><td colspan="4">Жазба жоқ</td></tr>'}
-              </tbody></table>
-            </div>
-          </div>
-          <div class="card" style="padding:16px">
-            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Прогресс</div>
-            <div class="table-wrap">
-              <table><thead><tr><th>Тест</th><th>Пікір</th><th>Күні</th></tr></thead><tbody>
-                ${(progressRes.data || []).map(r => `<tr><td>${esc(String(r.test_score || ''))}</td><td>${esc(r.teacher_comment || '')}</td><td>${esc((r.created_at || '').slice(0,10))}</td></tr>`).join('') || '<tr><td colspan="3">Жазба жоқ</td></tr>'}
-              </tbody></table>
-            </div>
-          </div>
+          <div class="item"><strong>Бала</strong><div class="muted">${esc(parentStudent.full_name)}</div></div>
+          <div class="item"><strong>Код / PIN</strong><div class="muted">${esc(parentStudent.student_code)} / ${esc(parentStudent.pin_code)}</div></div>
+          <div class="item"><strong>Келесі төлем</strong><div class="muted">${esc(nextDue)}</div></div>
+          <div class="item"><strong>Қарыз</strong><div class="muted">${money(debt)}</div></div>
+          <div class="item"><strong>Соңғы төлем</strong><div class="muted">${lastPayment ? money(lastPayment.amount) : '—'}</div></div>
+          <div class="item"><strong>Төлем жасау</strong><div class="muted">${tenant.bank_payment_link ? `<a href="${tenant.bank_payment_link}" target="_blank">Банк ссылка ашу</a>` : 'Ссылка жоқ'}</div></div>
         </div>
       `;
-    }
-
-    function backToAuth(){
-      parentStudent = null;
-      document.getElementById('parentView').classList.add('hidden');
-      document.getElementById('authView').classList.remove('hidden');
-    }
-
-    async function logout(){
-      await sb.auth.signOut();
-      session = null;
-      profile = null;
-      document.getElementById('portalView').classList.add('hidden');
-      document.getElementById('authView').classList.remove('hidden');
     }
 
 
@@ -983,7 +1005,37 @@
         notice('Бұл бөлім сенің белсенді тарифіңе кірмейді.', 'err');
         return false;
       }
+      if(accessLocked && featureKey !== 'tariff'){
+        notice(lockReason || 'Қазір бұл портал қарау режимінде. Owner ашқаннан кейін ғана өзгеріс жасай аласың.', 'err');
+        return false;
+      }
       return true;
+    }
+
+    function applyLockedUi(){
+      const lockEl = document.getElementById('lockNotice');
+      if(lockEl){
+        if(accessLocked){
+          lockEl.textContent = lockReason || 'Қарау режимі';
+          lockEl.className = 'notice err';
+          lockEl.classList.remove('hidden');
+        }else{
+          lockEl.className = 'notice err hidden';
+          lockEl.textContent = '';
+        }
+      }
+
+      document.querySelectorAll('.section input, .section select, .section textarea, .section button').forEach(el=>{
+        if(el.closest('#tariff')) return;
+        if(el.closest('#dashboard')) return;
+        if(accessLocked){
+          el.dataset.lockedByOwner = '1';
+          el.disabled = true;
+        }else if(el.dataset.lockedByOwner === '1'){
+          el.disabled = false;
+          delete el.dataset.lockedByOwner;
+        }
+      });
     }
 
     async function requestTariffAccess(){
@@ -1380,12 +1432,13 @@
         <div class="card kpi"><div class="label">Айлық төлем</div><div class="value">${money(income)}</div></div>
         <div class="card kpi"><div class="label">Онлайн курс</div><div class="value">${onlineCount}</div></div>
       `;
-      const tenant = state.tenants[0] || {};
+      const tenant = state.tenants[0] || state.tenant || {};
       document.getElementById('dashboardLeft').innerHTML = `
         <div style="font-size:22px;font-weight:900;margin-bottom:12px">Жылдам шолу</div>
         <div class="notice">Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.</div>
       `;
       document.getElementById('dashboardRight').innerHTML = `
+        ${accessLocked ? `<div class="notice err" style="margin-bottom:12px">${esc(lockReason)}</div>` : ''}
         <div style="font-size:22px;font-weight:900;margin-bottom:12px">Орталық ақпараты</div>
         <div class="two-col">
           <div class="item"><strong>Орталық</strong><div class="muted">${esc(tenant.name || '—')}</div></div>
@@ -1612,4 +1665,3 @@
   </script>
 <div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
-
