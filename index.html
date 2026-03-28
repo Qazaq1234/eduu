@@ -657,6 +657,256 @@
       document.getElementById('studentAge').value = calcAge(e.target.value);
     });
 
+
+    function fillSelects(){
+      const branchOptions = ['<option value="">Филиал</option>'].concat(
+        state.branches.map(b => `<option value="${b.id}">${esc(b.name || '')}</option>`)
+      ).join('');
+      ['studentBranch','groupBranch','staffBranch'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = branchOptions;
+      });
+
+      const studentOptions = ['<option value="">Оқушы</option>'].concat(
+        state.students.map(s => `<option value="${s.id}">${esc(s.full_name || '')}</option>`)
+      ).join('');
+      ['journalStudent','progressStudent','paymentStudent','paymentMsgStudent'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = studentOptions;
+      });
+
+      const groupOptions = ['<option value="">Топ</option>'].concat(
+        state.groups.map(g => `<option value="${g.id}">${esc(g.title || '')}</option>`)
+      ).join('');
+      const groupEl = document.getElementById('journalGroup');
+      if(groupEl) groupEl.innerHTML = groupOptions;
+
+      const teacherOptions = ['<option value="">Мұғалім</option>'].concat(
+        state.profiles.map(p => `<option value="${p.id}">${esc(p.full_name || p.email || p.role || '')}</option>`)
+      ).join('');
+      const teacherEl = document.getElementById('groupTeacher');
+      if(teacherEl) teacherEl.innerHTML = teacherOptions;
+
+      const courseOptions = ['<option value="">Курс</option>'].concat(
+        state.onlineCourses.map(c => `<option value="${c.id}">${esc(c.title || '')}</option>`)
+      ).join('');
+      const courseEl = document.getElementById('onlineCourseSelect');
+      if(courseEl) courseEl.innerHTML = courseOptions;
+
+      const selectedCourse = courseEl ? courseEl.value : '';
+      const moduleOptions = ['<option value="">Модуль</option>'].concat(
+        state.onlineModules
+          .filter(m => !selectedCourse || m.course_id === selectedCourse)
+          .map(m => `<option value="${m.id}">${esc(m.title || '')}</option>`)
+      ).join('');
+      const moduleEl = document.getElementById('onlineModuleSelect');
+      if(moduleEl) moduleEl.innerHTML = moduleOptions;
+
+      const lessonOptions = ['<option value="">Сабақ</option>'].concat(
+        state.onlineLessons.map(l => `<option value="${l.id}">${esc(l.title || '')}</option>`)
+      ).join('');
+      const testLessonEl = document.getElementById('onlineTestLesson');
+      if(testLessonEl) testLessonEl.innerHTML = lessonOptions;
+    }
+
+    async function registerDirector(){
+      clearAuthNotice();
+      const payload = {
+        full_name: document.getElementById('regFullName').value.trim(),
+        email: document.getElementById('regEmail').value.trim().toLowerCase(),
+        password: document.getElementById('regPassword').value.trim(),
+        center_name: document.getElementById('regCenterName').value.trim(),
+        city: document.getElementById('regCity').value.trim(),
+        direction: document.getElementById('regDirection').value.trim(),
+        main_branch: document.getElementById('regMainBranch').value.trim() || 'Бас филиал',
+        bank_payment_link: document.getElementById('regBankLink').value.trim()
+      };
+      if(!payload.full_name || !payload.email || !payload.password || !payload.center_name){
+        return authNotice('Міндетті өрістерді толтырыңыз', 'err');
+      }
+
+      const existingUser = await sb.auth.signInWithPassword({ email: payload.email, password: payload.password });
+      if(existingUser.data?.session){
+        await sb.auth.signOut();
+        return authNotice('Бұл email бұрын қолданылған. Кіру бөлімін қолданып көріңіз.', 'err');
+      }
+
+      const authRes = await sb.auth.signUp({
+        email: payload.email,
+        password: payload.password
+      });
+      if(authRes.error) return authNotice(authRes.error.message, 'err');
+      const userId = authRes.data.user?.id;
+      if(!userId) return authNotice('Auth user жасалмады', 'err');
+
+      const tenantRes = await sb.from('tenants').insert({
+        name: payload.center_name,
+        city: payload.city,
+        direction: payload.direction,
+        main_branch: payload.main_branch,
+        bank_payment_link: payload.bank_payment_link,
+        tariff_code: 'econom',
+        status: 'pending',
+        online_enabled: false
+      }).select().single();
+      if(tenantRes.error) return authNotice(tenantRes.error.message, 'err');
+
+      const branchRes = await sb.from('branches').insert({
+        tenant_id: tenantRes.data.id,
+        name: payload.main_branch,
+        city: payload.city
+      }).select().single();
+      if(branchRes.error) return authNotice(branchRes.error.message, 'err');
+
+      await sb.from('subscriptions').insert({
+        tenant_id: tenantRes.data.id,
+        tariff_code: 'econom',
+        requested_tariff: 'econom',
+        request_status: 'approved',
+        status: 'pending',
+        read_only_demo: false
+      });
+
+      await sb.from('owner_controls').insert({
+        tenant_id: tenantRes.data.id,
+        opened: false,
+        note: 'Owner approval needed'
+      });
+
+      const profileRes = await sb.from('profiles').insert({
+        user_id: userId,
+        tenant_id: tenantRes.data.id,
+        branch_id: branchRes.data.id,
+        full_name: payload.full_name,
+        email: payload.email,
+        role: 'director',
+        status: 'active'
+      });
+      if(profileRes.error) return authNotice(profileRes.error.message, 'err');
+
+      authNotice('Тіркелу сәтті. Енді Owner порталдан доступ ашылуы керек.', 'ok');
+    }
+
+    async function staffLogin(){
+      clearAuthNotice();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value.trim();
+      if(!email || !password) return authNotice('Email мен құпия сөзді енгізіңіз', 'err');
+
+      const authRes = await sb.auth.signInWithPassword({ email, password });
+      if(authRes.error) return authNotice(authRes.error.message, 'err');
+
+      const userId = authRes.data.user?.id;
+      const profileRes = await sb
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if(profileRes.error) return authNotice(profileRes.error.message, 'err');
+      if(!profileRes.data) return authNotice('Profile табылмады', 'err');
+      profile = profileRes.data;
+      session = authRes.data.session;
+
+      const [tenantRes, ownerRes, subRes] = await Promise.all([
+        sb.from('tenants').select('*').eq('id', profile.tenant_id).limit(1).maybeSingle(),
+        sb.from('owner_controls').select('*').eq('tenant_id', profile.tenant_id).limit(1).maybeSingle(),
+        sb.from('subscriptions').select('*').eq('tenant_id', profile.tenant_id).limit(1).maybeSingle()
+      ]);
+
+      if(!tenantRes.data || tenantRes.data.status !== 'active' || !ownerRes.data?.opened){
+        await sb.auth.signOut();
+        profile = null;
+        session = null;
+        return authNotice('Бұл орталыққа Owner порталдан доступ ашылмаған.', 'err');
+      }
+
+      document.getElementById('authView').classList.add('hidden');
+      document.getElementById('portalView').classList.remove('hidden');
+      document.getElementById('centerName').textContent = 'Орталық: ' + (tenantRes.data.name || '—');
+      document.getElementById('centerUser').textContent = 'Пайдаланушы: ' + (profile.full_name || profile.email || '—');
+      document.getElementById('centerRole').textContent = 'Рөлі: ' + (profile.role || '—');
+
+      if(subRes.data) state.subscriptions = [subRes.data];
+      applyRoleUI();
+      await loadTenantData();
+    }
+
+    async function parentLogin(){
+      clearAuthNotice();
+      const studentCode = document.getElementById('parentCode').value.trim();
+      const pinCode = document.getElementById('parentPin').value.trim();
+      if(!studentCode || !pinCode) return authNotice('Код пен PIN енгізіңіз', 'err');
+
+      const studentRes = await sb
+        .from('students')
+        .select('*')
+        .eq('student_code', studentCode)
+        .eq('pin_code', pinCode)
+        .limit(1)
+        .maybeSingle();
+
+      if(studentRes.error || !studentRes.data) return authNotice('Код немесе PIN қате', 'err');
+      parentStudent = studentRes.data;
+
+      const [paymentsRes, onlinePaymentsRes, progressRes] = await Promise.all([
+        sb.from('payments').select('*').eq('student_id', parentStudent.id).order('created_at', {ascending:false}),
+        sb.from('online_payments').select('*').eq('crm_student_id', parentStudent.id).order('created_at', {ascending:false}),
+        sb.from('education_records').select('*').eq('student_id', parentStudent.id).order('created_at', {ascending:false})
+      ]);
+
+      document.getElementById('authView').classList.add('hidden');
+      document.getElementById('parentView').classList.remove('hidden');
+
+      const allPayments = [...(paymentsRes.data || []), ...(onlinePaymentsRes.data || []).map(x => ({
+        amount: x.amount, paid_at: (x.created_at || '').slice(0,10), status: x.status, source: 'online', course_title: x.course_title || ''
+      }))];
+
+      document.getElementById('parentContent').innerHTML = `
+        <div class="parent-grid">
+          <div class="card" style="padding:16px"><div class="muted small">Бала</div><div style="font-size:22px;font-weight:900;margin-top:6px">${esc(parentStudent.full_name || '')}</div></div>
+          <div class="card" style="padding:16px"><div class="muted small">Код / PIN</div><div style="font-size:22px;font-weight:900;margin-top:6px">${esc(parentStudent.student_code || '')} / ${esc(parentStudent.pin_code || '')}</div></div>
+          <div class="card" style="padding:16px"><div class="muted small">Соңғы төлем</div><div style="font-size:22px;font-weight:900;margin-top:6px">${allPayments[0] ? money(allPayments[0].amount) : '—'}</div></div>
+          <div class="card" style="padding:16px"><div class="muted small">Онлайн статус</div><div style="font-size:22px;font-weight:900;margin-top:6px">${esc(parentStudent.online_status || 'inactive')}</div></div>
+        </div>
+        <div class="grid g2" style="margin-top:16px">
+          <div class="card" style="padding:16px">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Төлемдер</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Күні</th><th>Сома</th><th>Статус</th><th>Source</th></tr></thead><tbody>
+                ${allPayments.map(p => `<tr><td>${esc(p.paid_at || '')}</td><td>${money(p.amount)}</td><td>${esc(p.status || '')}</td><td>${esc(p.source || 'offline')}</td></tr>`).join('') || '<tr><td colspan="4">Жазба жоқ</td></tr>'}
+              </tbody></table>
+            </div>
+          </div>
+          <div class="card" style="padding:16px">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Прогресс</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Тест</th><th>Пікір</th><th>Күні</th></tr></thead><tbody>
+                ${(progressRes.data || []).map(r => `<tr><td>${esc(String(r.test_score || ''))}</td><td>${esc(r.teacher_comment || '')}</td><td>${esc((r.created_at || '').slice(0,10))}</td></tr>`).join('') || '<tr><td colspan="3">Жазба жоқ</td></tr>'}
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function backToAuth(){
+      parentStudent = null;
+      document.getElementById('parentView').classList.add('hidden');
+      document.getElementById('authView').classList.remove('hidden');
+    }
+
+    async function logout(){
+      await sb.auth.signOut();
+      session = null;
+      profile = null;
+      document.getElementById('portalView').classList.add('hidden');
+      document.getElementById('authView').classList.remove('hidden');
+    }
+
+
     async function loadTenantData(){
       if(!profile?.tenant_id) return;
       const tenantId = profile.tenant_id;
