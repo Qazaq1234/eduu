@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="favicon.ico">
   <title>EdukZ CRM Live</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -370,11 +371,11 @@
         </div>
         <div class="card" style="margin-top:16px">
           <div class="between" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-            <div style="font-size:22px;font-weight:900">Төлем тарихы</div>
+            <div style="font-size:22px;font-weight:900">Төлем тарихы</div><input id="paymentSearch" class="input" style="max-width:240px" placeholder="Іздеу" oninput="renderPayments()">
             <button class="btn secondary" onclick="window.print()">PDF жүктеу / Басып шығару</button>
           </div>
           <div class="table-wrap" style="margin-top:12px">
-            <table><thead><tr><th>Оқушы</th><th>Төлеген күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Өшіру</th></tr></thead><tbody id="paymentRows"></tbody></table>
+            <table><thead><tr><th>Оқушы</th><th>Соңғы төлем</th><th>Келесі төлеу</th><th>Сома</th><th>Статус</th><th>Source</th><th>Тарих</th><th>Өшіру</th></tr></thead><tbody id="paymentRows"></tbody></table>
           </div>
         </div>
       </section>
@@ -492,7 +493,7 @@
             <div class="form-grid">
               <input id="staffName" class="input" placeholder="Аты" />
               <input id="staffEmail" class="input" placeholder="Email" />
-              <select id="staffRole" class="select"><option value="teacher">Мұғалім</option><option value="admin">Админ</option><option value="director">Директор</option></select>
+              <select id="staffRole" class="select"><option value="teacher">Мұғалім</option><option value="admin">Админ</option><option value="director">Директор</option><option value="accountant">Бухгалтер</option><option value="marketing">Маркетинг</option></select>
               <input id="staffPassword" class="input" type="password" placeholder="Құпия сөз" />
               <select id="staffBranch" class="select"></select>
             </div>
@@ -569,6 +570,13 @@
 
     const sections = document.querySelectorAll('.section');
     const navBtns = document.querySelectorAll('.nav-btn[data-section]');
+    const roleSections = {
+      director:['dashboard','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','staff','branches'],
+      admin:['dashboard','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','staff','branches'],
+      teacher:['dashboard','students','groups','journal','progress','online-courses','online-upload','online-students','online-journal'],
+      accountant:['dashboard','students','payments','finance','online-payments'],
+      marketing:['dashboard','leads']
+    };
     const titleMap = {
       dashboard:['Басты бет','CRM толық басқару панелі'],
       tariff:['Тариф таңдау','Тарифке байланысты доступ'],
@@ -755,13 +763,13 @@
 
       const tenantRes = await sb.from('tenants').insert({
         name: centerName, city, direction, main_branch: mainBranch, bank_payment_link: bankLink,
-        status: 'active', tariff_code: 'demo', tariff_mode: 'demo', online_enabled: false, demo_enabled: true
+        status: 'pending', tariff_code: 'econom', tariff_mode: 'econom', online_enabled: false, demo_enabled: false
       }).select().single();
       if(tenantRes.error) return authNotice(tenantRes.error.message, 'err');
 
       const tenantId = tenantRes.data.id;
       const subRes = await sb.from('subscriptions').insert({
-        tenant_id: tenantId, tariff_code: 'demo', status: 'active', read_only_demo: true
+        tenant_id: tenantId, tariff_code: 'econom', status: 'pending', read_only_demo: false
       });
       if(subRes.error) return authNotice(subRes.error.message, 'err');
 
@@ -788,6 +796,11 @@
       const profileRes = await sb.from('profiles').select('*').eq('user_id', userId).single();
       if(profileRes.error) return authNotice(profileRes.error.message, 'err');
       profile = profileRes.data;
+      const tenantCheck = await sb.from('tenants').select('*').eq('id', profile.tenant_id).single();
+      if(tenantCheck.error || tenantCheck.data.status !== 'active'){
+        await sb.auth.signOut();
+        return authNotice('Бұл орталық owner portal-дан ашылмаған немесе жабылған.', 'err');
+      }
       session = { user_id: userId };
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('portalView').classList.remove('hidden');
@@ -795,6 +808,7 @@
       document.getElementById('centerUser').textContent = 'Пайдаланушы: ' + (profile.full_name || profile.email || '—');
       document.getElementById('centerRole').textContent = 'Рөлі: ' + (profile.role || '—');
       await loadTenantData();
+      applyRoleUI();
       const tenant = state.tenants[0];
       document.getElementById('centerName').textContent = 'Орталық: ' + (tenant?.name || '—');
     }
@@ -1103,6 +1117,19 @@
       await sb.from('payments').delete().eq('id', id);
       await loadTenantData();
     }
+    function openPaymentHistory(studentId){
+      const student = state.students.find(s=>s.id === studentId);
+      const rows = state.payments.filter(p=>p.student_id===studentId).concat(
+        state.onlinePayments.filter(p=>p.crm_student_id===studentId).map(p=>({
+          paid_at:(p.created_at||'').slice(0,10), due_date:'', amount:p.amount, status:p.status, source:'online', course_title:p.course_title || ''
+        }))
+      );
+      document.getElementById('paymentModalTitle').textContent = 'Төлем тарихы: ' + (student?.full_name || '');
+      document.getElementById('paymentHistoryRows').innerHTML = rows.map(r=>`<tr><td>${esc(r.paid_at||'')}</td><td>${esc(r.due_date||'')}</td><td>${money(r.amount)}</td><td>${esc(r.status||'')}</td><td>${esc(r.source||'offline')}</td><td>${esc(r.course_title||'')}</td></tr>`).join('') || '<tr><td colspan="6">Жазба жоқ</td></tr>';
+      document.getElementById('paymentHistoryModal').classList.remove('hidden');
+    }
+    function closePaymentHistory(){ document.getElementById('paymentHistoryModal').classList.add('hidden'); }
+
     function openPaymentWhatsApp(){
       const studentId = document.getElementById('paymentMsgStudent').value;
       const student = state.students.find(s=>s.id === studentId);
@@ -1237,6 +1264,13 @@
       notice('Онлайн доступ ашылды');
     }
 
+    function applyRoleUI(){
+      const role = profile?.role || 'teacher';
+      const allowed = roleSections[role] || roleSections.teacher;
+      document.querySelectorAll('.nav-btn[data-section]').forEach(btn=>{btn.classList.toggle('disabled', !allowed.includes(btn.dataset.section));});
+      document.getElementById('roleChip').textContent = 'Рөл: ' + role;
+    }
+
     function renderDashboard(){
       const onlineCount = state.onlineCourses.length;
       const income = state.payments.reduce((a,b)=>a + Number(b.amount || 0), 0);
@@ -1342,16 +1376,21 @@
     }
 
     function renderPayments(){
-      document.getElementById('paymentRows').innerHTML = state.payments.map(x=>`
-        <tr>
-          <td>${esc(x.full_name || '')}</td>
-          <td>${esc(x.paid_at || '')}</td>
-          <td>${esc(x.due_date || '')}</td>
-          <td>${money(x.amount)}</td>
-          <td>${esc(x.status || '')}</td>
-          <td>${esc(x.source || 'offline')}</td>
-          <td><button class="btn danger" onclick="deletePayment('${x.id}')">Өшіру</button></td>
-        </tr>`).join('') || '<tr><td colspan="7">Төлем жоқ</td></tr>';
+      const q = document.getElementById('paymentSearch') ? document.getElementById('paymentSearch').value.trim().toLowerCase() : '';
+      const rows = state.students.filter(s => [s.full_name,s.phone,s.student_code].join(' ').toLowerCase().includes(q));
+      document.getElementById('paymentRows').innerHTML = rows.map(s=>{
+        const last = state.payments.find(p=>p.student_id===s.id);
+        return `<tr>
+          <td>${esc(s.full_name)}</td>
+          <td>${esc(last?.paid_at || '—')}</td>
+          <td>${esc(last?.due_date || '—')}</td>
+          <td>${last ? money(last.amount) : '—'}</td>
+          <td>${esc(last?.status || '—')}</td>
+          <td>${esc(last?.source || '—')}</td>
+          <td><button class="btn secondary" onclick="openPaymentHistory('${s.id}')">Тарих</button></td>
+          <td>${last ? `<button class="btn danger" onclick="deletePayment('${last.id}')">Өшіру</button>` : ''}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="8">Оқушы жоқ</td></tr>';
     }
 
     function renderFinance(){
@@ -1471,6 +1510,5 @@
       renderBranches();
     }
   </script>
-</body>
+<div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
-
