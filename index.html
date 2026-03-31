@@ -168,7 +168,7 @@
   <div id="authView" class="auth-shell">
     <div class="panel hero">
       <h1>EdukZ CRM Portal</h1>
-      <p> Owner бекіткеннен кейін тарифке сай бөлімдер ашылады.</p>
+      <p>Премиумға жақын таза интерфейс. Owner бекіткеннен кейін тарифке сай бөлімдер ашылады.</p>
     </div>
 
     <div class="panel auth-card">
@@ -335,7 +335,7 @@
         <div class="card" style="margin-top:16px">
           <div class="form-grid" style="grid-template-columns:1fr 240px">
             <div style="font-size:22px;font-weight:900;align-self:center">Лид тізімі</div>
-            <input id="leadSearch" class="input" placeholder="Іздеу" oninput="debounceLeadRender()" />
+            <input id="leadSearch" class="input" placeholder="Іздеу" oninput="renderLeads()" />
           </div>
           <div class="table-wrap" style="margin-top:12px">
             <table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Қайдан</th><th>Статус</th><th>Ескерту</th><th>Өшіру</th></tr></thead><tbody id="leadRows"></tbody></table>
@@ -364,7 +364,7 @@
         <div class="card" style="margin-top:16px">
           <div class="form-grid" style="grid-template-columns:1fr 240px">
             <div style="font-size:22px;font-weight:900;align-self:center">Оқушылар тізімі</div>
-            <input id="studentSearch" class="input" placeholder="Іздеу" oninput="debounceStudentRender()" />
+            <input id="studentSearch" class="input" placeholder="Іздеу" oninput="renderStudents()" />
           </div>
           <div class="table-wrap" style="margin-top:12px">
             <table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Код</th><th>PIN</th><th>Жасы</th><th>Филиал</th><th>Өшіру</th></tr></thead><tbody id="studentRows"></tbody></table>
@@ -386,6 +386,10 @@
           <button class="btn primary" style="margin-top:12px" onclick="saveGroup()">Сақтау</button>
         </div>
         <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Топ тізімі</div>
+            <input id="groupSearch" class="input" placeholder="Іздеу: топ, бағыт, мұғалім" style="max-width:340px" oninput="renderGroups()" />
+          </div>
           <div class="table-wrap">
             <table><thead><tr><th>Топ</th><th>Бағыт</th><th>Мұғалім</th><th>Кесте</th><th>Аудитория</th><th>Филиал</th><th>Өшіру</th></tr></thead><tbody id="groupRows"></tbody></table>
           </div>
@@ -412,6 +416,10 @@
           </div>
         </div>
         <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Журнал тізімі</div>
+            <input id="journalSearch" class="input" placeholder="Іздеу: топ, оқушы, тақырып" style="max-width:360px" oninput="renderJournal()" />
+          </div>
           <div class="table-wrap">
             <table><thead><tr><th>Күні</th><th>Топ</th><th>Оқушы</th><th>Тақырып</th><th>Статус</th><th>Өшіру</th></tr></thead><tbody id="journalRows"></tbody></table>
           </div>
@@ -434,7 +442,10 @@
             <button class="btn primary" style="margin-top:12px" onclick="saveProgress()">Сақтау</button>
           </div>
           <div class="card">
-            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Прогресс тізімі</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+              <div style="font-size:22px;font-weight:900">Прогресс тізімі</div>
+              <input id="progressSearch" class="input" placeholder="Іздеу: оқушы, тест, пікір" style="max-width:340px" oninput="renderProgress()" />
+            </div>
             <div class="table-wrap">
               <table><thead><tr><th>Оқушы</th><th>Үй тапсырма</th><th>Тест</th><th>Пікір</th><th>Өшіру</th></tr></thead><tbody id="progressRows"></tbody></table>
             </div>
@@ -495,6 +506,10 @@
           </div>
         </div>
         <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Қаржы тізімі</div>
+            <input id="financeSearch" class="input" placeholder="Іздеу: түрі, категория, кімге" style="max-width:340px" oninput="renderFinance()" />
+          </div>
           <div class="table-wrap">
             <table><thead><tr><th>Түрі</th><th>Сома</th><th>Күні</th><th>Кімге/кімнен</th><th>Категория</th><th>Өшіру</th></tr></thead><tbody id="financeRows"></tbody></table>
           </div>
@@ -538,7 +553,13 @@
               <input id="onlineYoutubeUrl" class="input" placeholder="YouTube ссылка" />
               <input id="onlineFileUrl" class="input" placeholder="Ссылка / file url" />
               <input id="onlineVideoFile" class="input" type="file" accept="video/*" />
-              <div class="muted small" style="grid-column:1/-1">Файл режимінде телефоннан не ноутбуктан видеоны тікелей таңдап жүктей аласың.</div>
+              <input id="lessonMaterialTitle" class="input" placeholder="Материал атауы" />
+              <select id="lessonMaterialType" class="select"><option value="document">Құжат</option><option value="video">Видео</option><option value="audio">Аудио</option><option value="link">Ссылка</option></select>
+              <input id="lessonMaterialUrl" class="input" placeholder="Материал ссылка / url" />
+              <input id="lessonMaterialFile" class="input" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.wav,.m4a,.mp4,.mov,.avi,.zip,.rar,image/*,audio/*,video/*" />
+              <textarea id="lessonHomeworkText" class="textarea" placeholder="Үй тапсырмасы"></textarea>
+              <input id="lessonHomeworkDueDate" class="input" type="date" />
+              <div class="muted small" style="grid-column:1/-1">Файл режимінде телефоннан не ноутбуктан видеоны тікелей таңдап жүктей аласың. Материал мен үй тапсырмасын да осында қосасың.</div>
             </div>
             <button class="btn ok" style="margin-top:12px" onclick="saveOnlineLesson()">Сабақ қосу</button>
           </div>
@@ -557,10 +578,23 @@
           </div>
           <button class="btn warn" style="margin-top:12px" onclick="saveOnlineTest()">Тест сұрақ қосу</button>
         </div>
+              <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Оқушы жіберген үй тапсырмалары</div>
+            <input id="homeworkSubmissionSearch" class="input" placeholder="Іздеу: оқушы, сабақ, статус" style="max-width:360px" oninput="renderHomeworkSubmissions()" />
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Оқушы</th><th>Сабақ</th><th>Ескертпе</th><th>Файл</th><th>Күні</th><th>Статус</th></tr></thead><tbody id="homeworkSubmissionRows"></tbody></table>
+          </div>
+        </div>
       </section>
 
       <section id="online-students" class="section">
         <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Онлайн оқушылар</div>
+            <input id="onlineStudentSearch" class="input" placeholder="Іздеу: аты, email, код" style="max-width:340px" oninput="renderOnlineStudents()" />
+          </div>
           <div class="table-wrap">
             <table><thead><tr><th>Аты</th><th>Телефон</th><th>Email</th><th>Код</th><th>PIN</th><th>Курсы</th><th>Прогресі</th></tr></thead><tbody id="onlineStudentRows"></tbody></table>
           </div>
@@ -569,6 +603,10 @@
 
       <section id="online-journal" class="section">
         <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Онлайн журнал</div>
+            <input id="onlineJournalSearch" class="input" placeholder="Іздеу: оқушы, сабақ, күн" style="max-width:340px" oninput="renderOnlineJournal()" />
+          </div>
           <div class="table-wrap">
             <table><thead><tr><th>Оқушы</th><th>Сабақ</th><th>Күні</th><th>Уақыты</th><th>Статус</th></tr></thead><tbody id="onlineJournalRows"></tbody></table>
           </div>
@@ -577,6 +615,10 @@
 
       <section id="online-payments" class="section">
         <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Онлайн төлемдер</div>
+            <input id="onlinePaymentSearch" class="input" placeholder="Іздеу: оқушы, курс, статус" style="max-width:340px" oninput="renderOnlinePayments()" />
+          </div>
           <div class="table-wrap">
             <table><thead><tr><th>Оқушы</th><th>Курс</th><th>Суммасы</th><th>Күні</th><th>Әрекет</th></tr></thead><tbody id="onlinePaymentRows"></tbody></table>
           </div>
@@ -598,6 +640,10 @@
             <div class="notice small" style="margin-top:12px">Қауіпсіз production үшін staff auth-ты backend/edge function арқылы жасау керек. Бұл версия invite дерегін сақтайды.</div>
           </div>
           <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+              <div style="font-size:22px;font-weight:900">Қызметкерлер тізімі</div>
+              <input id="staffSearch" class="input" placeholder="Іздеу: аты, email, рөл" style="max-width:340px" oninput="renderStaff()" />
+            </div>
             <div class="table-wrap">
               <table><thead><tr><th>Аты</th><th>Email</th><th>Рөл</th><th>Филиал</th><th>Өшіру</th></tr></thead><tbody id="staffRows"></tbody></table>
             </div>
@@ -618,6 +664,10 @@
             <button class="btn primary" style="margin-top:12px" onclick="saveBranch()">Сақтау</button>
           </div>
           <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+              <div style="font-size:22px;font-weight:900">Филиалдар тізімі</div>
+              <input id="branchSearch" class="input" placeholder="Іздеу: филиал, қала, телефон" style="max-width:340px" oninput="renderBranches()" />
+            </div>
             <div class="table-wrap">
               <table><thead><tr><th>Аты</th><th>Қала</th><th>Мекенжай</th><th>Телефон</th><th>Өшіру</th></tr></thead><tbody id="branchRows"></tbody></table>
             </div>
@@ -645,13 +695,7 @@
       tenants: [], subscriptions: [], profiles: [], branches: [], students: [], leads: [], groups: [],
       journal: [], progress: [], payments: [], finance: [], staffInvites: [],
       onlineStudents: [], onlineCourses: [], onlineModules: [], onlineLessons: [], onlineTests: [],
-      onlinePayments: [], onlineJournal: [], onlineProgress: [],
-      meta: { studentCount:0, groupCount:0, onlineCourseCount:0, paymentAmount:null }
-    };
-    const sectionCache = {
-      leads:false, students:false, groups:false, journal:false, progress:false, payments:false, finance:false,
-      'online-courses':false, 'online-upload':false, 'online-students':false, 'online-journal':false, 'online-payments':false,
-      staff:false, branches:false
+      onlinePayments: [], onlineJournal: [], onlineProgress: [], onlineHomeworkSubmissions: []
     };
 
     const tariffFeatures = {
@@ -703,19 +747,18 @@
     };
 
     navBtns.forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
+      btn.addEventListener('click',()=>{
         if(btn.classList.contains('disabled')) return;
-        await setSection(btn.dataset.section);
+        setSection(btn.dataset.section);
       });
     });
 
-    async function setSection(id){
+    function setSection(id){
       activeSection = id;
       navBtns.forEach(x=>x.classList.toggle('active', x.dataset.section === id));
       sections.forEach(s=>s.classList.toggle('active', s.id === id));
       document.getElementById('pageTitle').textContent = titleMap[id][0];
       document.getElementById('pageSub').textContent = titleMap[id][1];
-      await loadSectionData(id, false);
       renderAll();
       applyLockedUi();
     }
@@ -1002,7 +1045,7 @@
       document.getElementById('centerUser').textContent = 'Пайдаланушы: ' + (profile.full_name || profile.email || '—');
       document.getElementById('centerRole').textContent = 'Рөлі: ' + (profile.role || '—');
 
-      await loadTenantData(false);
+      await loadTenantData();
       applyRoleUI();
       renderAll();
       applyLockedUi();
@@ -1053,112 +1096,38 @@
     }
 
 
-
-    async function loadDashboardMeta(){
+    async function loadTenantData(){
       if(!profile?.tenant_id) return;
       const tenantId = profile.tenant_id;
-      const [sCount, gCount, cCount] = await Promise.all([
-        sb.from('students').select('*', {count:'exact', head:true}).eq('tenant_id', tenantId),
-        sb.from('groups').select('*', {count:'exact', head:true}).eq('tenant_id', tenantId),
-        sb.from('online_courses').select('*', {count:'exact', head:true}).eq('tenant_id', tenantId)
-      ]);
-      state.meta.studentCount = sCount.count || 0;
-      state.meta.groupCount = gCount.count || 0;
-      state.meta.onlineCourseCount = cCount.count || 0;
-      state.meta.paymentAmount = null;
-    }
-
-    async function loadSectionData(section, force=false){
-      if(!profile?.tenant_id) return;
-      const tenantId = profile.tenant_id;
-      if(section === 'dashboard'){
-        await loadDashboardMeta();
-        return;
-      }
-      if(!force && sectionCache[section]) return;
-
-      if(section === 'leads'){
-        state.leads = (await sb.from('crm_leads').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false})).data || [];
-      } else if(section === 'students'){
-        state.students = (await sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
-      } else if(section === 'groups'){
-        state.groups = (await sb.from('groups').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
-      } else if(section === 'journal'){
-        const [groupsRes, studentsRes, journalRes] = await Promise.all([
-          sb.from('groups').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
-          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
-          sb.from('attendance_journal').select('*').eq('tenant_id', tenantId).order('lesson_date', {ascending:false}).limit(300)
-        ]);
-        state.groups = groupsRes.data || [];
-        state.students = studentsRes.data || [];
-        state.journal = journalRes.data || [];
-      } else if(section === 'progress'){
-        const [studentsRes, progressRes] = await Promise.all([
-          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
-          sb.from('education_records').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)
-        ]);
-        state.students = studentsRes.data || [];
-        state.progress = progressRes.data || [];
-      } else if(section === 'payments'){
-        const [studentsRes, paymentsRes] = await Promise.all([
-          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
-          sb.from('payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)
-        ]);
-        state.students = studentsRes.data || [];
-        state.payments = paymentsRes.data || [];
-        state.meta.paymentAmount = state.payments.reduce((a,b)=>a + Number(b.amount || 0), 0);
-      } else if(section === 'finance'){
-        state.finance = (await sb.from('finance_entries').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)).data || [];
-      } else if(section === 'online-courses'){
-        state.onlineCourses = (await sb.from('online_courses').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
-      } else if(section === 'online-upload'){
-        const [cRes,mRes,lRes,tRes] = await Promise.all([
-          sb.from('online_courses').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
-          sb.from('online_modules').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300),
-          sb.from('online_lessons').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(400),
-          sb.from('online_tests').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(400)
-        ]);
-        state.onlineCourses = cRes.data || [];
-        state.onlineModules = mRes.data || [];
-        state.onlineLessons = lRes.data || [];
-        state.onlineTests = tRes.data || [];
-      } else if(section === 'online-students'){
-        state.onlineStudents = (await sb.from('online_students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)).data || [];
-      } else if(section === 'online-journal'){
-        state.onlineJournal = (await sb.from('online_journal').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(400)).data || [];
-      } else if(section === 'online-payments'){
-        const [studentsRes, payRes] = await Promise.all([
-          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
-          sb.from('online_payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)
-        ]);
-        state.students = studentsRes.data || [];
-        state.onlinePayments = payRes.data || [];
-      } else if(section === 'staff'){
-        state.staffInvites = (await sb.from('staff_invites').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
-      } else if(section === 'branches'){
-        state.branches = (await sb.from('branches').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
-      }
-
-      if(sectionCache.hasOwnProperty(section)) sectionCache[section] = true;
-      fillSelects();
-    }
-
-    async function loadTenantData(force=true){
-      if(!profile?.tenant_id) return;
-      const tenantId = profile.tenant_id;
-      const coreResults = await Promise.all([
+      const results = await Promise.all([
         sb.from('tenants').select('*').eq('id', tenantId),
         sb.from('subscriptions').select('*').eq('tenant_id', tenantId),
         sb.from('profiles').select('*').eq('tenant_id', tenantId),
-        sb.from('branches').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)
+        sb.from('branches').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('crm_leads').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('groups').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('attendance_journal').select('*').eq('tenant_id', tenantId).order('lesson_date', {ascending:false}),
+        sb.from('education_records').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('finance_entries').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('staff_invites').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_courses').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_modules').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_lessons').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_tests').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_journal').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_progress').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('online_homework_submissions').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
       ]);
-      [state.tenants, state.subscriptions, state.profiles, state.branches] = coreResults.map(r=>r.data || []);
-
-      if(force){
-        Object.keys(sectionCache).forEach(k=>sectionCache[k] = false);
-      }
-      await loadDashboardMeta();
-      await loadSectionData(activeSection || 'dashboard', force);
+      [
+        state.tenants, state.subscriptions, state.profiles, state.branches, state.students, state.leads,
+        state.groups, state.journal, state.progress, state.payments, state.finance, state.staffInvites,
+        state.onlineStudents, state.onlineCourses, state.onlineModules, state.onlineLessons, state.onlineTests,
+        state.onlinePayments, state.onlineJournal, state.onlineProgress, state.onlineHomeworkSubmissions
+      ] = results.map(r=>r.data || []);
       fillSelects();
       applyTariffVisual();
       renderAll();
@@ -1573,13 +1542,22 @@
       if(!requireWrite('online-upload')) return;
       const mode = document.getElementById('onlineVideoMode').value;
       const fileInput = document.getElementById('onlineVideoFile');
+      const materialFileInput = document.getElementById('lessonMaterialFile');
       let fileUrl = mode !== 'youtube' ? document.getElementById('onlineFileUrl').value.trim() : null;
+      let materialUrl = document.getElementById('lessonMaterialUrl').value.trim();
 
       if(mode === 'file' && fileInput && fileInput.files && fileInput.files[0]){
         notice('Видео жүктеліп жатыр...', 'ok');
-        const uploaded = await uploadLessonVideoFile(fileInput.files[0]);
+        const uploaded = await uploadBucketFile(fileInput.files[0], 'lesson-video');
         if(uploaded.error) return notice(uploaded.error.message, 'err');
         fileUrl = uploaded.publicUrl;
+      }
+
+      if(materialFileInput && materialFileInput.files && materialFileInput.files[0]){
+        notice('Материал жүктеліп жатыр...', 'ok');
+        const uploadedMaterial = await uploadBucketFile(materialFileInput.files[0], 'lesson-material');
+        if(uploadedMaterial.error) return notice(uploadedMaterial.error.message, 'err');
+        materialUrl = uploadedMaterial.publicUrl;
       }
 
       const payload = {
@@ -1589,20 +1567,26 @@
         duration: document.getElementById('onlineLessonDuration').value.trim(),
         video_mode: mode,
         youtube_url: mode === 'youtube' ? document.getElementById('onlineYoutubeUrl').value.trim() : null,
-        file_url: mode !== 'youtube' ? fileUrl : null
+        file_url: mode !== 'youtube' ? fileUrl : null,
+        material_title: document.getElementById('lessonMaterialTitle').value.trim(),
+        material_type: document.getElementById('lessonMaterialType').value,
+        material_url: materialUrl || null,
+        homework_text: document.getElementById('lessonHomeworkText').value.trim(),
+        homework_due_date: document.getElementById('lessonHomeworkDueDate').value || null,
+        homework_accept_upload: true
       };
 
-      if(!payload.module_id || !payload.title) return;
-      if(mode !== 'youtube' && !payload.file_url) return notice('Файл таңда немесе ссылка қой', 'err');
+      if(!payload.module_id || !payload.title) return notice('Курс/модуль/сабақ толтыр', 'err');
+      if(mode !== 'youtube' && !payload.file_url) return notice('Видео файл не ссылка қой', 'err');
 
       const res = await sb.from('online_lessons').insert(payload);
       if(res.error) return notice(res.error.message, 'err');
 
+      ['onlineLessonTitle','onlineLessonDuration','onlineYoutubeUrl','onlineFileUrl','lessonMaterialTitle','lessonMaterialUrl','lessonHomeworkText','lessonHomeworkDueDate'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.value='';
+      });
       if(fileInput) fileInput.value = '';
-      document.getElementById('onlineFileUrl').value = '';
-      document.getElementById('onlineYoutubeUrl').value = '';
-      document.getElementById('onlineLessonTitle').value = '';
-      document.getElementById('onlineLessonDuration').value = '';
+      if(materialFileInput) materialFileInput.value = '';
 
       await loadTenantData();
       notice('Онлайн сабақ сақталды');
@@ -1732,14 +1716,12 @@
     }
 
     function renderDashboard(){
-      const onlineCount = state.meta.onlineCourseCount ?? state.onlineCourses.length;
-      const studentCount = state.meta.studentCount ?? state.students.length;
-      const groupCount = state.meta.groupCount ?? state.groups.length;
-      const income = state.meta.paymentAmount;
+      const onlineCount = state.onlineCourses.length;
+      const income = state.payments.reduce((a,b)=>a + Number(b.amount || 0), 0);
       document.getElementById('dashboardStats').innerHTML = `
-        <div class="card kpi"><div class="label">Оқушылар</div><div class="value">${studentCount}</div></div>
-        <div class="card kpi"><div class="label">Топтар</div><div class="value">${groupCount}</div></div>
-        <div class="card kpi"><div class="label">Айлық төлем</div><div class="value">${income === null ? '...' : money(income)}</div></div>
+        <div class="card kpi"><div class="label">Оқушылар</div><div class="value">${state.students.length}</div></div>
+        <div class="card kpi"><div class="label">Топтар</div><div class="value">${state.groups.length}</div></div>
+        <div class="card kpi"><div class="label">Айлық төлем</div><div class="value">${money(income)}</div></div>
         <div class="card kpi"><div class="label">Онлайн курс</div><div class="value">${onlineCount}</div></div>
       `;
       const tenant = state.tenants[0] || state.tenant || {};
@@ -1774,11 +1756,6 @@
         </tr>`).join('') || '<tr><td colspan="7">Лид жоқ</td></tr>';
     }
 
-    let studentSearchTimer = null;
-    let leadSearchTimer = null;
-    function debounceStudentRender(){ clearTimeout(studentSearchTimer); studentSearchTimer = setTimeout(renderStudents, 220); }
-    function debounceLeadRender(){ clearTimeout(leadSearchTimer); leadSearchTimer = setTimeout(renderLeads, 220); }
-
     function renderStudents(){
       const q = document.getElementById('studentSearch').value.trim().toLowerCase();
       const rows = state.students.filter(x => [x.full_name, x.phone, x.direction, x.student_code, x.pin_code].join(' ').toLowerCase().includes(q));
@@ -1798,7 +1775,13 @@
     }
 
     function renderGroups(){
-      document.getElementById('groupRows').innerHTML = state.groups.map(x=>{
+      const q = (document.getElementById('groupSearch')?.value || '').trim().toLowerCase();
+      const rows = state.groups.filter(x=>{
+        const teacher = state.profiles.find(p=>p.id === x.teacher_profile_id);
+        const branch = state.branches.find(b=>b.id === x.branch_id);
+        return qmatch([x.title, x.direction, teacher?.full_name, teacher?.email, x.schedule_text, x.room, branch?.name], q);
+      });
+      document.getElementById('groupRows').innerHTML = rows.map(x=>{
         const teacher = state.profiles.find(p=>p.id === x.teacher_profile_id);
         const branch = state.branches.find(b=>b.id === x.branch_id);
         return `<tr>
@@ -1815,7 +1798,22 @@
 
     function renderJournal(){
       const fd = document.getElementById('journalFilterDate').value;
-      const rows = state.journal.filter(x => !fd || x.lesson_date === fd);
+      const q = (document.getElementById('journalSearch')?.value || '').trim().toLowerCase();
+
+      const rows = state.journal.filter(x => {
+        const g = state.groups.find(y=>y.id === x.group_id);
+        const s = state.students.find(y=>y.id === x.student_id);
+        const text = [
+          x.lesson_date || '',
+          g?.title || '',
+          s?.full_name || '',
+          x.topic || '',
+          x.attendance_status || ''
+        ].join(' ').toLowerCase();
+
+        return (!fd || x.lesson_date === fd) && (!q || text.includes(q));
+      });
+
       document.getElementById('journalRows').innerHTML = rows.map(x=>{
         const g = state.groups.find(y=>y.id === x.group_id);
         const s = state.students.find(y=>y.id === x.student_id);
@@ -1831,7 +1829,12 @@
     }
 
     function renderProgress(){
-      document.getElementById('progressRows').innerHTML = state.progress.map(x=>{
+      const q = (document.getElementById('progressSearch')?.value || '').trim().toLowerCase();
+      const rows = state.progress.filter(x=>{
+        const s = state.students.find(y=>y.id === x.student_id);
+        return qmatch([s?.full_name, x.homework_status, x.test_score, x.teacher_comment, x.weekly_result, x.monthly_result], q);
+      });
+      document.getElementById('progressRows').innerHTML = rows.map(x=>{
         const s = state.students.find(y=>y.id === x.student_id);
         return `<tr>
           <td>${esc(s?.full_name || '')}</td>
@@ -1870,7 +1873,9 @@
         <div class="item"><strong>Шығыс</strong><div class="muted">${money(out)}</div></div>
         <div class="item"><strong>Жалақы</strong><div class="muted">${money(salary)}</div></div>
       `;
-      document.getElementById('financeRows').innerHTML = state.finance.map(x=>`
+      const q = (document.getElementById('financeSearch')?.value || '').trim().toLowerCase();
+      const rows = state.finance.filter(x=>qmatch([x.entry_type, x.amount, x.entry_date, x.subject_name, x.category, x.note], q));
+      document.getElementById('financeRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.entry_type || '')}</td>
           <td>${money(x.amount)}</td>
@@ -1895,7 +1900,13 @@
     }
 
     function renderOnlineStudents(){
-      document.getElementById('onlineStudentRows').innerHTML = state.onlineStudents.map(x=>{
+      const q = (document.getElementById('onlineStudentSearch')?.value || '').trim().toLowerCase();
+      const rows = state.onlineStudents.filter(x=>{
+        const crm = state.students.find(s=>s.id === x.crm_student_id);
+        const payments = state.onlinePayments.filter(p=>p.crm_student_id === x.crm_student_id || p.online_student_id === x.id).map(p=>p.course_title).filter(Boolean).join(', ');
+        return qmatch([x.full_name, x.phone, x.email, crm?.student_code, crm?.pin_code, payments], q);
+      });
+      document.getElementById('onlineStudentRows').innerHTML = rows.map(x=>{
         const crm = state.students.find(s=>s.id === x.crm_student_id);
         const progress = state.onlineProgress.filter(p=>p.crm_student_id === x.crm_student_id || p.online_student_id === x.id);
         const pct = progress.length ? Math.round(progress.filter(p=>p.completed).length*100/progress.length) : 0;
@@ -1913,20 +1924,28 @@
     }
 
     function renderOnlineJournal(){
-      document.getElementById('onlineJournalRows').innerHTML = state.onlineJournal.map(x=>{
+      const q = (document.getElementById('onlineJournalSearch')?.value || '').trim().toLowerCase();
+      const rows = state.onlineJournal.filter(x=>{
         const s = state.students.find(y=>y.id === x.crm_student_id);
+        return qmatch([s?.full_name, x.lesson_title, x.study_date, x.created_at], q);
+      });
+      document.getElementById('onlineJournalRows').innerHTML = rows.map(x=>{
+        const s = state.students.find(y=>y.id === x.crm_student_id);
+        const progress = state.onlineProgress.find(p=>p.crm_student_id === x.crm_student_id && p.lesson_id === x.lesson_id);
         return `<tr>
           <td>${esc(s?.full_name || '')}</td>
           <td>${esc(x.lesson_title || '')}</td>
           <td>${esc(x.study_date || '')}</td>
-          <td>${esc((x.study_time || '').slice(11,16) || '')}</td>
-          <td class="status-ok">Оқыды</td>
+          <td>${esc((x.created_at || '').replace('T',' ').slice(0,16))}</td>
+          <td>${progress?.completed ? 'Аяқталды' : 'Көрді'}</td>
         </tr>`;
-      }).join('') || '<tr><td colspan="5">Онлайн журнал бос</td></tr>';
+      }).join('') || '<tr><td colspan="5">Online журнал бос</td></tr>';
     }
 
     function renderOnlinePayments(){
-      document.getElementById('onlinePaymentRows').innerHTML = state.onlinePayments.map(x=>`
+      const q = (document.getElementById('onlinePaymentSearch')?.value || '').trim().toLowerCase();
+      const rows = state.onlinePayments.filter(x=>qmatch([x.student_name, x.course_title, x.amount, x.status, x.created_at], q));
+      document.getElementById('onlinePaymentRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.student_name || '')}</td>
           <td>${esc(x.course_title || '')}</td>
@@ -1937,7 +1956,12 @@
     }
 
     function renderStaff(){
-      document.getElementById('staffRows').innerHTML = state.staffInvites.map(x=>{
+      const q = (document.getElementById('staffSearch')?.value || '').trim().toLowerCase();
+      const rows = state.staffInvites.filter(x=>{
+        const b = state.branches.find(y=>y.id === x.branch_id);
+        return qmatch([x.full_name, x.email, x.role, b?.name], q);
+      });
+      document.getElementById('staffRows').innerHTML = rows.map(x=>{
         const b = state.branches.find(y=>y.id === x.branch_id);
         return `<tr>
           <td>${esc(x.full_name)}</td>
@@ -1950,7 +1974,9 @@
     }
 
     function renderBranches(){
-      document.getElementById('branchRows').innerHTML = state.branches.map(x=>`
+      const q = (document.getElementById('branchSearch')?.value || '').trim().toLowerCase();
+      const rows = state.branches.filter(x=>qmatch([x.name, x.city, x.address, x.phone], q));
+      document.getElementById('branchRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.name)}</td>
           <td>${esc(x.city || '')}</td>
@@ -1958,6 +1984,26 @@
           <td>${esc(x.phone || '')}</td>
           <td><button class="btn danger" onclick="deleteBranch('${x.id}')">Өшіру</button></td>
         </tr>`).join('') || '<tr><td colspan="5">Филиал жоқ</td></tr>';
+    }
+
+
+    function renderHomeworkSubmissions(){
+      const q = (document.getElementById('homeworkSubmissionSearch')?.value || '').trim().toLowerCase();
+      const rows = (state.onlineHomeworkSubmissions || []).filter(x=>{
+        const lesson = state.onlineLessons.find(l=>l.id === x.lesson_id);
+        return qmatch([x.student_name, lesson?.title, x.note, x.status, x.created_at], q);
+      });
+      document.getElementById('homeworkSubmissionRows').innerHTML = rows.map(x=>{
+        const lesson = state.onlineLessons.find(l=>l.id === x.lesson_id);
+        return `<tr>
+          <td>${esc(x.student_name || '')}</td>
+          <td>${esc(lesson?.title || '')}</td>
+          <td>${esc(x.note || '')}</td>
+          <td>${x.file_url ? `<a href="${x.file_url}" target="_blank">Файл ашу</a>` : '—'}</td>
+          <td>${esc((x.created_at || '').replace('T',' ').slice(0,16))}</td>
+          <td>${esc(x.status || 'sent')}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6">Үй тапсырмасы жіберілмеген</td></tr>';
     }
 
     function renderAll(){
@@ -1974,10 +2020,28 @@
       renderOnlineStudents();
       renderOnlineJournal();
       renderOnlinePayments();
+      renderHomeworkSubmissions();
       renderStaff();
       renderBranches();
     }
   </script>
 <div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
+    function qmatch(parts, q){
+      const text = parts.filter(Boolean).join(' ').toLowerCase();
+      return !q || text.includes(q);
+    }
+
+    async function uploadBucketFile(file, folder='misc'){
+      if(!file) return { publicUrl: null };
+      const safe = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${folder}/${profile.tenant_id}/${Date.now()}_${safe}`;
+      const up = await sb.storage.from('lesson-videos').upload(path, file, {
+        upsert: false,
+        contentType: file.type || 'application/octet-stream'
+      });
+      if(up.error) return { error: up.error };
+      const { data } = sb.storage.from('lesson-videos').getPublicUrl(path);
+      return { publicUrl: data.publicUrl };
+    }
 
