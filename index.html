@@ -7,6 +7,7 @@
   <title>EdukZ CRM Live</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;700;800&display=swap");
 
     :root{
       --bg:#f6f8fc; --card:#ffffff; --line:#e8eef6; --text:#0f172a; --muted:#667085;
@@ -17,7 +18,7 @@
     html{-webkit-text-size-adjust:100%}
     body{
       margin:0;
-      font-family:Inter,Arial,sans-serif;
+      font-family:"Inter","Noto Sans","Segoe UI",Arial,sans-serif;
       background:
         radial-gradient(circle at top left, rgba(37,99,235,.05), transparent 22%),
         linear-gradient(180deg,#fbfdff 0%,var(--bg) 100%);
@@ -334,7 +335,7 @@
         <div class="card" style="margin-top:16px">
           <div class="form-grid" style="grid-template-columns:1fr 240px">
             <div style="font-size:22px;font-weight:900;align-self:center">Лид тізімі</div>
-            <input id="leadSearch" class="input" placeholder="Іздеу" oninput="renderLeads()" />
+            <input id="leadSearch" class="input" placeholder="Іздеу" oninput="debounceLeadRender()" />
           </div>
           <div class="table-wrap" style="margin-top:12px">
             <table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Қайдан</th><th>Статус</th><th>Ескерту</th><th>Өшіру</th></tr></thead><tbody id="leadRows"></tbody></table>
@@ -363,7 +364,7 @@
         <div class="card" style="margin-top:16px">
           <div class="form-grid" style="grid-template-columns:1fr 240px">
             <div style="font-size:22px;font-weight:900;align-self:center">Оқушылар тізімі</div>
-            <input id="studentSearch" class="input" placeholder="Іздеу" oninput="renderStudents()" />
+            <input id="studentSearch" class="input" placeholder="Іздеу" oninput="debounceStudentRender()" />
           </div>
           <div class="table-wrap" style="margin-top:12px">
             <table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Код</th><th>PIN</th><th>Жасы</th><th>Филиал</th><th>Өшіру</th></tr></thead><tbody id="studentRows"></tbody></table>
@@ -536,6 +537,8 @@
               <select id="onlineVideoMode" class="select"><option value="youtube">YouTube</option><option value="file">Файл</option><option value="link">Ссылка</option></select>
               <input id="onlineYoutubeUrl" class="input" placeholder="YouTube ссылка" />
               <input id="onlineFileUrl" class="input" placeholder="Ссылка / file url" />
+              <input id="onlineVideoFile" class="input" type="file" accept="video/*" />
+              <div class="muted small" style="grid-column:1/-1">Файл режимінде телефоннан не ноутбуктан видеоны тікелей таңдап жүктей аласың.</div>
             </div>
             <button class="btn ok" style="margin-top:12px" onclick="saveOnlineLesson()">Сабақ қосу</button>
           </div>
@@ -550,7 +553,7 @@
             <input id="testA2" class="input" placeholder="Жауап 2" />
             <input id="testA3" class="input" placeholder="Жауап 3" />
             <input id="testA4" class="input" placeholder="Жауап 4" />
-            <input id="testCorrect" class="input" placeholder="Дұрыс жауап" />
+            <select id="testCorrect" class="select"><option value="">Дұрыс жауапты таңда</option></select>
           </div>
           <button class="btn warn" style="margin-top:12px" onclick="saveOnlineTest()">Тест сұрақ қосу</button>
         </div>
@@ -636,11 +639,19 @@
     let parentStudent = null;
     let accessLocked = false;
     let lockReason = '';
+    let preferredCourseId = '';
+    let preferredModuleId = '';
     let state = {
       tenants: [], subscriptions: [], profiles: [], branches: [], students: [], leads: [], groups: [],
       journal: [], progress: [], payments: [], finance: [], staffInvites: [],
       onlineStudents: [], onlineCourses: [], onlineModules: [], onlineLessons: [], onlineTests: [],
-      onlinePayments: [], onlineJournal: [], onlineProgress: []
+      onlinePayments: [], onlineJournal: [], onlineProgress: [],
+      meta: { studentCount:0, groupCount:0, onlineCourseCount:0, paymentAmount:null }
+    };
+    const sectionCache = {
+      leads:false, students:false, groups:false, journal:false, progress:false, payments:false, finance:false,
+      'online-courses':false, 'online-upload':false, 'online-students':false, 'online-journal':false, 'online-payments':false,
+      staff:false, branches:false
     };
 
     const tariffFeatures = {
@@ -692,18 +703,19 @@
     };
 
     navBtns.forEach(btn=>{
-      btn.addEventListener('click',()=>{
+      btn.addEventListener('click', async ()=>{
         if(btn.classList.contains('disabled')) return;
-        setSection(btn.dataset.section);
+        await setSection(btn.dataset.section);
       });
     });
 
-    function setSection(id){
+    async function setSection(id){
       activeSection = id;
       navBtns.forEach(x=>x.classList.toggle('active', x.dataset.section === id));
       sections.forEach(s=>s.classList.toggle('active', s.id === id));
       document.getElementById('pageTitle').textContent = titleMap[id][0];
       document.getElementById('pageSub').textContent = titleMap[id][1];
+      await loadSectionData(id, false);
       renderAll();
       applyLockedUi();
     }
@@ -744,6 +756,118 @@
       document.getElementById('studentAge').value = calcAge(e.target.value);
     });
 
+
+
+    function refreshCorrectAnswerOptions(){
+      const a1 = document.getElementById('testA1')?.value?.trim() || 'Жауап 1';
+      const a2 = document.getElementById('testA2')?.value?.trim() || 'Жауап 2';
+      const a3 = document.getElementById('testA3')?.value?.trim() || 'Жауап 3';
+      const a4 = document.getElementById('testA4')?.value?.trim() || 'Жауап 4';
+      const select = document.getElementById('testCorrect');
+      if(!select) return;
+      const current = select.value;
+      select.innerHTML = `
+        <option value="">Дұрыс жауапты таңда</option>
+        <option value="1">1 — ${esc(a1)}</option>
+        <option value="2">2 — ${esc(a2)}</option>
+        <option value="3">3 — ${esc(a3)}</option>
+        <option value="4">4 — ${esc(a4)}</option>
+      `;
+      if(current) select.value = current;
+    }
+
+    function fillSelects(){
+      const branchOpts = ['<option value="">Филиал таңда</option>'].concat(
+        state.branches.map(b => `<option value="${b.id}">${esc(b.name)}${b.city ? ' — ' + esc(b.city) : ''}</option>`)
+      ).join('');
+
+      ['studentBranch','groupBranch','staffBranch'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = branchOpts;
+      });
+
+      const teacherOpts = ['<option value="">Мұғалім таңда</option>'].concat(
+        state.profiles.map(p => `<option value="${p.id}">${esc(p.full_name || p.email || p.role)}</option>`)
+      ).join('');
+      const groupTeacher = document.getElementById('groupTeacher');
+      if(groupTeacher) groupTeacher.innerHTML = teacherOpts;
+
+      const studentOpts = ['<option value="">Оқушы таңда</option>'].concat(
+        state.students.map(s => `<option value="${s.id}">${esc(s.full_name)}${s.student_code ? ' — ' + esc(s.student_code) : ''}</option>`)
+      ).join('');
+      ['journalStudent','progressStudent','paymentStudent','paymentMsgStudent'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = studentOpts;
+      });
+
+      const groupOpts = ['<option value="">Топ таңда</option>'].concat(
+        state.groups.map(g => `<option value="${g.id}">${esc(g.title)}${g.direction ? ' — ' + esc(g.direction) : ''}</option>`)
+      ).join('');
+      const journalGroup = document.getElementById('journalGroup');
+      if(journalGroup) journalGroup.innerHTML = groupOpts;
+
+      const courseSelect = document.getElementById('onlineCourseSelect');
+      const courseOpts = ['<option value="">Курс таңда</option>'].concat(
+        state.onlineCourses.map(c => `<option value="${c.id}">${esc(c.title)}</option>`)
+      ).join('');
+      if(courseSelect){
+        const currentCourse = preferredCourseId || courseSelect.value;
+        courseSelect.innerHTML = courseOpts;
+        if(currentCourse && state.onlineCourses.some(c=>c.id===currentCourse)) courseSelect.value = currentCourse;
+        else if(state.onlineCourses[0]) courseSelect.value = state.onlineCourses[0].id;
+      }
+
+      const activeCourseId = document.getElementById('onlineCourseSelect')?.value || '';
+      const moduleSelect = document.getElementById('onlineModuleSelect');
+      const moduleOpts = ['<option value="">Модуль таңда</option>'].concat(
+        state.onlineModules
+          .filter(m => !activeCourseId || m.course_id === activeCourseId)
+          .map(m => `<option value="${m.id}">${esc(m.title)}</option>`)
+      ).join('');
+      if(moduleSelect){
+        const currentModule = preferredModuleId || moduleSelect.value;
+        moduleSelect.innerHTML = moduleOpts;
+        if(currentModule && state.onlineModules.some(m=>m.id===currentModule)) moduleSelect.value = currentModule;
+      }
+
+      const lessonSelect = document.getElementById('testLessonSelect');
+      const modulesForCourse = state.onlineModules.filter(m => !activeCourseId || m.course_id === activeCourseId).map(m=>m.id);
+      const lessonOpts = ['<option value="">Сабақты таңда</option>'].concat(
+        state.onlineLessons
+          .filter(l => modulesForCourse.length ? modulesForCourse.includes(l.module_id) : true)
+          .map(l => `<option value="${l.id}">${esc(l.title)}</option>`)
+      ).join('');
+      if(lessonSelect) lessonSelect.innerHTML = lessonOpts;
+
+      preferredCourseId = '';
+      preferredModuleId = '';
+      refreshCorrectAnswerOptions();
+    }
+
+    document.getElementById('onlineCourseSelect')?.addEventListener('change', ()=>fillSelects());
+    ['testA1','testA2','testA3','testA4'].forEach(id=>{
+      document.getElementById(id)?.addEventListener('input', refreshCorrectAnswerOptions);
+    });
+
+
+
+    async function generateUniqueStudentCode(tenantId){
+      for(let i=0;i<20;i++){
+        const code = randCode();
+        const check = await sb.from('students').select('id').eq('tenant_id', tenantId).eq('student_code', code).limit(1).maybeSingle();
+        if(!check.data) return code;
+      }
+      return 'EDU' + Date.now().toString().slice(-8);
+    }
+
+    async function generateUniquePin(tenantId){
+      for(let i=0;i<20;i++){
+        const pin = randPin();
+        const check = await sb.from('students').select('id').eq('tenant_id', tenantId).eq('pin_code', pin).limit(1).maybeSingle();
+        if(!check.data) return pin;
+      }
+      return String(Math.floor(100000 + Math.random()*900000));
+    }
 
     async function registerDirector(){
       clearAuthNotice();
@@ -878,7 +1002,7 @@
       document.getElementById('centerUser').textContent = 'Пайдаланушы: ' + (profile.full_name || profile.email || '—');
       document.getElementById('centerRole').textContent = 'Рөлі: ' + (profile.role || '—');
 
-      await loadTenantData();
+      await loadTenantData(false);
       applyRoleUI();
       renderAll();
       applyLockedUi();
@@ -929,37 +1053,112 @@
     }
 
 
-    async function loadTenantData(){
+
+    async function loadDashboardMeta(){
       if(!profile?.tenant_id) return;
       const tenantId = profile.tenant_id;
-      const results = await Promise.all([
+      const [sCount, gCount, cCount] = await Promise.all([
+        sb.from('students').select('*', {count:'exact', head:true}).eq('tenant_id', tenantId),
+        sb.from('groups').select('*', {count:'exact', head:true}).eq('tenant_id', tenantId),
+        sb.from('online_courses').select('*', {count:'exact', head:true}).eq('tenant_id', tenantId)
+      ]);
+      state.meta.studentCount = sCount.count || 0;
+      state.meta.groupCount = gCount.count || 0;
+      state.meta.onlineCourseCount = cCount.count || 0;
+      state.meta.paymentAmount = null;
+    }
+
+    async function loadSectionData(section, force=false){
+      if(!profile?.tenant_id) return;
+      const tenantId = profile.tenant_id;
+      if(section === 'dashboard'){
+        await loadDashboardMeta();
+        return;
+      }
+      if(!force && sectionCache[section]) return;
+
+      if(section === 'leads'){
+        state.leads = (await sb.from('crm_leads').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false})).data || [];
+      } else if(section === 'students'){
+        state.students = (await sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
+      } else if(section === 'groups'){
+        state.groups = (await sb.from('groups').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
+      } else if(section === 'journal'){
+        const [groupsRes, studentsRes, journalRes] = await Promise.all([
+          sb.from('groups').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
+          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
+          sb.from('attendance_journal').select('*').eq('tenant_id', tenantId).order('lesson_date', {ascending:false}).limit(300)
+        ]);
+        state.groups = groupsRes.data || [];
+        state.students = studentsRes.data || [];
+        state.journal = journalRes.data || [];
+      } else if(section === 'progress'){
+        const [studentsRes, progressRes] = await Promise.all([
+          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
+          sb.from('education_records').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)
+        ]);
+        state.students = studentsRes.data || [];
+        state.progress = progressRes.data || [];
+      } else if(section === 'payments'){
+        const [studentsRes, paymentsRes] = await Promise.all([
+          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
+          sb.from('payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)
+        ]);
+        state.students = studentsRes.data || [];
+        state.payments = paymentsRes.data || [];
+        state.meta.paymentAmount = state.payments.reduce((a,b)=>a + Number(b.amount || 0), 0);
+      } else if(section === 'finance'){
+        state.finance = (await sb.from('finance_entries').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)).data || [];
+      } else if(section === 'online-courses'){
+        state.onlineCourses = (await sb.from('online_courses').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
+      } else if(section === 'online-upload'){
+        const [cRes,mRes,lRes,tRes] = await Promise.all([
+          sb.from('online_courses').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
+          sb.from('online_modules').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300),
+          sb.from('online_lessons').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(400),
+          sb.from('online_tests').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(400)
+        ]);
+        state.onlineCourses = cRes.data || [];
+        state.onlineModules = mRes.data || [];
+        state.onlineLessons = lRes.data || [];
+        state.onlineTests = tRes.data || [];
+      } else if(section === 'online-students'){
+        state.onlineStudents = (await sb.from('online_students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)).data || [];
+      } else if(section === 'online-journal'){
+        state.onlineJournal = (await sb.from('online_journal').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(400)).data || [];
+      } else if(section === 'online-payments'){
+        const [studentsRes, payRes] = await Promise.all([
+          sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200),
+          sb.from('online_payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(300)
+        ]);
+        state.students = studentsRes.data || [];
+        state.onlinePayments = payRes.data || [];
+      } else if(section === 'staff'){
+        state.staffInvites = (await sb.from('staff_invites').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
+      } else if(section === 'branches'){
+        state.branches = (await sb.from('branches').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)).data || [];
+      }
+
+      if(sectionCache.hasOwnProperty(section)) sectionCache[section] = true;
+      fillSelects();
+    }
+
+    async function loadTenantData(force=true){
+      if(!profile?.tenant_id) return;
+      const tenantId = profile.tenant_id;
+      const coreResults = await Promise.all([
         sb.from('tenants').select('*').eq('id', tenantId),
         sb.from('subscriptions').select('*').eq('tenant_id', tenantId),
         sb.from('profiles').select('*').eq('tenant_id', tenantId),
-        sb.from('branches').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('crm_leads').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('groups').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('attendance_journal').select('*').eq('tenant_id', tenantId).order('lesson_date', {ascending:false}),
-        sb.from('education_records').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('finance_entries').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('staff_invites').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_students').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_courses').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_modules').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_lessons').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_tests').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_payments').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_journal').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
-        sb.from('online_progress').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
+        sb.from('branches').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}).limit(200)
       ]);
-      [
-        state.tenants, state.subscriptions, state.profiles, state.branches, state.students, state.leads,
-        state.groups, state.journal, state.progress, state.payments, state.finance, state.staffInvites,
-        state.onlineStudents, state.onlineCourses, state.onlineModules, state.onlineLessons, state.onlineTests,
-        state.onlinePayments, state.onlineJournal, state.onlineProgress
-      ] = results.map(r=>r.data || []);
+      [state.tenants, state.subscriptions, state.profiles, state.branches] = coreResults.map(r=>r.data || []);
+
+      if(force){
+        Object.keys(sectionCache).forEach(k=>sectionCache[k] = false);
+      }
+      await loadDashboardMeta();
+      await loadSectionData(activeSection || 'dashboard', force);
       fillSelects();
       applyTariffVisual();
       renderAll();
@@ -1139,15 +1338,15 @@
         phone: document.getElementById('studentPhone').value.trim(),
         email: document.getElementById('studentEmail').value.trim(),
         direction: document.getElementById('studentDirection').value.trim(),
-        student_code: document.getElementById('studentCode').value.trim() || randCode(),
-        pin_code: document.getElementById('studentPin').value.trim() || randPin(),
+        student_code: document.getElementById('studentCode').value.trim() || await generateUniqueStudentCode(profile.tenant_id),
+        pin_code: document.getElementById('studentPin').value.trim() || await generateUniquePin(profile.tenant_id),
         date_of_birth: dob || null,
         age: document.getElementById('studentAge').value.trim() ? Number(document.getElementById('studentAge').value) : (dob ? calcAge(dob) : null),
         monthly_fee: Number(document.getElementById('studentMonthlyFee').value || 0),
         branch_id: document.getElementById('studentBranch').value || null,
         status: 'Белсенді'
       };
-      if(!payload.full_name) return;
+      if(!payload.full_name) return notice('Оқушы атын жаз', 'err');
       const res = await sb.from('students').insert(payload);
       if(res.error) return notice(res.error.message, 'err');
       await loadTenantData();
@@ -1324,9 +1523,13 @@
         portal_link: 'https://eduonline-delta.vercel.app/'
       };
       if(!payload.title) return;
-      const res = await sb.from('online_courses').insert(payload);
+      const res = await sb.from('online_courses').insert(payload).select().single();
       if(res.error) return notice(res.error.message, 'err');
+      preferredCourseId = res.data.id;
       await loadTenantData();
+      document.getElementById('onlineCourseTitle').value = '';
+      document.getElementById('onlineCoursePrice').value = '';
+      document.getElementById('onlineCourseDesc').value = '';
       notice('Онлайн курс сақталды');
     }
     async function deleteOnlineCourse(id){
@@ -1339,16 +1542,46 @@
       if(!requireWrite('online-upload')) return;
       const courseId = document.getElementById('onlineCourseSelect').value;
       const title = document.getElementById('onlineModuleTitle').value.trim();
-      if(!courseId || !title) return;
-      const res = await sb.from('online_modules').insert({ tenant_id: profile.tenant_id, course_id: courseId, title });
+      if(!courseId) return notice('Алдымен курс таңда', 'err');
+      if(!title) return notice('Модуль атауын жаз', 'err');
+      const res = await sb.from('online_modules').insert({ tenant_id: profile.tenant_id, course_id: courseId, title }).select().single();
       if(res.error) return notice(res.error.message, 'err');
+      preferredCourseId = courseId;
+      preferredModuleId = res.data.id;
       await loadTenantData();
+      document.getElementById('onlineModuleTitle').value = '';
       notice('Модуль сақталды');
     }
+
+    async function uploadLessonVideoFile(file){
+      if(!file) return { publicUrl: null };
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${profile.tenant_id}/${Date.now()}_${safeName}`;
+      const uploadRes = await sb.storage
+        .from('lesson-videos')
+        .upload(path, file, { upsert: false, contentType: file.type || 'video/mp4' });
+
+      if(uploadRes.error) return { error: uploadRes.error };
+
+      const { data } = sb.storage.from('lesson-videos').getPublicUrl(path);
+      return { publicUrl: data.publicUrl };
+    }
+
+
 
     async function saveOnlineLesson(){
       if(!requireWrite('online-upload')) return;
       const mode = document.getElementById('onlineVideoMode').value;
+      const fileInput = document.getElementById('onlineVideoFile');
+      let fileUrl = mode !== 'youtube' ? document.getElementById('onlineFileUrl').value.trim() : null;
+
+      if(mode === 'file' && fileInput && fileInput.files && fileInput.files[0]){
+        notice('Видео жүктеліп жатыр...', 'ok');
+        const uploaded = await uploadLessonVideoFile(fileInput.files[0]);
+        if(uploaded.error) return notice(uploaded.error.message, 'err');
+        fileUrl = uploaded.publicUrl;
+      }
+
       const payload = {
         tenant_id: profile.tenant_id,
         module_id: document.getElementById('onlineModuleSelect').value || null,
@@ -1356,30 +1589,53 @@
         duration: document.getElementById('onlineLessonDuration').value.trim(),
         video_mode: mode,
         youtube_url: mode === 'youtube' ? document.getElementById('onlineYoutubeUrl').value.trim() : null,
-        file_url: mode !== 'youtube' ? document.getElementById('onlineFileUrl').value.trim() : null
+        file_url: mode !== 'youtube' ? fileUrl : null
       };
+
       if(!payload.module_id || !payload.title) return;
+      if(mode !== 'youtube' && !payload.file_url) return notice('Файл таңда немесе ссылка қой', 'err');
+
       const res = await sb.from('online_lessons').insert(payload);
       if(res.error) return notice(res.error.message, 'err');
+
+      if(fileInput) fileInput.value = '';
+      document.getElementById('onlineFileUrl').value = '';
+      document.getElementById('onlineYoutubeUrl').value = '';
+      document.getElementById('onlineLessonTitle').value = '';
+      document.getElementById('onlineLessonDuration').value = '';
+
       await loadTenantData();
       notice('Онлайн сабақ сақталды');
     }
 
     async function saveOnlineTest(){
       if(!requireWrite('online-upload')) return;
+      const correctKey = document.getElementById('testCorrect').value;
+      const answers = {
+        '1': document.getElementById('testA1').value.trim(),
+        '2': document.getElementById('testA2').value.trim(),
+        '3': document.getElementById('testA3').value.trim(),
+        '4': document.getElementById('testA4').value.trim()
+      };
       const payload = {
         tenant_id: profile.tenant_id,
         lesson_id: document.getElementById('testLessonSelect').value || null,
         question: document.getElementById('testQuestion').value.trim(),
-        answer_1: document.getElementById('testA1').value.trim(),
-        answer_2: document.getElementById('testA2').value.trim(),
-        answer_3: document.getElementById('testA3').value.trim(),
-        answer_4: document.getElementById('testA4').value.trim(),
-        correct_answer: document.getElementById('testCorrect').value.trim()
+        answer_1: answers['1'],
+        answer_2: answers['2'],
+        answer_3: answers['3'],
+        answer_4: answers['4'],
+        correct_answer: correctKey
       };
-      if(!payload.lesson_id || !payload.question) return;
+      if(!payload.lesson_id) return notice('Алдымен сабақты таңда', 'err');
+      if(!payload.question) return notice('Сұрақты жаз', 'err');
+      if(!answers['1'] || !answers['2'] || !answers['3'] || !answers['4']) return notice('4 жауаптың бәрін толтыр', 'err');
+      if(!correctKey) return notice('Дұрыс жауапты таңда', 'err');
       const res = await sb.from('online_tests').insert(payload);
       if(res.error) return notice(res.error.message, 'err');
+      ['testQuestion','testA1','testA2','testA3','testA4'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('testCorrect').value = '';
+      refreshCorrectAnswerOptions();
       await loadTenantData();
       notice('Тест сақталды');
     }
@@ -1411,7 +1667,59 @@
       if(!requireWrite('online-payments')) return;
       const row = state.onlinePayments.find(x=>x.id === id);
       if(!row) return;
-      await sb.from('online_payments').update({ status:'approved', approved_at: new Date().toISOString(), crm_synced: true }).eq('id', id);
+      await sb.from('online_payments').update({
+        status:'approved',
+        approved_at:new Date().toISOString(),
+        crm_synced:true
+      }).eq('id', id);
+
+      const existing = await sb.from('online_enrollments')
+        .select('*')
+        .eq('crm_student_id', row.crm_student_id)
+        .eq('course_id', row.course_id)
+        .limit(1)
+        .maybeSingle();
+
+      if(!existing.data){
+        await sb.from('online_enrollments').insert({
+          tenant_id: profile.tenant_id,
+          crm_student_id: row.crm_student_id,
+          online_student_id: row.online_student_id,
+          course_id: row.course_id,
+          access_status:'active',
+          activated_by_profile_id: profile.id,
+          activated_at:new Date().toISOString()
+        });
+      }
+
+      const paymentRes = await sb.from('payments').insert({
+        tenant_id: profile.tenant_id,
+        student_id: row.crm_student_id,
+        full_name: row.student_name,
+        paid_at: today(),
+        due_date: today(),
+        amount: row.amount,
+        discount: 0,
+        status: 'Төленді',
+        note: 'Online course approved',
+        source: 'online',
+        course_title: row.course_title || ''
+      }).select().single();
+
+      if(paymentRes.data){
+        await sb.from('finance_entries').insert({
+          tenant_id: profile.tenant_id,
+          linked_payment_id: paymentRes.data.id,
+          entry_type: 'Кіріс',
+          amount: row.amount,
+          entry_date: today(),
+          subject_name: row.student_name || '',
+          category: 'Online төлем',
+          note: row.course_title || 'Online course',
+          auto_generated: true
+        });
+      }
+
       await loadTenantData();
       notice('Онлайн доступ ашылды');
     }
@@ -1424,12 +1732,14 @@
     }
 
     function renderDashboard(){
-      const onlineCount = state.onlineCourses.length;
-      const income = state.payments.reduce((a,b)=>a + Number(b.amount || 0), 0);
+      const onlineCount = state.meta.onlineCourseCount ?? state.onlineCourses.length;
+      const studentCount = state.meta.studentCount ?? state.students.length;
+      const groupCount = state.meta.groupCount ?? state.groups.length;
+      const income = state.meta.paymentAmount;
       document.getElementById('dashboardStats').innerHTML = `
-        <div class="card kpi"><div class="label">Оқушылар</div><div class="value">${state.students.length}</div></div>
-        <div class="card kpi"><div class="label">Топтар</div><div class="value">${state.groups.length}</div></div>
-        <div class="card kpi"><div class="label">Айлық төлем</div><div class="value">${money(income)}</div></div>
+        <div class="card kpi"><div class="label">Оқушылар</div><div class="value">${studentCount}</div></div>
+        <div class="card kpi"><div class="label">Топтар</div><div class="value">${groupCount}</div></div>
+        <div class="card kpi"><div class="label">Айлық төлем</div><div class="value">${income === null ? '...' : money(income)}</div></div>
         <div class="card kpi"><div class="label">Онлайн курс</div><div class="value">${onlineCount}</div></div>
       `;
       const tenant = state.tenants[0] || state.tenant || {};
@@ -1463,6 +1773,11 @@
           <td><button class="btn danger" onclick="deleteLead('${x.id}')">Өшіру</button></td>
         </tr>`).join('') || '<tr><td colspan="7">Лид жоқ</td></tr>';
     }
+
+    let studentSearchTimer = null;
+    let leadSearchTimer = null;
+    function debounceStudentRender(){ clearTimeout(studentSearchTimer); studentSearchTimer = setTimeout(renderStudents, 220); }
+    function debounceLeadRender(){ clearTimeout(leadSearchTimer); leadSearchTimer = setTimeout(renderLeads, 220); }
 
     function renderStudents(){
       const q = document.getElementById('studentSearch').value.trim().toLowerCase();
@@ -1665,3 +1980,4 @@
   </script>
 <div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
+
