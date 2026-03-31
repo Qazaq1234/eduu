@@ -783,6 +783,25 @@
     }
     function money(v){ return `${Number(v||0).toLocaleString('ru-RU')} ₸`; }
     function esc(v){ return String(v ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    function qmatch(parts, q){
+      const text = parts.filter(Boolean).join(' ').toLowerCase();
+      return !q || text.includes(q);
+    }
+
+    async function uploadBucketFile(file, folder='misc'){
+      if(!file) return { publicUrl: null };
+      const safe = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${folder}/${profile.tenant_id}/${Date.now()}_${safe}`;
+      const up = await sb.storage.from('lesson-videos').upload(path, file, {
+        upsert: false,
+        contentType: file.type || 'application/octet-stream'
+      });
+      if(up.error) return { error: up.error };
+      const { data } = sb.storage.from('lesson-videos').getPublicUrl(path);
+      return { publicUrl: data.publicUrl };
+    }
+
     function today(){ return new Date().toISOString().slice(0,10); }
     function randCode(){ return 'EDU' + String(Math.floor(1000 + Math.random()*9000)); }
     function randPin(){ return String(Math.floor(1000 + Math.random()*9000)); }
@@ -2027,21 +2046,3 @@
   </script>
 <div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
-    function qmatch(parts, q){
-      const text = parts.filter(Boolean).join(' ').toLowerCase();
-      return !q || text.includes(q);
-    }
-
-    async function uploadBucketFile(file, folder='misc'){
-      if(!file) return { publicUrl: null };
-      const safe = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
-      const path = `${folder}/${profile.tenant_id}/${Date.now()}_${safe}`;
-      const up = await sb.storage.from('lesson-videos').upload(path, file, {
-        upsert: false,
-        contentType: file.type || 'application/octet-stream'
-      });
-      if(up.error) return { error: up.error };
-      const { data } = sb.storage.from('lesson-videos').getPublicUrl(path);
-      return { publicUrl: data.publicUrl };
-    }
-
