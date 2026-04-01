@@ -168,7 +168,7 @@
   <div id="authView" class="auth-shell">
     <div class="panel hero">
       <h1>EdukZ CRM Portal</h1>
-      <p> Owner бекіткеннен кейін тарифке сай бөлімдер ашылады.</p>
+      <p>Премиумға жақын таза интерфейс. Owner бекіткеннен кейін тарифке сай бөлімдер ашылады.</p>
     </div>
 
     <div class="panel auth-card">
@@ -1022,45 +1022,82 @@
       const password = document.getElementById('loginPassword').value.trim();
       if(!email || !password) return authNotice('Email мен құпия сөзді толтыр', 'err');
 
-      const authRes = await sb.auth.signInWithPassword({ email, password });
-      if(authRes.error) return authNotice(authRes.error.message, 'err');
+      let authProfile = null;
+      let tenantData = null;
+      let ownerData = null;
+      let authRes = await sb.auth.signInWithPassword({ email, password });
 
-      const userId = authRes.data.user?.id;
-      const profileRes = await sb
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending:false })
-        .limit(1)
-        .maybeSingle();
-      if(profileRes.error) return authNotice(profileRes.error.message, 'err');
-      if(!profileRes.data){
-        await sb.auth.signOut();
-        return authNotice('Profile табылмады', 'err');
+      if(!authRes.error && authRes.data.user?.id){
+        const userId = authRes.data.user.id;
+        const profileRes = await sb
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending:false })
+          .limit(1)
+          .maybeSingle();
+
+        if(profileRes.error) return authNotice(profileRes.error.message, 'err');
+        if(profileRes.data){
+          authProfile = profileRes.data;
+          session = { user_id: userId };
+        }
       }
 
-      profile = profileRes.data;
-      session = { user_id: userId };
+      if(!authProfile){
+        // fallback: staff_invites table login
+        const inviteRes = await sb
+          .from('staff_invites')
+          .select('*')
+          .eq('email', email)
+          .eq('password_plain', password)
+          .order('created_at', { ascending:false })
+          .limit(1)
+          .maybeSingle();
+
+        if(inviteRes.error) return authNotice(inviteRes.error.message, 'err');
+        if(!inviteRes.data){
+          if(!authRes.error && authRes.data.session) await sb.auth.signOut();
+          return authNotice('Email немесе құпия сөз қате', 'err');
+        }
+
+        authProfile = {
+          id: inviteRes.data.id,
+          tenant_id: inviteRes.data.tenant_id,
+          branch_id: inviteRes.data.branch_id,
+          full_name: inviteRes.data.full_name,
+          email: inviteRes.data.email,
+          role: inviteRes.data.role,
+          status: 'active',
+          login_source: 'staff_invite'
+        };
+        session = { user_id: null };
+      }
+
+      profile = authProfile;
 
       const [tenantRes, ownerRes] = await Promise.all([
         sb.from('tenants').select('*').eq('id', profile.tenant_id).limit(1).maybeSingle(),
         sb.from('owner_controls').select('*').eq('tenant_id', profile.tenant_id).limit(1).maybeSingle()
       ]);
+
       if(tenantRes.error) return authNotice(tenantRes.error.message, 'err');
+      tenantData = tenantRes.data || null;
+      ownerData = ownerRes.data || null;
 
       accessLocked = false;
       lockReason = '';
-      if(!tenantRes.data){
+      if(!tenantData){
         accessLocked = true;
         lockReason = 'Орталық ақпараты табылмады. Қарау режимі ғана ашық.';
-      } else if(tenantRes.data.status !== 'active' || !ownerRes.data?.opened){
+      } else if(tenantData.status !== 'active' || !ownerData?.opened){
         accessLocked = true;
         lockReason = 'Owner доступты жапқан. Порталға кірдің, бірақ қазір тек қарау режимі ашық.';
       }
 
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('portalView').classList.remove('hidden');
-      document.getElementById('centerName').textContent = 'Орталық: ' + (tenantRes.data?.name || '—');
+      document.getElementById('centerName').textContent = 'Орталық: ' + (tenantData?.name || '—');
       document.getElementById('centerUser').textContent = 'Пайдаланушы: ' + (profile.full_name || profile.email || '—');
       document.getElementById('centerRole').textContent = 'Рөлі: ' + (profile.role || '—');
 
@@ -1068,6 +1105,21 @@
       applyRoleUI();
       renderAll();
       applyLockedUi();
+    }
+
+
+    function parentTable(title, headers, rowsHtml){
+      return `
+        <div class="card" style="margin-top:16px">
+          <div style="font-size:22px;font-weight:900;margin-bottom:12px">${title}</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>${rowsHtml || `<tr><td colspan="${headers.length}">Мәлімет жоқ</td></tr>`}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
     }
 
     async function parentLogin(){
@@ -1087,18 +1139,80 @@
       if(res.error || !res.data) return authNotice('Код немесе PIN қате', 'err');
       parentStudent = res.data;
 
-      const [paymentsRes, journalRes, progressRes, onlinePaymentsRes, tenantRes] = await Promise.all([
+      const [paymentsRes, journalRes, progressRes, onlinePaymentsRes, tenantRes, onlineJournalRes, onlineProgressRes] = await Promise.all([
         sb.from('payments').select('*').eq('student_id', parentStudent.id).order('created_at', {ascending:false}),
         sb.from('attendance_journal').select('*').eq('student_id', parentStudent.id).order('lesson_date', {ascending:false}),
         sb.from('education_records').select('*').eq('student_id', parentStudent.id).order('created_at', {ascending:false}),
         sb.from('online_payments').select('*').eq('crm_student_id', parentStudent.id).order('created_at', {ascending:false}),
-        sb.from('tenants').select('*').eq('id', parentStudent.tenant_id).limit(1).maybeSingle()
+        sb.from('tenants').select('*').eq('id', parentStudent.tenant_id).limit(1).maybeSingle(),
+        sb.from('online_journal').select('*').eq('crm_student_id', parentStudent.id).order('created_at', {ascending:false}),
+        sb.from('online_progress').select('*').eq('crm_student_id', parentStudent.id).order('created_at', {ascending:false}),
       ]);
 
       const tenant = tenantRes.data || {};
-      const lastPayment = paymentsRes.data?.[0] || onlinePaymentsRes.data?.[0];
-      const nextDue = paymentsRes.data?.find(x=>x.due_date)?.due_date || '—';
+      const payments = paymentsRes.data || [];
+      const journal = journalRes.data || [];
+      const progress = progressRes.data || [];
+      const onlinePayments = onlinePaymentsRes.data || [];
+      const onlineJournal = onlineJournalRes.data || [];
+      const onlineProgress = onlineProgressRes.data || [];
+
+      const lastPayment = payments[0] || onlinePayments[0];
+      const nextDue = payments.find(x=>x.due_date)?.due_date || '—';
       const debt = Number(parentStudent.debt_amount || 0);
+
+      const attendanceRows = journal.map(x=>`
+        <tr>
+          <td>${esc(x.lesson_date || '')}</td>
+          <td>${esc(x.topic || '')}</td>
+          <td>${esc(x.attendance_status || '')}</td>
+        </tr>
+      `).join('');
+
+      const progressRows = progress.map(x=>`
+        <tr>
+          <td>${esc((x.created_at || '').slice(0,10))}</td>
+          <td>${esc(x.homework_status || '')}</td>
+          <td>${esc(String(x.test_score || ''))}</td>
+          <td>${esc(x.teacher_comment || '')}</td>
+          <td>${esc(x.weekly_result || x.monthly_result || '')}</td>
+        </tr>
+      `).join('');
+
+      const paymentRows = payments.map(x=>`
+        <tr>
+          <td>${esc(x.paid_at || x.created_at?.slice(0,10) || '')}</td>
+          <td>${money(x.amount || 0)}</td>
+          <td>${esc(x.status || '')}</td>
+          <td>${esc(x.note || '')}</td>
+        </tr>
+      `).join('');
+
+      const onlinePaymentRows = onlinePayments.map(x=>`
+        <tr>
+          <td>${esc((x.created_at || '').slice(0,10))}</td>
+          <td>${esc(x.course_title || '')}</td>
+          <td>${money(x.amount || 0)}</td>
+          <td>${esc(x.status || '')}</td>
+        </tr>
+      `).join('');
+
+      const onlineJournalRows = onlineJournal.map(x=>`
+        <tr>
+          <td>${esc(x.study_date || '')}</td>
+          <td>${esc(x.lesson_title || '')}</td>
+          <td>${esc((x.created_at || '').replace('T',' ').slice(0,16))}</td>
+        </tr>
+      `).join('');
+
+      const onlineProgressRows = onlineProgress.map(x=>`
+        <tr>
+          <td>${esc((x.created_at || '').slice(0,10))}</td>
+          <td>${esc(x.lesson_id || '')}</td>
+          <td>${x.completed ? 'Аяқталды' : 'Оқылуда'}</td>
+          <td>${esc((x.completed_at || '').replace('T',' ').slice(0,16) || '—')}</td>
+        </tr>
+      `).join('');
 
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('parentView').classList.remove('hidden');
@@ -1110,7 +1224,18 @@
           <div class="item"><strong>Қарыз</strong><div class="muted">${money(debt)}</div></div>
           <div class="item"><strong>Соңғы төлем</strong><div class="muted">${lastPayment ? money(lastPayment.amount) : '—'}</div></div>
           <div class="item"><strong>Төлем жасау</strong><div class="muted">${tenant.bank_payment_link ? `<a href="${tenant.bank_payment_link}" target="_blank">Банк ссылка ашу</a>` : 'Ссылка жоқ'}</div></div>
+          <div class="item"><strong>Орталық</strong><div class="muted">${esc(tenant.name || '')}</div></div>
+          <div class="item"><strong>Бағыт</strong><div class="muted">${esc(parentStudent.direction || '')}</div></div>
+          <div class="item"><strong>Телефон</strong><div class="muted">${esc(parentStudent.phone || '')}</div></div>
+          <div class="item"><strong>Email</strong><div class="muted">${esc(parentStudent.email || '')}</div></div>
         </div>
+
+        ${parentTable('Қатысу журналы', ['Күні','Тақырып','Статус'], attendanceRows)}
+        ${parentTable('Прогресс', ['Күні','Үй тапсырма','Тест','Мұғалім пікірі','Нәтиже'], progressRows)}
+        ${parentTable('Төлемдер', ['Күні','Сома','Статус','Ескерту'], paymentRows)}
+        ${parentTable('Online төлемдер', ['Күні','Курс','Сома','Статус'], onlinePaymentRows)}
+        ${parentTable('Online сабақ журналы', ['Күні','Сабақ','Уақыты'], onlineJournalRows)}
+        ${parentTable('Online прогресс', ['Күні','Lesson ID','Статус','Аяқталған уақыты'], onlineProgressRows)}
       `;
     }
 
