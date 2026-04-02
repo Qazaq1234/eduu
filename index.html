@@ -155,6 +155,20 @@
     .modal{width:min(980px,100%);max-height:90vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 20px 50px rgba(15,23,42,.22)}
     .actions-inline{display:flex;gap:8px;flex-wrap:wrap}
     .btn.tiny{padding:8px 10px;border-radius:10px;font-size:12px}
+    .lang-switch{
+      position:fixed;top:14px;right:14px;z-index:90;
+      display:flex;gap:8px;background:rgba(255,255,255,.92);
+      border:1px solid var(--line);padding:8px;border-radius:16px;
+      box-shadow:0 10px 30px rgba(15,23,42,.12);backdrop-filter:blur(8px)
+    }
+    .lang-switch .lang-btn{
+      appearance:none;border:1px solid var(--line);background:#fff;color:var(--text);
+      border-radius:12px;padding:8px 12px;font:inherit;font-weight:800;cursor:pointer
+    }
+    .lang-switch .lang-btn.active{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent
+    }
+
 
     a{color:#2563eb;text-decoration:none}
     a:hover{text-decoration:underline}
@@ -170,6 +184,12 @@
   </style>
 </head>
 <body>
+
+  <div class="lang-switch">
+    <button type="button" class="lang-btn" id="langKkBtn" onclick="setLang('kk')">Қаз</button>
+    <button type="button" class="lang-btn" id="langRuBtn" onclick="setLang('ru')">Рус</button>
+  </div>
+
   <div id="authView" class="auth-shell">
     <div class="panel hero">
       <h1>EdukZ CRM Portal</h1>
@@ -783,20 +803,97 @@
     });
 
     const sections = document.querySelectorAll('.section');
+    
+    const LANG_KEY = 'edukz_lang_crm';
+    let currentLang = localStorage.getItem(LANG_KEY) || 'kk';
+    const I18N_TEXTS = {"Кіру": "Войти", "Директор тіркелу": "Регистрация директора", "Ата-ана кіру": "Вход для родителя", "Email": "Email", "Құпия сөз": "Пароль", "Аты жөні": "ФИО", "Орталық атауы": "Название центра", "Қаласы": "Город", "Бағыты": "Направление", "Бас филиал": "Главный филиал", "Банк төлеміне ссылка": "Ссылка на оплату банка", "Тіркелу": "Регистрация", "Оқушы логин": "Логин ученика", "Пин код": "Пин-код", "Ата-ана панелі": "Панель родителя", "Оффлайн + онлайн ақпарат бір жерде": "Оффлайн + онлайн информация в одном месте", "Шығу": "Выход", "Premium version": "Премиум версия", "Орталық: —": "Центр: —", "Пайдаланушы: —": "Пользователь: —", "Рөлі: —": "Роль: —", "Басты бет": "Главная", "Тариф таңдау": "Выбор тарифа", "CRM лидтар": "CRM лиды", "Оқушылар": "Ученики", "Топтар": "Группы", "Журнал": "Журнал", "Прогресс": "Прогресс", "Төлем": "Платежи", "Кіріс/шығыс": "Доход/расход", "Онлайн курстар": "Онлайн курсы", "Онлайн сабақ жүктеу": "Загрузка онлайн уроков", "Онлайн оқушылар": "Онлайн ученики", "Онлайн журнал": "Онлайн журнал", "Онлайн төлемдер": "Онлайн платежи", "Табель / ЗП": "Табель / ЗП", "Қызметкерлер": "Сотрудники", "Филиалдар": "Филиалы", "Архив": "Архив", "CRM толық басқару панелі": "Полная CRM-панель управления", "Қысқа ескерту / сұраныс": "Короткая заметка / запрос", "Доступ жіберу": "Отправить запрос", "Белсенді тариф": "Активный тариф", "Сұралған тариф": "Запрошенный тариф", "Owner статусы": "Статус Owner", "Эконом": "Эконом", "Стандарт": "Стандарт", "Про": "Про", "Онлайн орталықтар": "Онлайн центры", "Лид қосу": "Добавить лид", "Аты": "Имя", "Телефон": "Телефон", "Қайдан келгені": "Источник", "Ескерту": "Комментарий", "Сақтау": "Сохранить", "Клиент дожим хабарламасы": "Сообщение клиенту", "WhatsApp номер": "Номер WhatsApp", "Клиентке жазу мәтіні": "Текст сообщения клиенту", "WhatsApp ашу": "Открыть WhatsApp", "Лид тізімі": "Список лидов", "Іздеу": "Поиск", "Статус": "Статус", "Өшіру": "Удалить", "Оқушы тіркеу": "Регистрация ученика", "Ата ана": "Родитель", "Email (міндетті емес)": "Email (необязательно)", "Оқушы коды": "Код ученика", "Оқушы пин коды": "Пин ученика", "Жасы автоматом": "Возраст автоматически", "Айлық төлем сумма": "Сумма ежемесячной оплаты", "Оқушылар тізімі": "Список учеников", "Тақырыптар": "Темы", "Әрекет": "Действие", "Топ қосу": "Добавить группу", "Топ атауы": "Название группы", "Кесте": "Расписание", "Аудитория": "Аудитория", "Топ тізімі": "Список групп", "Іздеу: топ, бағыт, мұғалім": "Поиск: группа, направление, учитель", "Журнал жазу": "Запись в журнал", "Тақырып": "Тема", "Келді": "Был", "Келмеді": "Не был", "Себепті": "По уважительной причине", "Күнтізбе бойынша қатысу": "Посещаемость по календарю", "Күнді таңдап, төменнен сол күнгі жазбаларды қарай аласың.": "Выберите дату и ниже увидите записи за этот день.", "Журнал тізімі": "Список журнала", "Іздеу: топ, оқушы, тақырып": "Поиск: группа, ученик, тема", "Прогресс еңгізу": "Внести прогресс", "Үй тапсырма": "Домашнее задание", "Мұғалім пікірі": "Комментарий учителя", "Оценка ручной": "Оценка вручную", "Тест %": "Тест %", "Апта нәтижесі": "Результат недели", "Ай нәтижесі": "Результат месяца", "Прогресс тізімі": "Список прогресса", "Іздеу: оқушы, тест, пікір": "Поиск: ученик, тест, комментарий", "Төлем еңгізу": "Внести платеж", "Төлем суммасы": "Сумма платежа", "Жеңілдік": "Скидка", "Төленді": "Оплачено", "Қарыз": "Долг", "Күтілуде": "Ожидается", "Төлемді сақтау": "Сохранить платеж", "Ата анаға хабарлама": "Сообщение родителю", "Төлем уақыт келді / қарыз қалды": "Срок оплаты пришёл / остался долг", "Төлем тарихы": "История платежей", "PDF жүктеу / Басып шығару": "Скачать PDF / Печать", "Кіріс / Шығыс / Жалақы": "Доход / расход / зарплата", "Орталықтың банк реквизиттері": "Банковские реквизиты центра", "Бұл бөлім дәл осы жерде тұрсын: филиалдар ішінде. Барлық орталық өз банк ссылкасы мен шотын осы жерден өзгерте алады.": "Этот блок находится именно здесь: внутри раздела филиалов. Каждый центр может менять ссылку банка и счёт здесь.", "Банк ссылка": "Ссылка банка", "Шот / Kaspi / IBAN": "Счёт / Kaspi / IBAN", "Филиал қосу": "Добавить филиал", "Филиал аты": "Название филиала", "Қала": "Город", "Адрес": "Адрес", "Архивтегі оқушылар": "Архивированные ученики", "Архивтегі онлайн оқушылар": "Архивированные онлайн ученики", "Қайтару": "Вернуть", "Толық өшіру": "Полностью удалить", "Жылдам шолу": "Быстрый обзор", "Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.": "Это премиум версия CRM. Разделы открываются согласно активному тарифу, подтверждённому Owner.", "Кіріс": "Доход", "Шығыс": "Расход", "Жалақы": "Зарплата", "Күн": "Дата", "Күні": "Дата", "Төлеу керек күні": "Дата оплаты", "Сома": "Сумма", "Курс": "Курс", "Ашық": "Открыт", "Доступ ашу": "Открыть доступ", "Оқу уақыты": "Время обучения", "Редакт": "Редактировать", "Онлайн журнал жазбасы өшірілді": "Запись онлайн-журнала удалена", "Онлайн төлем өшірілді": "Онлайн платеж удалён", "Оқушы архивке жіберілді": "Ученик отправлен в архив", "Оқушы архивтен қайтарылды": "Ученик возвращён из архива", "Оқушы толық өшірілді": "Ученик полностью удалён", "Онлайн оқушы архивке жіберілді": "Онлайн ученик отправлен в архив", "Онлайн оқушы архивтен қайтарылды": "Онлайн ученик возвращён из архива", "Онлайн оқушы толық өшірілді": "Онлайн ученик полностью удалён", "Банк реквизиттері сақталды": "Банковские реквизиты сохранены", "Оқушы формасы редакцияға толтырылды": "Форма ученика заполнена для редактирования", "Оқушы жаңартылды": "Ученик обновлён", "Оқушы сақталды": "Ученик сохранён"};
+    const ROLE_I18N = {"director": {"kk": "Директор", "ru": "Директор"}, "admin": {"kk": "Админ", "ru": "Админ"}, "teacher": {"kk": "Мұғалім", "ru": "Учитель"}, "accountant": {"kk": "Бухгалтер", "ru": "Бухгалтер"}, "marketing": {"kk": "Маркетинг", "ru": "Маркетинг"}};
+
+    function tr(input){
+      if(input == null) return input;
+      const s = String(input);
+      const entries = Object.entries(I18N_TEXTS);
+      for(const [kk, ru] of entries){
+        if(s === kk || s === ru) return currentLang === 'ru' ? ru : kk;
+      }
+      return s;
+    }
+    function trRole(role){
+      return ROLE_I18N[role]?.[currentLang] || role || '—';
+    }
+    function applyPrefix(el, kk, ru){
+      if(!el || !el.textContent) return;
+      const val = el.textContent.replace(/^.*?:\s*/, '');
+      el.textContent = (currentLang === 'ru' ? ru : kk) + ': ' + val;
+    }
+    function replaceTextNodes(root){
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let node;
+      while((node = walker.nextNode())){
+        const raw = node.nodeValue;
+        const trimmed = raw.trim();
+        if(!trimmed) continue;
+        const translated = tr(trimmed);
+        if(translated !== trimmed && raw === trimmed) node.nodeValue = translated;
+      }
+    }
+    function translatePlaceholders(){
+      document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el=>{
+        const val = el.getAttribute('placeholder');
+        el.setAttribute('placeholder', tr(val));
+      });
+    }
+    function translateTitleAndMeta(){
+      const tm = getTitleMap();
+      if(typeof activeSection !== 'undefined' && tm[activeSection]){
+        const title = document.getElementById('pageTitle');
+        const sub = document.getElementById('pageSub');
+        if(title) title.textContent = tm[activeSection][0];
+        if(sub) sub.textContent = tm[activeSection][1];
+      }
+      document.title = currentLang === 'ru' ? 'EdukZ CRM Портал' : 'EdukZ CRM Portal';
+    }
+    function updateLangButtons(){
+      document.getElementById('langKkBtn')?.classList.toggle('active', currentLang === 'kk');
+      document.getElementById('langRuBtn')?.classList.toggle('active', currentLang === 'ru');
+    }
+    function translateDynamicLabels(){
+      applyPrefix(document.getElementById('centerName'), 'Орталық', 'Центр');
+      applyPrefix(document.getElementById('centerUser'), 'Пайдаланушы', 'Пользователь');
+      const roleEl = document.getElementById('centerRole');
+      if(roleEl && roleEl.textContent){
+        const raw = roleEl.textContent.replace(/^.*?:\s*/, '');
+        roleEl.textContent = (currentLang === 'ru' ? 'Роль' : 'Рөлі') + ': ' + trRole(raw);
+      }
+    }
+    function applyLanguage(){
+      document.documentElement.lang = currentLang;
+      updateLangButtons();
+      translateTitleAndMeta();
+      translatePlaceholders();
+      replaceTextNodes(document.body);
+      translateDynamicLabels();
+    }
+    function setLang(lang){
+      currentLang = lang;
+      localStorage.setItem(LANG_KEY, lang);
+      applyLanguage();
+    }
+
     const navBtns = document.querySelectorAll('.nav-btn[data-section]');
     const roleSections = {
       director:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
       admin:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
-      teacher:['dashboard','students','groups','progress','online-courses','online-upload','online-students','online-journal','online-payments','timesheet'],
-      accountant:['dashboard','online-payments','payments','finance'],
-      marketing:['dashboard','leads']
+      teacher:['dashboard','students','groups','progress','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','archive'],
+      accountant:['dashboard','online-payments','payments','finance','archive'],
+      marketing:['dashboard','leads','archive']
     };
     const roleWriteSections = {
       director:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
       admin:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
-      teacher:['dashboard','progress','online-upload','online-journal','timesheet'],
-      accountant:['dashboard','payments','finance','online-payments'],
-      marketing:['dashboard','leads']
+      teacher:['dashboard','progress','online-upload','online-journal','timesheet','archive'],
+      accountant:['dashboard','payments','finance','online-payments','archive'],
+      marketing:['dashboard','leads','archive']
     };
     const editState = { leadId:null, studentId:null, groupId:null, journalId:null, progressId:null, paymentId:null, financeId:null, staffId:null, branchId:null };
 
@@ -857,27 +954,52 @@
         </tr>`;
       }).join('') || '<tr><td colspan="4">Тақырыптар жоқ</td></tr>';
       document.getElementById('studentTopicsModal').classList.remove('hidden');
+      applyLanguage();
     }
 
-    const titleMap = {
-      dashboard:['Басты бет','CRM толық басқару панелі'],
-      tariff:['Тариф таңдау','Тариф таңдап, Owner-ге сұраныс жіберу'],
-      leads:['CRM лидтар','Лид басқару'],
-      students:['Оқушылар','Оқушы базасы'],
-      groups:['Топтар','Топ және кесте'],
-      journal:['Журнал','Күнтізбе және қатысу'],
-      progress:['Прогресс','Үй тапсырма, тест, пікір'],
-      payments:['Төлем','Тарих және PDF'],
-      finance:['Кіріс/шығыс','Ақша айналымы'],
-      'online-courses':['Онлайн курстар','Portal ссылка'],
-      'online-upload':['Онлайн сабақ жүктеу','Курс, модуль, тест'],
-      'online-students':['Онлайн оқушылар','Online тізім'],
-      'online-journal':['Онлайн журнал','Оқу уақыты'],
-      'online-payments':['Онлайн төлемдер','Доступ ашу'],
-      timesheet:['Табель / ЗП','Мұғалім келу уақыты мен жалақы'],
-      staff:['Қызметкерлер','Рөл және филиал'],
-      branches:['Филиалдар','Филиал басқару']
+    const TITLE_MAPS = {
+      kk:{
+        dashboard:['Басты бет','CRM толық басқару панелі'],
+        tariff:['Тариф таңдау','Тариф таңдап, Owner-ге сұраныс жіберу'],
+        leads:['CRM лидтар','Лид басқару'],
+        students:['Оқушылар','Оқушы базасы'],
+        groups:['Топтар','Топ және кесте'],
+        journal:['Журнал','Күнтізбе және қатысу'],
+        progress:['Прогресс','Үй тапсырма, тест, пікір'],
+        payments:['Төлем','Тарих және PDF'],
+        finance:['Кіріс/шығыс','Ақша айналымы'],
+        'online-courses':['Онлайн курстар','Portal ссылка'],
+        'online-upload':['Онлайн сабақ жүктеу','Курс, модуль, тест'],
+        'online-students':['Онлайн оқушылар','Online тізім'],
+        'online-journal':['Онлайн журнал','Оқу уақыты'],
+        'online-payments':['Онлайн төлемдер','Доступ ашу'],
+        timesheet:['Табель / ЗП','Мұғалім келу уақыты мен жалақы'],
+        staff:['Қызметкерлер','Рөл және филиал'],
+        branches:['Филиалдар','Филиалдар және банк реквизиттері'],
+        archive:['Архив','Архивке кеткен балалар осы бөлімде тұрады']
+      },
+      ru:{
+        dashboard:['Главная','Полная CRM-панель управления'],
+        tariff:['Выбор тарифа','Выберите тариф и отправьте запрос Owner-у'],
+        leads:['CRM лиды','Управление лидами'],
+        students:['Ученики','База учеников'],
+        groups:['Группы','Группы и расписание'],
+        journal:['Журнал','Календарь и посещаемость'],
+        progress:['Прогресс','Домашка, тест, комментарий'],
+        payments:['Платежи','История и PDF'],
+        finance:['Доход/расход','Движение денег'],
+        'online-courses':['Онлайн курсы','Ссылка на портал'],
+        'online-upload':['Загрузка онлайн уроков','Курс, модуль, тест'],
+        'online-students':['Онлайн ученики','Список online'],
+        'online-journal':['Онлайн журнал','Время обучения'],
+        'online-payments':['Онлайн платежи','Открытие доступа'],
+        timesheet:['Табель / ЗП','Время прихода и зарплата учителя'],
+        staff:['Сотрудники','Роль и филиал'],
+        branches:['Филиалы','Филиалы и банковские реквизиты'],
+        archive:['Архив','Архивированные ученики']
+      }
     };
+    function getTitleMap(){ return TITLE_MAPS[currentLang] || TITLE_MAPS.kk; }
 
     navBtns.forEach(btn=>{
       btn.addEventListener('click',()=>{
@@ -890,22 +1012,24 @@
       activeSection = id;
       navBtns.forEach(x=>x.classList.toggle('active', x.dataset.section === id));
       sections.forEach(s=>s.classList.toggle('active', s.id === id));
-      document.getElementById('pageTitle').textContent = titleMap[id][0];
-      document.getElementById('pageSub').textContent = titleMap[id][1];
+      const tm = getTitleMap();
+      document.getElementById('pageTitle').textContent = tm[id][0];
+      document.getElementById('pageSub').textContent = tm[id][1];
       renderAll();
       applyLockedUi();
+      applyLanguage();
     }
 
     function notice(msg, type='ok'){
       const el = document.getElementById('topNotice');
-      el.textContent = msg;
+      el.textContent = tr(msg);
       el.className = 'notice ' + type;
       el.classList.remove('hidden');
       setTimeout(()=>el.classList.add('hidden'), 2600);
     }
     function authNotice(msg, type='ok'){
       const el = document.getElementById('authNotice');
-      el.textContent = msg;
+      el.textContent = tr(msg);
       el.className = 'notice ' + type;
       el.classList.remove('hidden');
     }
@@ -1228,9 +1352,9 @@ async function staffLogin(){
 
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('portalView').classList.remove('hidden');
-      document.getElementById('centerName').textContent = 'Орталық: ' + (tenantRes.data?.name || '—');
-      document.getElementById('centerUser').textContent = 'Пайдаланушы: ' + (profile.full_name || profile.email || '—');
-      document.getElementById('centerRole').textContent = 'Рөлі: ' + (profile.role || '—');
+      document.getElementById('centerName').textContent = (currentLang === 'ru' ? 'Центр: ' : 'Орталық: ') + (tenantRes.data?.name || '—');
+      document.getElementById('centerUser').textContent = (currentLang === 'ru' ? 'Пользователь: ' : 'Пайдаланушы: ') + (profile.full_name || profile.email || '—');
+      document.getElementById('centerRole').textContent = (currentLang === 'ru' ? 'Роль: ' : 'Рөлі: ') + trRole(profile.role || '—');
 
       await loadTenantData();
       applyRoleUI();
@@ -2350,7 +2474,7 @@ async function saveStaffInvite(){
       const allowed = roleSections[role] || roleSections.teacher;
       document.querySelectorAll('.nav-btn[data-section]').forEach(btn=>{btn.classList.toggle('disabled', !allowed.includes(btn.dataset.section));});
       const roleEl = document.getElementById('centerRole');
-      if(roleEl) roleEl.textContent = 'Рөлі: ' + role;
+      if(roleEl) roleEl.textContent = (currentLang === 'ru' ? 'Роль: ' : 'Рөлі: ') + trRole(role);
     }
 
     function renderDashboard(){
@@ -2363,18 +2487,9 @@ async function saveStaffInvite(){
         <div class="card kpi"><div class="label">Онлайн курс</div><div class="value">${onlineCount}</div></div>
       `;
       const tenant = state.tenants[0] || state.tenant || {};
-      const bankAccount = getTenantBankAccount();
       document.getElementById('dashboardLeft').innerHTML = `
         <div style="font-size:22px;font-weight:900;margin-bottom:12px">Жылдам шолу</div>
         <div class="notice">Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.</div>
-        <div class="card" style="padding:16px;border-radius:18px">
-          <div style="font-size:18px;font-weight:900;margin-bottom:10px">Банк реквизиттері</div>
-          <div class="form-grid">
-            <input id="tenantBankLinkInput" class="input" placeholder="Банк ссылка" value="${esc(tenant.bank_payment_link || '')}" />
-            <input id="tenantBankAccountInput" class="input" placeholder="Шот / Kaspi / IBAN" value="${esc(bankAccount || '')}" />
-          </div>
-          <button class="btn primary" style="margin-top:12px" onclick="saveTenantBankSettings()">Сақтау</button>
-        </div>
       `;
       document.getElementById('dashboardRight').innerHTML = `
         ${accessLocked ? `<div class="notice err" style="margin-bottom:12px">${esc(lockReason)}</div>` : ''}
@@ -2383,8 +2498,7 @@ async function saveStaffInvite(){
           <div class="item"><strong>Орталық</strong><div class="muted">${esc(tenant.name || '—')}</div></div>
           <div class="item"><strong>Қала</strong><div class="muted">${esc(tenant.city || '—')}</div></div>
           <div class="item"><strong>Бағыт</strong><div class="muted">${esc(tenant.direction || '—')}</div></div>
-          <div class="item"><strong>Банк ссылка</strong><div class="muted">${esc(tenant.bank_payment_link || '—')}</div></div>
-          <div class="item"><strong>Шот</strong><div class="muted">${esc(getTenantBankAccount() || '—')}</div></div>
+
         </div>
       `;
     }
@@ -2644,6 +2758,10 @@ async function saveStaffInvite(){
       const q = (document.getElementById('branchSearch')?.value || '').trim().toLowerCase();
       const rows = state.branches.filter(x=>qmatch([x.name, x.city, x.address, x.phone], q));
       const canDelete = canWrite('branches');
+      const linkInput = document.getElementById('tenantBankLinkInput');
+      const accInput = document.getElementById('tenantBankAccountInput');
+      if(linkInput) linkInput.value = state.tenants?.[0]?.bank_payment_link || '';
+      if(accInput) accInput.value = getTenantBankAccount() || '';
       document.getElementById('branchRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.name)}</td>
@@ -2723,6 +2841,7 @@ async function saveStaffInvite(){
       renderStaff();
       renderBranches();
       renderArchive();
+      applyLanguage();
     }
   </script>
 
