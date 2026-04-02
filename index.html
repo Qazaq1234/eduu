@@ -609,7 +609,7 @@
             <input id="onlineJournalSearch" class="input" placeholder="Іздеу: оқушы, сабақ, күн" style="max-width:340px" oninput="renderOnlineJournal()" />
           </div>
           <div class="table-wrap">
-            <table><thead><tr><th>Оқушы</th><th>Сабақ</th><th>Күні</th><th>Уақыты</th><th>Статус</th></tr></thead><tbody id="onlineJournalRows"></tbody></table>
+            <table><thead><tr><th>Оқушы</th><th>Сабақ</th><th>Күні</th><th>Уақыты</th><th>Статус</th><th>Өшіру</th></tr></thead><tbody id="onlineJournalRows"></tbody></table>
           </div>
         </div>
       </section>
@@ -621,7 +621,7 @@
             <input id="onlinePaymentSearch" class="input" placeholder="Іздеу: оқушы, курс, статус" style="max-width:340px" oninput="renderOnlinePayments()" />
           </div>
           <div class="table-wrap">
-            <table><thead><tr><th>Оқушы</th><th>Курс</th><th>Суммасы</th><th>Күні</th><th>Әрекет</th></tr></thead><tbody id="onlinePaymentRows"></tbody></table>
+            <table><thead><tr><th>Оқушы</th><th>Курс</th><th>Суммасы</th><th>Күні</th><th>Әрекет</th><th>Өшіру</th></tr></thead><tbody id="onlinePaymentRows"></tbody></table>
           </div>
         </div>
       </section>
@@ -761,10 +761,17 @@
     const sections = document.querySelectorAll('.section');
     const navBtns = document.querySelectorAll('.nav-btn[data-section]');
     const roleSections = {
-      director:['dashboard','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
-      admin:['dashboard','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
-      teacher:['dashboard','students','groups','journal','progress','online-courses','online-upload','online-students','online-journal','timesheet'],
-      accountant:['dashboard','students','payments','finance','online-payments'],
+      director:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
+      admin:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
+      teacher:['dashboard','students','groups','progress','online-courses','online-upload','online-students','online-journal','online-payments','timesheet'],
+      accountant:['dashboard','online-payments','payments','finance'],
+      marketing:['dashboard','leads']
+    };
+    const roleWriteSections = {
+      director:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
+      admin:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
+      teacher:['dashboard','progress','online-upload','online-journal','timesheet'],
+      accountant:['dashboard','payments','finance','online-payments'],
       marketing:['dashboard','leads']
     };
     const titleMap = {
@@ -1322,6 +1329,19 @@ async function parentLogin(){
       const t = currentTariff();
       return (tariffFeatures[t] || []).includes(feature);
     }
+    function roleAllowed(feature){
+      const role = profile?.role || 'teacher';
+      const allowed = roleSections[role] || roleSections.teacher;
+      return allowed.includes(feature);
+    }
+    function canWrite(featureKey=''){
+      const role = profile?.role || 'teacher';
+      const allowed = roleWriteSections[role] || [];
+      if(featureKey && !allowed.includes(featureKey)) return false;
+      if(featureKey && !featureAllowed(featureKey)) return false;
+      if(accessLocked && featureKey !== 'tariff') return false;
+      return true;
+    }
     function applyTariffVisual(){
       const t = currentTariff();
       const requested = requestedTariff();
@@ -1338,8 +1358,7 @@ async function parentLogin(){
       document.querySelectorAll('.plan').forEach(p=>p.classList.toggle('active', p.dataset.plan === requested));
       document.querySelectorAll('.nav-btn[data-section]').forEach(btn=>{
         const key = btn.dataset.section;
-        if(key === 'dashboard' || key === 'tariff') { btn.classList.remove('disabled'); return; }
-        const allow = featureAllowed(key);
+        const allow = roleAllowed(key) && (key === 'dashboard' || featureAllowed(key));
         btn.classList.toggle('disabled', !allow);
       });
     }
@@ -1351,6 +1370,10 @@ async function parentLogin(){
       }
       if(accessLocked && featureKey !== 'tariff'){
         notice(lockReason || 'Қазір бұл портал қарау режимінде. Owner ашқаннан кейін ғана өзгеріс жасай аласың.', 'err');
+        return false;
+      }
+      if(featureKey && !canWrite(featureKey)){
+        notice('Бұл әрекет сенің рөліңе ашылмаған.', 'err');
         return false;
       }
       return true;
@@ -1983,11 +2006,26 @@ async function saveStaffInvite(){
       notice('Онлайн доступ ашылды');
     }
 
+    async function deleteOnlinePayment(id){
+      if(!requireWrite('online-payments')) return;
+      await sb.from('online_payments').delete().eq('id', id);
+      await loadTenantData();
+      notice('Онлайн төлем өшірілді');
+    }
+
+    async function deleteOnlineJournal(id){
+      if(!requireWrite('online-journal')) return;
+      await sb.from('online_progress_journal').delete().eq('id', id);
+      await loadTenantData();
+      notice('Онлайн журнал жазбасы өшірілді');
+    }
+
     function applyRoleUI(){
       const role = profile?.role || 'teacher';
       const allowed = roleSections[role] || roleSections.teacher;
       document.querySelectorAll('.nav-btn[data-section]').forEach(btn=>{btn.classList.toggle('disabled', !allowed.includes(btn.dataset.section));});
-      document.getElementById('roleChip').textContent = 'Рөл: ' + role;
+      const roleEl = document.getElementById('centerRole');
+      if(roleEl) roleEl.textContent = 'Рөлі: ' + role;
     }
 
     function renderDashboard(){
@@ -2019,6 +2057,7 @@ async function saveStaffInvite(){
     function renderLeads(){
       const q = document.getElementById('leadSearch').value.trim().toLowerCase();
       const rows = state.leads.filter(x => [x.full_name, x.phone, x.direction, x.source, x.lead_status, x.note].join(' ').toLowerCase().includes(q));
+      const canDelete = canWrite('leads');
       document.getElementById('leadRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.full_name)}</td>
@@ -2027,13 +2066,14 @@ async function saveStaffInvite(){
           <td>${esc(x.source || '')}</td>
           <td>${esc(x.lead_status || '')}</td>
           <td>${esc(x.note || '')}</td>
-          <td><button class="btn danger" onclick="deleteLead('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteLead('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`).join('') || '<tr><td colspan="7">Лид жоқ</td></tr>';
     }
 
     function renderStudents(){
       const q = document.getElementById('studentSearch').value.trim().toLowerCase();
       const rows = state.students.filter(x => [x.full_name, x.phone, x.direction, x.student_code, x.pin_code].join(' ').toLowerCase().includes(q));
+      const canDelete = canWrite('students');
       document.getElementById('studentRows').innerHTML = rows.map(x=>{
         const b = state.branches.find(y=>y.id === x.branch_id);
         return `<tr>
@@ -2044,7 +2084,7 @@ async function saveStaffInvite(){
           <td>${esc(x.pin_code || '')}</td>
           <td>${esc(String(x.age || ''))}</td>
           <td>${esc(b?.name || '')}</td>
-          <td><button class="btn danger" onclick="deleteStudent('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteStudent('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="8">Оқушы жоқ</td></tr>';
     }
@@ -2056,6 +2096,7 @@ async function saveStaffInvite(){
         const branch = state.branches.find(b=>b.id === x.branch_id);
         return qmatch([x.title, x.direction, teacher?.full_name, teacher?.email, x.schedule_text, x.room, branch?.name], q);
       });
+      const canDelete = canWrite('groups');
       document.getElementById('groupRows').innerHTML = rows.map(x=>{
         const teacher = state.profiles.find(p=>p.id === x.teacher_profile_id);
         const branch = state.branches.find(b=>b.id === x.branch_id);
@@ -2066,7 +2107,7 @@ async function saveStaffInvite(){
           <td>${esc(x.schedule_text || '')}</td>
           <td>${esc(x.room || '')}</td>
           <td>${esc(branch?.name || '')}</td>
-          <td><button class="btn danger" onclick="deleteGroup('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteGroup('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="7">Топ жоқ</td></tr>';
     }
@@ -2089,6 +2130,7 @@ async function saveStaffInvite(){
         return (!fd || x.lesson_date === fd) && (!q || text.includes(q));
       });
 
+      const canDelete = canWrite('journal');
       document.getElementById('journalRows').innerHTML = rows.map(x=>{
         const g = state.groups.find(y=>y.id === x.group_id);
         const s = state.students.find(y=>y.id === x.student_id);
@@ -2098,7 +2140,7 @@ async function saveStaffInvite(){
           <td>${esc(s?.full_name || '')}</td>
           <td>${esc(x.topic || '')}</td>
           <td>${esc(x.attendance_status || '')}</td>
-          <td><button class="btn danger" onclick="deleteJournal('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteJournal('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="6">Журнал бос</td></tr>';
     }
@@ -2109,6 +2151,7 @@ async function saveStaffInvite(){
         const s = state.students.find(y=>y.id === x.student_id);
         return qmatch([s?.full_name, x.homework_status, x.test_score, x.teacher_comment, x.weekly_result, x.monthly_result], q);
       });
+      const canDelete = canWrite('progress');
       document.getElementById('progressRows').innerHTML = rows.map(x=>{
         const s = state.students.find(y=>y.id === x.student_id);
         return `<tr>
@@ -2116,7 +2159,7 @@ async function saveStaffInvite(){
           <td>${esc(x.homework_status || '')}</td>
           <td>${esc(String(x.test_score || ''))}</td>
           <td>${esc(x.teacher_comment || '')}</td>
-          <td><button class="btn danger" onclick="deleteProgress('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteProgress('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="5">Прогресс жоқ</td></tr>';
     }
@@ -2124,6 +2167,7 @@ async function saveStaffInvite(){
     function renderPayments(){
       const q = document.getElementById('paymentSearch') ? document.getElementById('paymentSearch').value.trim().toLowerCase() : '';
       const rows = state.students.filter(s => [s.full_name,s.phone,s.student_code].join(' ').toLowerCase().includes(q));
+      const canDelete = canWrite('payments');
       document.getElementById('paymentRows').innerHTML = rows.map(s=>{
         const last = state.payments.find(p=>p.student_id===s.id);
         return `<tr>
@@ -2134,7 +2178,7 @@ async function saveStaffInvite(){
           <td>${esc(last?.status || '—')}</td>
           <td>${esc(last?.source || '—')}</td>
           <td><button class="btn secondary" onclick="openPaymentHistory('${s.id}')">Тарих</button></td>
-          <td>${last ? `<button class="btn danger" onclick="deletePayment('${last.id}')">Өшіру</button>` : ''}</td>
+          <td>${last && canDelete ? `<button class="btn danger" onclick="deletePayment('${last.id}')">Өшіру</button>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="8">Оқушы жоқ</td></tr>';
     }
@@ -2150,6 +2194,7 @@ async function saveStaffInvite(){
       `;
       const q = (document.getElementById('financeSearch')?.value || '').trim().toLowerCase();
       const rows = state.finance.filter(x=>qmatch([x.entry_type, x.amount, x.entry_date, x.subject_name, x.category, x.note], q));
+      const canDelete = canWrite('finance');
       document.getElementById('financeRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.entry_type || '')}</td>
@@ -2157,7 +2202,7 @@ async function saveStaffInvite(){
           <td>${esc(x.entry_date || '')}</td>
           <td>${esc(x.subject_name || '')}</td>
           <td>${esc(x.category || '')}</td>
-          <td><button class="btn danger" onclick="deleteFinance('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteFinance('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`).join('') || '<tr><td colspan="6">Жазба жоқ</td></tr>';
     }
 
@@ -2204,6 +2249,7 @@ async function saveStaffInvite(){
         const s = state.students.find(y=>y.id === x.crm_student_id);
         return qmatch([s?.full_name, x.lesson_title, x.study_date, x.created_at], q);
       });
+      const canDelete = canWrite('online-journal');
       document.getElementById('onlineJournalRows').innerHTML = rows.map(x=>{
         const s = state.students.find(y=>y.id === x.crm_student_id);
         const progress = state.onlineProgress.find(p=>p.crm_student_id === x.crm_student_id && p.lesson_id === x.lesson_id);
@@ -2213,21 +2259,24 @@ async function saveStaffInvite(){
           <td>${esc(x.study_date || '')}</td>
           <td>${esc((x.created_at || '').replace('T',' ').slice(0,16))}</td>
           <td>${progress?.completed ? 'Аяқталды' : 'Көрді'}</td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteOnlineJournal('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`;
-      }).join('') || '<tr><td colspan="5">Online журнал бос</td></tr>';
+      }).join('') || '<tr><td colspan="6">Online журнал бос</td></tr>';
     }
 
     function renderOnlinePayments(){
       const q = (document.getElementById('onlinePaymentSearch')?.value || '').trim().toLowerCase();
       const rows = state.onlinePayments.filter(x=>qmatch([x.student_name, x.course_title, x.amount, x.status, x.created_at], q));
+      const canManage = canWrite('online-payments');
       document.getElementById('onlinePaymentRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.student_name || '')}</td>
           <td>${esc(x.course_title || '')}</td>
           <td>${money(x.amount)}</td>
           <td>${esc((x.created_at || '').slice(0,10))}</td>
-          <td>${x.status === 'approved' ? '<span class="status-ok">Ашық</span>' : `<button class="btn ok" onclick="approveOnlinePayment('${x.id}')">Доступ ашу</button>`}</td>
-        </tr>`).join('') || '<tr><td colspan="5">Онлайн төлем жоқ</td></tr>';
+          <td>${x.status === 'approved' ? '<span class="status-ok">Ашық</span>' : (canManage ? `<button class="btn ok" onclick="approveOnlinePayment('${x.id}')">Доступ ашу</button>` : 'Күтілуде')}</td>
+          <td>${canManage ? `<button class="btn danger" onclick="deleteOnlinePayment('${x.id}')">Өшіру</button>` : '—'}</td>
+        </tr>`).join('') || '<tr><td colspan="6">Онлайн төлем жоқ</td></tr>';
     }
 
     function renderStaff(){
@@ -2236,6 +2285,7 @@ async function saveStaffInvite(){
         const b = state.branches.find(y=>y.id === x.branch_id);
         return qmatch([x.full_name, x.email, x.role, b?.name], q);
       });
+      const canDelete = canWrite('staff');
       document.getElementById('staffRows').innerHTML = rows.map(x=>{
         const b = state.branches.find(y=>y.id === x.branch_id);
         return `<tr>
@@ -2243,7 +2293,7 @@ async function saveStaffInvite(){
           <td>${esc(x.email)}</td>
           <td>${esc(x.role)}</td>
           <td>${esc(b?.name || '')}</td>
-          <td><button class="btn danger" onclick="deleteStaffInvite('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteStaffInvite('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="5">Қызметкер жоқ</td></tr>';
     }
@@ -2251,13 +2301,14 @@ async function saveStaffInvite(){
     function renderBranches(){
       const q = (document.getElementById('branchSearch')?.value || '').trim().toLowerCase();
       const rows = state.branches.filter(x=>qmatch([x.name, x.city, x.address, x.phone], q));
+      const canDelete = canWrite('branches');
       document.getElementById('branchRows').innerHTML = rows.map(x=>`
         <tr>
           <td>${esc(x.name)}</td>
           <td>${esc(x.city || '')}</td>
           <td>${esc(x.address || '')}</td>
           <td>${esc(x.phone || '')}</td>
-          <td><button class="btn danger" onclick="deleteBranch('${x.id}')">Өшіру</button></td>
+          <td>${canDelete ? `<button class="btn danger" onclick="deleteBranch('${x.id}')">Өшіру</button>` : '—'}</td>
         </tr>`).join('') || '<tr><td colspan="5">Филиал жоқ</td></tr>';
     }
 
