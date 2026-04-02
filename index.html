@@ -151,6 +151,11 @@
       box-shadow:0 8px 22px rgba(15,23,42,.04);
     }
     .item strong{display:block;font-size:13px;color:#475467;margin-bottom:8px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.55);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+    .modal{width:min(980px,100%);max-height:90vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 20px 50px rgba(15,23,42,.22)}
+    .actions-inline{display:flex;gap:8px;flex-wrap:wrap}
+    .btn.tiny{padding:8px 10px;border-radius:10px;font-size:12px}
+
     a{color:#2563eb;text-decoration:none}
     a:hover{text-decoration:underline}
     @media (max-width:980px){
@@ -256,6 +261,7 @@
       <button class="nav-btn" data-section="timesheet">Табель / ЗП</button>
       <button class="nav-btn" data-section="staff">Қызметкерлер</button>
       <button class="nav-btn" data-section="branches">Филиалдар</button>
+      <button class="nav-btn" data-section="archive">Архив</button>
       <button class="nav-btn" onclick="logout()">Шығу</button>
     </aside>
 
@@ -368,7 +374,7 @@
             <input id="studentSearch" class="input" placeholder="Іздеу" oninput="renderStudents()" />
           </div>
           <div class="table-wrap" style="margin-top:12px">
-            <table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Код</th><th>PIN</th><th>Жасы</th><th>Филиал</th><th>Өшіру</th></tr></thead><tbody id="studentRows"></tbody></table>
+            <table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Код</th><th>PIN</th><th>Жасы</th><th>Филиал</th><th>Тақырыптар</th><th>Әрекет</th></tr></thead><tbody id="studentRows"></tbody></table>
           </div>
         </div>
       </section>
@@ -597,7 +603,7 @@
             <input id="onlineStudentSearch" class="input" placeholder="Іздеу: аты, email, код" style="max-width:340px" oninput="renderOnlineStudents()" />
           </div>
           <div class="table-wrap">
-            <table><thead><tr><th>Аты</th><th>Телефон</th><th>Email</th><th>Код</th><th>PIN</th><th>Курсы</th><th>Прогресі</th></tr></thead><tbody id="onlineStudentRows"></tbody></table>
+            <table><thead><tr><th>Аты</th><th>Телефон</th><th>Email</th><th>Код</th><th>PIN</th><th>Курсы</th><th>Прогресі</th><th>Әрекет</th></tr></thead><tbody id="onlineStudentRows"></tbody></table>
           </div>
         </div>
       </section>
@@ -691,6 +697,24 @@
         </div>
       </section>
 
+
+      <section id="archive" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Архивтегі оқушылар</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Аты</th><th>Телефон</th><th>Бағыт</th><th>Әрекет</th></tr></thead><tbody id="archiveStudentRows"></tbody></table>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Архивтегі онлайн оқушылар</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Аты</th><th>Email</th><th>Телефон</th><th>Әрекет</th></tr></thead><tbody id="archiveOnlineStudentRows"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="branches" class="section">
         <div class="grid g2">
           <div class="card">
@@ -774,6 +798,67 @@
       accountant:['dashboard','payments','finance','online-payments'],
       marketing:['dashboard','leads']
     };
+    const editState = { leadId:null, studentId:null, groupId:null, journalId:null, progressId:null, paymentId:null, financeId:null, staffId:null, branchId:null };
+
+    function archiveStorageKey(kind){ return `edukz_archive_${kind}_${profile?.tenant_id || 'guest'}`; }
+    function getArchiveIds(kind){
+      try{ return JSON.parse(localStorage.getItem(archiveStorageKey(kind)) || '[]'); }catch(e){ return []; }
+    }
+    function setArchiveIds(kind, ids){ localStorage.setItem(archiveStorageKey(kind), JSON.stringify([...new Set(ids)])); }
+    function isStudentArchived(id){
+      const row = state.students.find(x=>x.id === id);
+      if(row && typeof row.is_archived === 'boolean') return !!row.is_archived;
+      return getArchiveIds('students').includes(id);
+    }
+    function isOnlineStudentArchived(id){
+      const row = state.onlineStudents.find(x=>x.id === id);
+      if(row && typeof row.is_archived === 'boolean') return !!row.is_archived;
+      return getArchiveIds('online_students').includes(id);
+    }
+    function archiveStudentLocal(id){ const ids = getArchiveIds('students'); ids.push(id); setArchiveIds('students', ids); }
+    function archiveOnlineStudentLocal(id){ const ids = getArchiveIds('online_students'); ids.push(id); setArchiveIds('online_students', ids); }
+    function unarchiveStudentLocal(id){ setArchiveIds('students', getArchiveIds('students').filter(x=>x!==id)); }
+    function unarchiveOnlineStudentLocal(id){ setArchiveIds('online_students', getArchiveIds('online_students').filter(x=>x!==id)); }
+    function isLinkedStudentArchived(studentId){ return !studentId ? false : isStudentArchived(studentId); }
+    function getTenantBankAccount(){
+      return state.tenants?.[0]?.bank_account || localStorage.getItem(`edukz_bank_account_${profile?.tenant_id || 'guest'}`) || '';
+    }
+    async function saveTenantBankSettings(){
+      const bankLink = document.getElementById('tenantBankLinkInput')?.value?.trim() || '';
+      const bankAccount = document.getElementById('tenantBankAccountInput')?.value?.trim() || '';
+      const res = await sb.from('tenants').update({
+        bank_payment_link: bankLink,
+        bank_account: bankAccount
+      }).eq('id', profile.tenant_id);
+      if(res.error){
+        if(bankAccount) localStorage.setItem(`edukz_bank_account_${profile?.tenant_id || 'guest'}`, bankAccount);
+        return notice(res.error.message + ' (bank_account поле SQL-да жоқ болса, SQL-ді жүргіз)', 'err');
+      }
+      localStorage.removeItem(`edukz_bank_account_${profile?.tenant_id || 'guest'}`);
+      await loadTenantData();
+      notice('Банк реквизиттері сақталды');
+    }
+    function closeStudentTopics(){
+      document.getElementById('studentTopicsModal')?.classList.add('hidden');
+    }
+    function openStudentTopics(studentId){
+      const student = state.students.find(x=>x.id === studentId);
+      const rows = state.journal
+        .filter(x=>x.student_id === studentId)
+        .sort((a,b)=>(b.lesson_date||'').localeCompare(a.lesson_date||''));
+      document.getElementById('studentTopicsTitle').textContent = (student?.full_name || 'Оқушы') + ' — тақырыптар';
+      document.getElementById('studentTopicsRows').innerHTML = rows.map(x=>{
+        const g = state.groups.find(y=>y.id === x.group_id);
+        return `<tr>
+          <td>${esc(x.lesson_date || '')}</td>
+          <td>${esc(g?.title || '')}</td>
+          <td>${esc(x.topic || '')}</td>
+          <td>${esc(x.attendance_status || '')}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="4">Тақырыптар жоқ</td></tr>';
+      document.getElementById('studentTopicsModal').classList.remove('hidden');
+    }
+
     const titleMap = {
       dashboard:['Басты бет','CRM толық басқару панелі'],
       tariff:['Тариф таңдау','Тариф таңдап, Owner-ге сұраныс жіберу'],
@@ -1499,6 +1584,7 @@ async function parentLogin(){
     async function saveStudent(){
       if(!requireWrite('students')) return;
       const dob = document.getElementById('studentDob').value;
+      const editingId = editState.studentId;
       const payload = {
         tenant_id: profile.tenant_id,
         full_name: document.getElementById('studentName').value.trim(),
@@ -1515,15 +1601,165 @@ async function parentLogin(){
         status: 'Белсенді'
       };
       if(!payload.full_name) return notice('Оқушы атын жаз', 'err');
-      const res = await sb.from('students').insert(payload);
+      const res = editingId
+        ? await sb.from('students').update(payload).eq('id', editingId)
+        : await sb.from('students').insert(payload);
       if(res.error) return notice(res.error.message, 'err');
+      editState.studentId = null;
       await loadTenantData();
-      notice('Оқушы сақталды');
+      notice(editingId ? 'Оқушы жаңартылды' : 'Оқушы сақталды');
+    }
+    async function editStudent(id){
+      const x = state.students.find(s=>s.id===id); if(!x) return;
+      editState.studentId = id;
+      document.getElementById('studentName').value = x.full_name || '';
+      document.getElementById('studentParent').value = x.parent_name || '';
+      document.getElementById('studentPhone').value = x.phone || '';
+      document.getElementById('studentEmail').value = x.email || '';
+      document.getElementById('studentDirection').value = x.direction || '';
+      document.getElementById('studentCode').value = x.student_code || '';
+      document.getElementById('studentPin').value = x.pin_code || '';
+      document.getElementById('studentDob').value = x.date_of_birth || '';
+      document.getElementById('studentAge').value = x.age || '';
+      document.getElementById('studentMonthlyFee').value = x.monthly_fee || '';
+      document.getElementById('studentBranch').value = x.branch_id || '';
+      notice('Оқушы формасы редакцияға толтырылды');
+      showSection('students');
+    }
+    async function archiveStudent(id){
+      if(!requireWrite('students')) return;
+      let res = await sb.rpc('archive_student', { p_student_id: id, p_note: null });
+      if(res.error){
+        res = await sb.from('students').update({ is_archived:true, archived_at:new Date().toISOString() }).eq('id', id);
+        if(!res.error){
+          await sb.from('online_students').update({ is_archived:true, archived_at:new Date().toISOString() }).eq('crm_student_id', id);
+        }
+      }
+      if(res.error){
+        archiveStudentLocal(id);
+        await loadTenantData();
+        return notice('SQL функциясы табылмады, уақытша local архив қолданылды', 'err');
+      }
+      unarchiveStudentLocal(id);
+      await loadTenantData();
+      notice('Оқушы архивке жіберілді');
+    }
+    async function unarchiveStudent(id){
+      if(!requireWrite('students')) return;
+      let res = await sb.rpc('unarchive_student', { p_student_id: id });
+      if(res.error){
+        res = await sb.from('students').update({ is_archived:false, archived_at:null, archived_note:null }).eq('id', id);
+        if(!res.error){
+          await sb.from('online_students').update({ is_archived:false, archived_at:null, archived_note:null }).eq('crm_student_id', id);
+        }
+      }
+      if(res.error){
+        unarchiveStudentLocal(id);
+        await loadTenantData();
+        return notice('SQL функциясы табылмады, уақытша local архив қайтарылды', 'err');
+      }
+      unarchiveStudentLocal(id);
+      await loadTenantData();
+      notice('Оқушы архивтен қайтарылды');
     }
     async function deleteStudent(id){
       if(!requireWrite('students')) return;
-      await sb.from('students').delete().eq('id', id);
+      if(!confirm('Оқушыны толық өшіреміз бе? Барлық байланысты деректер де өшеді.')) return;
+      let res = await sb.rpc('hard_delete_student', { p_student_id: id });
+      if(res.error){
+        const relatedPaymentIds = state.payments.filter(p=>p.student_id===id).map(p=>p.id);
+        if(relatedPaymentIds.length) await sb.from('finance_entries').delete().in('linked_payment_id', relatedPaymentIds);
+        await Promise.allSettled([
+          sb.from('attendance_journal').delete().eq('student_id', id),
+          sb.from('education_records').delete().eq('student_id', id),
+          sb.from('payments').delete().eq('student_id', id),
+          sb.from('online_payments').delete().eq('crm_student_id', id),
+          sb.from('online_journal').delete().eq('crm_student_id', id),
+          sb.from('online_progress').delete().eq('crm_student_id', id),
+          sb.from('online_progress_journal').delete().eq('crm_student_id', id),
+          sb.from('online_homework_submissions').delete().eq('crm_student_id', id),
+          sb.from('online_enrollments').delete().eq('crm_student_id', id)
+        ]);
+        const onlineIds = state.onlineStudents.filter(x=>x.crm_student_id===id).map(x=>x.id);
+        if(onlineIds.length){
+          await Promise.allSettled([
+            sb.from('online_payments').delete().in('online_student_id', onlineIds),
+            sb.from('online_journal').delete().in('online_student_id', onlineIds),
+            sb.from('online_progress').delete().in('online_student_id', onlineIds),
+            sb.from('online_progress_journal').delete().in('online_student_id', onlineIds),
+            sb.from('online_homework_submissions').delete().in('online_student_id', onlineIds),
+            sb.from('online_enrollments').delete().in('online_student_id', onlineIds),
+            sb.from('online_students').delete().in('id', onlineIds)
+          ]);
+        }
+        res = await sb.from('students').delete().eq('id', id);
+      }
+      if(res.error) return notice(res.error.message, 'err');
+      unarchiveStudentLocal(id);
       await loadTenantData();
+      notice('Оқушы толық өшірілді');
+    }
+
+    async function editOnlineStudent(id){
+      if(!requireWrite('online-students')) return;
+      const row = state.onlineStudents.find(x=>x.id===id); if(!row) return;
+      const full_name = prompt('Аты', row.full_name || ''); if(full_name===null) return;
+      const phone = prompt('Телефон', row.phone || ''); if(phone===null) return;
+      const email = prompt('Email', row.email || ''); if(email===null) return;
+      const res = await sb.from('online_students').update({full_name, phone, email}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData();
+      notice('Онлайн оқушы жаңартылды');
+    }
+    async function archiveOnlineStudent(id){
+      if(!requireWrite('online-students')) return;
+      let res = await sb.rpc('archive_online_student', { p_online_student_id: id, p_note: null });
+      if(res.error){
+        res = await sb.from('online_students').update({ is_archived:true, archived_at:new Date().toISOString() }).eq('id', id);
+      }
+      if(res.error){
+        archiveOnlineStudentLocal(id);
+        await loadTenantData();
+        return notice('SQL функциясы табылмады, уақытша local архив қолданылды', 'err');
+      }
+      unarchiveOnlineStudentLocal(id);
+      await loadTenantData();
+      notice('Онлайн оқушы архивке жіберілді');
+    }
+    async function unarchiveOnlineStudent(id){
+      if(!requireWrite('online-students')) return;
+      let res = await sb.rpc('unarchive_online_student', { p_online_student_id: id });
+      if(res.error){
+        res = await sb.from('online_students').update({ is_archived:false, archived_at:null, archived_note:null }).eq('id', id);
+      }
+      if(res.error){
+        unarchiveOnlineStudentLocal(id);
+        await loadTenantData();
+        return notice('SQL функциясы табылмады, уақытша local архив қайтарылды', 'err');
+      }
+      unarchiveOnlineStudentLocal(id);
+      await loadTenantData();
+      notice('Онлайн оқушы архивтен қайтарылды');
+    }
+    async function deleteOnlineStudent(id){
+      if(!requireWrite('online-students')) return;
+      if(!confirm('Онлайн оқушыны толық өшіреміз бе?')) return;
+      let res = await sb.rpc('hard_delete_online_student', { p_online_student_id: id });
+      if(res.error){
+        await Promise.allSettled([
+          sb.from('online_payments').delete().eq('online_student_id', id),
+          sb.from('online_journal').delete().eq('online_student_id', id),
+          sb.from('online_progress').delete().eq('online_student_id', id),
+          sb.from('online_progress_journal').delete().eq('online_student_id', id),
+          sb.from('online_homework_submissions').delete().eq('online_student_id', id),
+          sb.from('online_enrollments').delete().eq('online_student_id', id)
+        ]);
+        res = await sb.from('online_students').delete().eq('id', id);
+      }
+      if(res.error) return notice(res.error.message, 'err');
+      unarchiveOnlineStudentLocal(id);
+      await loadTenantData();
+      notice('Онлайн оқушы толық өшірілді');
     }
 
     async function saveGroup(){
@@ -2015,9 +2251,98 @@ async function saveStaffInvite(){
 
     async function deleteOnlineJournal(id){
       if(!requireWrite('online-journal')) return;
-      await sb.from('online_progress_journal').delete().eq('id', id);
+      await sb.from('online_journal').delete().eq('id', id);
       await loadTenantData();
       notice('Онлайн журнал жазбасы өшірілді');
+    }
+
+
+    async function editLead(id){
+      if(!requireWrite('leads')) return;
+      const row = state.leads.find(x=>x.id===id); if(!row) return;
+      const full_name = prompt('Аты', row.full_name || ''); if(full_name===null) return;
+      const phone = prompt('Телефон', row.phone || ''); if(phone===null) return;
+      const direction = prompt('Бағыт', row.direction || ''); if(direction===null) return;
+      const source = prompt('Қайдан', row.source || ''); if(source===null) return;
+      const lead_status = prompt('Статус', row.lead_status || ''); if(lead_status===null) return;
+      const note = prompt('Ескерту', row.note || ''); if(note===null) return;
+      const res = await sb.from('crm_leads').update({full_name, phone, direction, source, lead_status, note}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Лид жаңартылды');
+    }
+    async function editGroup(id){
+      if(!requireWrite('groups')) return;
+      const row = state.groups.find(x=>x.id===id); if(!row) return;
+      const title = prompt('Топ атауы', row.title || ''); if(title===null) return;
+      const direction = prompt('Бағыт', row.direction || ''); if(direction===null) return;
+      const schedule_text = prompt('Кесте', row.schedule_text || ''); if(schedule_text===null) return;
+      const room = prompt('Аудитория', row.room || ''); if(room===null) return;
+      const res = await sb.from('groups').update({title, direction, schedule_text, room}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Топ жаңартылды');
+    }
+    async function editJournal(id){
+      if(!requireWrite('journal')) return;
+      const row = state.journal.find(x=>x.id===id); if(!row) return;
+      const topic = prompt('Тақырып', row.topic || ''); if(topic===null) return;
+      const attendance_status = prompt('Статус', row.attendance_status || ''); if(attendance_status===null) return;
+      const lesson_date = prompt('Күні YYYY-MM-DD', row.lesson_date || ''); if(lesson_date===null) return;
+      const res = await sb.from('attendance_journal').update({topic, attendance_status, lesson_date}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Журнал жазбасы жаңартылды');
+    }
+    async function editProgress(id){
+      if(!requireWrite('progress')) return;
+      const row = state.progress.find(x=>x.id===id); if(!row) return;
+      const homework_status = prompt('Үй тапсырма', row.homework_status || ''); if(homework_status===null) return;
+      const teacher_comment = prompt('Пікір', row.teacher_comment || ''); if(teacher_comment===null) return;
+      const test_score = prompt('Тест %', row.test_score || ''); if(test_score===null) return;
+      const res = await sb.from('education_records').update({homework_status, teacher_comment, test_score:Number(test_score||0)}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Прогресс жаңартылды');
+    }
+    async function editPayment(id){
+      if(!requireWrite('payments')) return;
+      const row = state.payments.find(x=>x.id===id); if(!row) return;
+      const amount = prompt('Сома', row.amount || ''); if(amount===null) return;
+      const due_date = prompt('Келесі төлем күні YYYY-MM-DD', row.due_date || ''); if(due_date===null) return;
+      const status = prompt('Статус', row.status || ''); if(status===null) return;
+      const note = prompt('Ескерту', row.note || ''); if(note===null) return;
+      const res = await sb.from('payments').update({amount:Number(amount||0), due_date, status, note}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Төлем жаңартылды');
+    }
+    async function editFinance(id){
+      if(!requireWrite('finance')) return;
+      const row = state.finance.find(x=>x.id===id); if(!row) return;
+      const entry_type = prompt('Тип', row.entry_type || ''); if(entry_type===null) return;
+      const amount = prompt('Сома', row.amount || ''); if(amount===null) return;
+      const category = prompt('Категория', row.category || ''); if(category===null) return;
+      const note = prompt('Ескерту', row.note || ''); if(note===null) return;
+      const res = await sb.from('finance_entries').update({entry_type, amount:Number(amount||0), category, note}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Кіріс/шығыс жаңартылды');
+    }
+    async function editBranch(id){
+      if(!requireWrite('branches')) return;
+      const row = state.branches.find(x=>x.id===id); if(!row) return;
+      const name = prompt('Филиал аты', row.name || ''); if(name===null) return;
+      const city = prompt('Қала', row.city || ''); if(city===null) return;
+      const address = prompt('Адрес', row.address || ''); if(address===null) return;
+      const phone = prompt('Телефон', row.phone || ''); if(phone===null) return;
+      const res = await sb.from('branches').update({name, city, address, phone}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Филиал жаңартылды');
+    }
+    async function editStaffInvite(id){
+      if(!requireWrite('staff')) return;
+      const row = state.staffInvites.find(x=>x.id===id); if(!row) return;
+      const full_name = prompt('Аты', row.full_name || ''); if(full_name===null) return;
+      const role = prompt('Рөлі', row.role || ''); if(role===null) return;
+      const email = prompt('Email', row.email || ''); if(email===null) return;
+      const res = await sb.from('staff_invites').update({full_name, role, email}).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData(); notice('Қызметкер жаңартылды');
     }
 
     function applyRoleUI(){
@@ -2032,15 +2357,24 @@ async function saveStaffInvite(){
       const onlineCount = state.onlineCourses.length;
       const income = state.payments.reduce((a,b)=>a + Number(b.amount || 0), 0);
       document.getElementById('dashboardStats').innerHTML = `
-        <div class="card kpi"><div class="label">Оқушылар</div><div class="value">${state.students.length}</div></div>
+        <div class="card kpi"><div class="label">Оқушылар</div><div class="value">${state.students.filter(x=>!isStudentArchived(x.id)).length}</div></div>
         <div class="card kpi"><div class="label">Топтар</div><div class="value">${state.groups.length}</div></div>
         <div class="card kpi"><div class="label">Айлық төлем</div><div class="value">${money(income)}</div></div>
         <div class="card kpi"><div class="label">Онлайн курс</div><div class="value">${onlineCount}</div></div>
       `;
       const tenant = state.tenants[0] || state.tenant || {};
+      const bankAccount = getTenantBankAccount();
       document.getElementById('dashboardLeft').innerHTML = `
         <div style="font-size:22px;font-weight:900;margin-bottom:12px">Жылдам шолу</div>
         <div class="notice">Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.</div>
+        <div class="card" style="padding:16px;border-radius:18px">
+          <div style="font-size:18px;font-weight:900;margin-bottom:10px">Банк реквизиттері</div>
+          <div class="form-grid">
+            <input id="tenantBankLinkInput" class="input" placeholder="Банк ссылка" value="${esc(tenant.bank_payment_link || '')}" />
+            <input id="tenantBankAccountInput" class="input" placeholder="Шот / Kaspi / IBAN" value="${esc(bankAccount || '')}" />
+          </div>
+          <button class="btn primary" style="margin-top:12px" onclick="saveTenantBankSettings()">Сақтау</button>
+        </div>
       `;
       document.getElementById('dashboardRight').innerHTML = `
         ${accessLocked ? `<div class="notice err" style="margin-bottom:12px">${esc(lockReason)}</div>` : ''}
@@ -2050,6 +2384,7 @@ async function saveStaffInvite(){
           <div class="item"><strong>Қала</strong><div class="muted">${esc(tenant.city || '—')}</div></div>
           <div class="item"><strong>Бағыт</strong><div class="muted">${esc(tenant.direction || '—')}</div></div>
           <div class="item"><strong>Банк ссылка</strong><div class="muted">${esc(tenant.bank_payment_link || '—')}</div></div>
+          <div class="item"><strong>Шот</strong><div class="muted">${esc(getTenantBankAccount() || '—')}</div></div>
         </div>
       `;
     }
@@ -2066,14 +2401,16 @@ async function saveStaffInvite(){
           <td>${esc(x.source || '')}</td>
           <td>${esc(x.lead_status || '')}</td>
           <td>${esc(x.note || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteLead('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td>${canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editLead('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteLead('${x.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`).join('') || '<tr><td colspan="7">Лид жоқ</td></tr>';
     }
 
     function renderStudents(){
       const q = document.getElementById('studentSearch').value.trim().toLowerCase();
-      const rows = state.students.filter(x => [x.full_name, x.phone, x.direction, x.student_code, x.pin_code].join(' ').toLowerCase().includes(q));
-      const canDelete = canWrite('students');
+      const rows = state.students
+        .filter(x => !isStudentArchived(x.id))
+        .filter(x => [x.full_name, x.phone, x.direction, x.student_code, x.pin_code].join(' ').toLowerCase().includes(q));
+      const canManage = canWrite('students');
       document.getElementById('studentRows').innerHTML = rows.map(x=>{
         const b = state.branches.find(y=>y.id === x.branch_id);
         return `<tr>
@@ -2084,9 +2421,10 @@ async function saveStaffInvite(){
           <td>${esc(x.pin_code || '')}</td>
           <td>${esc(String(x.age || ''))}</td>
           <td>${esc(b?.name || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteStudent('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td><button class="btn tiny secondary" onclick="openStudentTopics('${x.id}')">Тақырып</button></td>
+          <td><div class="actions-inline">${canManage ? `<button class="btn tiny secondary" onclick="editStudent('${x.id}')">Редакт</button><button class="btn tiny warn" onclick="archiveStudent('${x.id}')">Архив</button><button class="btn tiny danger" onclick="deleteStudent('${x.id}')">Өшіру</button>` : '—'}</div></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="8">Оқушы жоқ</td></tr>';
+      }).join('') || '<tr><td colspan="9">Оқушы жоқ</td></tr>';
     }
 
     function renderGroups(){
@@ -2107,7 +2445,7 @@ async function saveStaffInvite(){
           <td>${esc(x.schedule_text || '')}</td>
           <td>${esc(x.room || '')}</td>
           <td>${esc(branch?.name || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteGroup('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td>${canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editGroup('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteGroup('${x.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="7">Топ жоқ</td></tr>';
     }
@@ -2116,7 +2454,7 @@ async function saveStaffInvite(){
       const fd = document.getElementById('journalFilterDate').value;
       const q = (document.getElementById('journalSearch')?.value || '').trim().toLowerCase();
 
-      const rows = state.journal.filter(x => {
+      const rows = state.journal.filter(x => !isLinkedStudentArchived(x.student_id)).filter(x => {
         const g = state.groups.find(y=>y.id === x.group_id);
         const s = state.students.find(y=>y.id === x.student_id);
         const text = [
@@ -2140,14 +2478,14 @@ async function saveStaffInvite(){
           <td>${esc(s?.full_name || '')}</td>
           <td>${esc(x.topic || '')}</td>
           <td>${esc(x.attendance_status || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteJournal('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td>${canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editJournal('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteJournal('${x.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="6">Журнал бос</td></tr>';
     }
 
     function renderProgress(){
       const q = (document.getElementById('progressSearch')?.value || '').trim().toLowerCase();
-      const rows = state.progress.filter(x=>{
+      const rows = state.progress.filter(x=>!isLinkedStudentArchived(x.student_id)).filter(x=>{
         const s = state.students.find(y=>y.id === x.student_id);
         return qmatch([s?.full_name, x.homework_status, x.test_score, x.teacher_comment, x.weekly_result, x.monthly_result], q);
       });
@@ -2159,14 +2497,14 @@ async function saveStaffInvite(){
           <td>${esc(x.homework_status || '')}</td>
           <td>${esc(String(x.test_score || ''))}</td>
           <td>${esc(x.teacher_comment || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteProgress('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td>${canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editProgress('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteProgress('${x.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="5">Прогресс жоқ</td></tr>';
     }
 
     function renderPayments(){
       const q = document.getElementById('paymentSearch') ? document.getElementById('paymentSearch').value.trim().toLowerCase() : '';
-      const rows = state.students.filter(s => [s.full_name,s.phone,s.student_code].join(' ').toLowerCase().includes(q));
+      const rows = state.students.filter(s => !isStudentArchived(s.id) && [s.full_name,s.phone,s.student_code].join(' ').toLowerCase().includes(q));
       const canDelete = canWrite('payments');
       document.getElementById('paymentRows').innerHTML = rows.map(s=>{
         const last = state.payments.find(p=>p.student_id===s.id);
@@ -2178,7 +2516,7 @@ async function saveStaffInvite(){
           <td>${esc(last?.status || '—')}</td>
           <td>${esc(last?.source || '—')}</td>
           <td><button class="btn secondary" onclick="openPaymentHistory('${s.id}')">Тарих</button></td>
-          <td>${last && canDelete ? `<button class="btn danger" onclick="deletePayment('${last.id}')">Өшіру</button>` : '—'}</td>
+          <td>${last && canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editPayment('${last.id}')">Редакт</button><button class="btn tiny danger" onclick="deletePayment('${last.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="8">Оқушы жоқ</td></tr>';
     }
@@ -2202,7 +2540,7 @@ async function saveStaffInvite(){
           <td>${esc(x.entry_date || '')}</td>
           <td>${esc(x.subject_name || '')}</td>
           <td>${esc(x.category || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteFinance('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td>${canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editFinance('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteFinance('${x.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`).join('') || '<tr><td colspan="6">Жазба жоқ</td></tr>';
     }
 
@@ -2221,11 +2559,14 @@ async function saveStaffInvite(){
 
     function renderOnlineStudents(){
       const q = (document.getElementById('onlineStudentSearch')?.value || '').trim().toLowerCase();
-      const rows = state.onlineStudents.filter(x=>{
-        const crm = state.students.find(s=>s.id === x.crm_student_id);
-        const payments = state.onlinePayments.filter(p=>p.crm_student_id === x.crm_student_id || p.online_student_id === x.id).map(p=>p.course_title).filter(Boolean).join(', ');
-        return qmatch([x.full_name, x.phone, x.email, crm?.student_code, crm?.pin_code, payments], q);
-      });
+      const rows = state.onlineStudents
+        .filter(x=>!isOnlineStudentArchived(x.id) && !isLinkedStudentArchived(x.crm_student_id))
+        .filter(x=>{
+          const crm = state.students.find(s=>s.id === x.crm_student_id);
+          const payments = state.onlinePayments.filter(p=>p.crm_student_id === x.crm_student_id || p.online_student_id === x.id).map(p=>p.course_title).filter(Boolean).join(', ');
+          return qmatch([x.full_name, x.phone, x.email, crm?.student_code, crm?.pin_code, payments], q);
+        });
+      const canManage = canWrite('online-students');
       document.getElementById('onlineStudentRows').innerHTML = rows.map(x=>{
         const crm = state.students.find(s=>s.id === x.crm_student_id);
         const progress = state.onlineProgress.filter(p=>p.crm_student_id === x.crm_student_id || p.online_student_id === x.id);
@@ -2239,13 +2580,14 @@ async function saveStaffInvite(){
           <td>${esc(crm?.pin_code || '')}</td>
           <td>${esc(payments)}</td>
           <td>${pct}%</td>
+          <td><div class="actions-inline">${canManage ? `<button class="btn tiny secondary" onclick="editOnlineStudent('${x.id}')">Редакт</button><button class="btn tiny warn" onclick="archiveOnlineStudent('${x.id}')">Архив</button><button class="btn tiny danger" onclick="deleteOnlineStudent('${x.id}')">Өшіру</button>` : '—'}</div></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="7">Онлайн оқушы жоқ</td></tr>';
+      }).join('') || '<tr><td colspan="8">Онлайн оқушы жоқ</td></tr>';
     }
 
     function renderOnlineJournal(){
       const q = (document.getElementById('onlineJournalSearch')?.value || '').trim().toLowerCase();
-      const rows = state.onlineJournal.filter(x=>{
+      const rows = state.onlineJournal.filter(x=>!isLinkedStudentArchived(x.crm_student_id) && !isOnlineStudentArchived(x.online_student_id)).filter(x=>{
         const s = state.students.find(y=>y.id === x.crm_student_id);
         return qmatch([s?.full_name, x.lesson_title, x.study_date, x.created_at], q);
       });
@@ -2266,7 +2608,7 @@ async function saveStaffInvite(){
 
     function renderOnlinePayments(){
       const q = (document.getElementById('onlinePaymentSearch')?.value || '').trim().toLowerCase();
-      const rows = state.onlinePayments.filter(x=>qmatch([x.student_name, x.course_title, x.amount, x.status, x.created_at], q));
+      const rows = state.onlinePayments.filter(x=>!isLinkedStudentArchived(x.crm_student_id) && !isOnlineStudentArchived(x.online_student_id)).filter(x=>qmatch([x.student_name, x.course_title, x.amount, x.status, x.created_at], q));
       const canManage = canWrite('online-payments');
       document.getElementById('onlinePaymentRows').innerHTML = rows.map(x=>`
         <tr>
@@ -2293,7 +2635,7 @@ async function saveStaffInvite(){
           <td>${esc(x.email)}</td>
           <td>${esc(x.role)}</td>
           <td>${esc(b?.name || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteStaffInvite('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td>${canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editStaffInvite('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteStaffInvite('${x.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="5">Қызметкер жоқ</td></tr>';
     }
@@ -2308,7 +2650,7 @@ async function saveStaffInvite(){
           <td>${esc(x.city || '')}</td>
           <td>${esc(x.address || '')}</td>
           <td>${esc(x.phone || '')}</td>
-          <td>${canDelete ? `<button class="btn danger" onclick="deleteBranch('${x.id}')">Өшіру</button>` : '—'}</td>
+          <td>${canDelete ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editBranch('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteBranch('${x.id}')">Өшіру</button></div>` : '—'}</td>
         </tr>`).join('') || '<tr><td colspan="5">Филиал жоқ</td></tr>';
     }
 
@@ -2332,6 +2674,36 @@ async function saveStaffInvite(){
       }).join('') || '<tr><td colspan="6">Үй тапсырмасы жіберілмеген</td></tr>';
     }
 
+
+    function renderArchive(){
+      const archivedStudents = state.students.filter(x=>isStudentArchived(x.id));
+      const archivedOnline = state.onlineStudents.filter(x=>isOnlineStudentArchived(x.id));
+      const canManageStudents = canWrite('students');
+      const canManageOnline = canWrite('online-students');
+      const studentBody = document.getElementById('archiveStudentRows');
+      if(studentBody){
+        studentBody.innerHTML = archivedStudents.map(x=>`
+          <tr>
+            <td>${esc(x.full_name || '')}</td>
+            <td>${esc(x.phone || '')}</td>
+            <td>${esc(x.direction || '')}</td>
+            <td><div class="actions-inline">${canManageStudents ? `<button class="btn tiny secondary" onclick="unarchiveStudent('${x.id}')">Қайтару</button><button class="btn tiny danger" onclick="deleteStudent('${x.id}')">Толық өшіру</button>` : '—'}</div></td>
+          </tr>
+        `).join('') || '<tr><td colspan="4">Архив бос</td></tr>';
+      }
+      const onlineBody = document.getElementById('archiveOnlineStudentRows');
+      if(onlineBody){
+        onlineBody.innerHTML = archivedOnline.map(x=>`
+          <tr>
+            <td>${esc(x.full_name || '')}</td>
+            <td>${esc(x.email || '')}</td>
+            <td>${esc(x.phone || '')}</td>
+            <td><div class="actions-inline">${canManageOnline ? `<button class="btn tiny secondary" onclick="unarchiveOnlineStudent('${x.id}')">Қайтару</button><button class="btn tiny danger" onclick="deleteOnlineStudent('${x.id}')">Толық өшіру</button>` : '—'}</div></td>
+          </tr>
+        `).join('') || '<tr><td colspan="4">Архив бос</td></tr>';
+      }
+    }
+
     function renderAll(){
       applyTariffVisual();
       renderDashboard();
@@ -2350,7 +2722,23 @@ async function saveStaffInvite(){
       renderTimesheet();
       renderStaff();
       renderBranches();
+      renderArchive();
     }
   </script>
+
+<div id="studentTopicsModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+      <div>
+        <div id="studentTopicsTitle" style="font-size:24px;font-weight:900">Оқушы тақырыптары</div>
+        <div class="muted">Қай күні қай тақырып өтті, келді ме келмеді ме</div>
+      </div>
+      <button class="btn secondary" onclick="closeStudentTopics()">Жабу</button>
+    </div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table><thead><tr><th>Күні</th><th>Топ</th><th>Тақырып</th><th>Статус</th></tr></thead><tbody id="studentTopicsRows"></tbody></table>
+    </div>
+  </div>
+</div>
 <div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
