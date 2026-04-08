@@ -155,6 +155,53 @@
     .modal{width:min(980px,100%);max-height:90vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 20px 50px rgba(15,23,42,.22)}
     .actions-inline{display:flex;gap:8px;flex-wrap:wrap}
     .btn.tiny{padding:8px 10px;border-radius:10px;font-size:12px}
+    .schedule-summary{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:16px}
+    .schedule-kpi{padding:16px 18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);box-shadow:0 8px 22px rgba(15,23,42,.04)}
+    .schedule-kpi .k{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.05em}
+    .schedule-kpi .v{font-size:30px;font-weight:900;margin-top:8px}
+    .schedule-grid-wrap{overflow:auto;border:1px solid var(--line);border-radius:22px;background:#fff}
+    .schedule-grid{min-width:1100px;display:grid;grid-template-columns:110px repeat(7,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+    .schedule-grid > div{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:92px;background:#fff}
+    .schedule-grid .head{min-height:auto;padding:12px;background:#fafcff;font-size:13px;font-weight:900}
+    .schedule-grid .time{padding:12px;background:#fafcff;font-size:12px;font-weight:800;color:var(--muted)}
+    .schedule-cell{padding:8px;display:flex;flex-direction:column;gap:8px}
+    .lesson-card{border:1px solid #dbe7ff;background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%);border-radius:16px;padding:10px 10px 8px;box-shadow:0 4px 10px rgba(37,99,235,.08)}
+    .lesson-card .title{font-size:13px;font-weight:900;line-height:1.25}
+    .lesson-card .meta{font-size:12px;color:#475467;line-height:1.45}
+    .lesson-card .badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#eef4ff;color:#3454d1;font-size:11px;font-weight:900;border:1px solid #d9e5ff;margin-top:4px}
+    .schedule-toolbar{display:grid;gap:12px;grid-template-columns:1.2fr .8fr .8fr .8fr auto auto;align-items:end}
+    .schedule-today-list{display:grid;gap:10px}
+    .schedule-mini{border:1px solid var(--line);border-radius:18px;padding:12px;background:#fff}
+    .schedule-view-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .schedule-view-btn{appearance:none;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:12px;padding:10px 14px;font:inherit;font-weight:800;cursor:pointer}
+    .schedule-view-btn.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+    .schedule-panel{display:none}
+    .schedule-panel.active{display:block}
+    .schedule-board-note{margin-top:12px;color:var(--muted);font-size:13px}
+    .lesson-card{cursor:grab}
+    .lesson-card.dragging{opacity:.45;transform:scale(.98)}
+    .schedule-drop-target{background:#f8fbff}
+    .lesson-card.status-active{border-color:#bfdbfe;background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%)}
+    .lesson-card.status-moved{border-color:#fde68a;background:linear-gradient(180deg,#fffbeb 0%,#ffffff 100%)}
+    .lesson-card.status-cancel{border-color:#fecaca;background:linear-gradient(180deg,#fef2f2 0%,#ffffff 100%)}
+    .lesson-card.g1{box-shadow:inset 0 0 0 2px rgba(37,99,235,.12)}
+    .lesson-card.g2{box-shadow:inset 0 0 0 2px rgba(124,58,237,.12)}
+    .lesson-card.g3{box-shadow:inset 0 0 0 2px rgba(22,163,74,.12)}
+    .lesson-card.g4{box-shadow:inset 0 0 0 2px rgba(217,119,6,.12)}
+    .lesson-card.a-online{border-color:#67e8f9;background:linear-gradient(180deg,#ecfeff 0%,#ffffff 100%)}
+    .lesson-card.a-both{border-color:#c4b5fd;background:linear-gradient(180deg,#f5f3ff 0%,#ffffff 100%)}
+    .table-audience-badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid transparent}
+    .table-audience-badge.crm{background:#eef4ff;color:#3454d1;border-color:#d9e5ff}
+    .table-audience-badge.online{background:#ecfeff;color:#155e75;border-color:#a5f3fc}
+    .table-audience-badge.both{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .legend .tag{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:700}
+    .legend .dot{width:12px;height:12px;border-radius:999px;display:inline-block}
+    .teacher-room-toolbar{display:grid;gap:12px;grid-template-columns:1fr 1fr;align-items:end;margin-top:12px}
+    .online-schedule-badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#ecfeff;color:#155e75;font-size:11px;font-weight:800;border:1px solid #a5f3fc}
+
+
+
     .lang-switch{
       position:fixed;top:16px;right:18px;z-index:120;
       display:flex;gap:8px;padding:8px;border-radius:16px;
@@ -191,6 +238,7 @@
   <div id="authView" class="auth-shell">
     <div class="panel hero">
       <h1>EdukZ CRM Portal</h1>
+      <p>Премиумға жақын таза интерфейс. Owner бекіткеннен кейін тарифке сай бөлімдер ашылады.</p>
     </div>
 
     <div class="panel auth-card">
@@ -266,6 +314,7 @@
       <button class="nav-btn" data-section="leads">CRM лидтар</button>
       <button class="nav-btn" data-section="students">Оқушылар</button>
       <button class="nav-btn" data-section="groups">Топтар</button>
+      <button class="nav-btn" data-section="schedule">Расписание</button>
       <button class="nav-btn" data-section="journal">Журнал</button>
       <button class="nav-btn" data-section="progress">Прогресс</button>
       <button class="nav-btn" data-section="payments">Төлем</button>
@@ -278,14 +327,15 @@
       <button class="nav-btn" data-section="timesheet">Табель / ЗП</button>
       <button class="nav-btn" data-section="staff">Қызметкерлер</button>
       <button class="nav-btn" data-section="branches">Филиалдар</button>
-      <button class="nav-btn" data-section="archive">Архив</button>
-      <button class="nav-btn" onclick="logout()">Шығу</button>
+      <button id="archiveNavBtn" class="nav-btn" data-section="archive">Архив</button>
+      <button id="logoutNavBtn" class="nav-btn" onclick="logout()">Шығу</button>
     </aside>
 
     <main class="main">
       <div id="topNotice" class="notice hidden"></div>
       <div id="lockNotice" class="notice err hidden"></div>
       <div class="topbar card">
+        <div class="lang-switch" style="position:static;margin-left:auto"><button type="button" class="lang-btn" onclick="setLang('kk')">Қаз</button><button type="button" class="lang-btn" onclick="setLang('ru')">Рус</button></div>
         <div>
           <div id="pageTitle" style="font-size:30px;font-weight:900">Басты бет</div>
           <div id="pageSub" class="muted">CRM толық басқару панелі</div>
@@ -330,7 +380,7 @@
     <div class="plan" data-plan="econom"><div style="font-size:24px;font-weight:900">Эконом</div><ul><li>Оқушылар</li><li>Топтар</li><li>Журнал</li><li>Қызметкерлер</li><li>Филиалдар</li></ul></div>
     <div class="plan" data-plan="standard"><div style="font-size:24px;font-weight:900">Стандарт</div><ul><li>CRM лидтар</li><li>Оқушылар</li><li>Топтар</li><li>Журнал</li><li>Прогресс</li><li>Төлемдер</li><li>Табель / ЗП</li><li>Қызметкерлер</li><li>Филиалдар</li><li>Кіріс/шығыс</li></ul></div>
     <div class="plan" data-plan="pro"><div style="font-size:24px;font-weight:900">Про</div><ul><li>Барлық CRM</li><li>Онлайн курстар</li><li>Онлайн сабақ жүктеу</li><li>Онлайн оқушылар</li><li>Онлайн журнал</li><li>Онлайн төлемдер</li><li>Табель / ЗП</li></ul></div>
-    <div class="plan" data-plan="online"><div style="font-size:24px;font-weight:900">Онлайн орталықтар</div><ul><li>Тек online модульдер</li><li>Курс, сабақ, online төлем</li></ul></div>
+    <div class="plan" data-plan="online"><div style="font-size:24px;font-weight:900">Онлайн орталықтар</div><ul><li>Тек онлайн модульдер</li><li>Курс, сабақ, онлайн төлем</li></ul></div>
   </div>
 </section>
 
@@ -419,6 +469,140 @@
           </div>
         </div>
       </section>
+
+
+      
+
+<section id="schedule" class="section">
+        <div class="grid g2">
+          <div class="card">
+            <div style="font-size:24px;font-weight:900;margin-bottom:12px">Сабақ кестесі</div>
+            <div class="muted" style="margin-bottom:12px">Супер кесте: апталық тор, түстер, ұстап апару, мұғалім бойынша және кабинет бойынша бөлек көрініс.</div>
+            <div class="form-grid">
+              <input id="scheduleDate" class="input" type="date" />
+              <select id="scheduleDay" class="select">
+                <option value="">Күн таңда</option>
+                <option value="Дүйсенбі">Дүйсенбі</option>
+                <option value="Сейсенбі">Сейсенбі</option>
+                <option value="Сәрсенбі">Сәрсенбі</option>
+                <option value="Бейсенбі">Бейсенбі</option>
+                <option value="Жұма">Жұма</option>
+                <option value="Сенбі">Сенбі</option>
+                <option value="Жексенбі">Жексенбі</option>
+              </select>
+              <input id="scheduleStart" class="input" type="time" />
+              <input id="scheduleEnd" class="input" type="time" />
+              <select id="scheduleGroup" class="select"></select>
+              <select id="scheduleTeacher" class="select"></select>
+              <input id="scheduleRoom" class="input" placeholder="Кабинет / аудитория" />
+              <select id="scheduleBranch" class="select"></select>
+              <select id="scheduleAudience" class="select">
+                <option value="crm">Тек CRM</option>
+                <option value="online">Тек Online</option>
+                <option value="both">CRM + Online</option>
+              </select>
+              <select id="scheduleOnlineCourse" class="select"></select>
+              <select id="scheduleOnlineLesson" class="select"></select>
+              <input id="scheduleMeetingUrl" class="input" placeholder="Online сілтеме / meeting url" />
+              <select id="scheduleStatus" class="select">
+                <option value="Белсенді">Белсенді</option>
+                <option value="Ауысты">Ауысты</option>
+                <option value="Отмена">Отмена</option>
+              </select>
+              <textarea id="scheduleNote" class="textarea" placeholder="Ескерту / комментарий"></textarea>
+            </div>
+            <div class="actions-inline" style="margin-top:12px">
+              <button class="btn primary" onclick="saveSchedule()">Сақтау</button>
+              <button class="btn secondary" onclick="clearScheduleForm()">Тазалау</button>
+            </div>
+            <div class="legend">
+              <span class="tag"><span class="dot" style="background:#93c5fd"></span>Белсенді</span>
+              <span class="tag"><span class="dot" style="background:#fcd34d"></span>Ауысты</span>
+              <span class="tag"><span class="dot" style="background:#fca5a5"></span>Отмена</span>
+              <span class="tag"><span class="dot" style="background:#dbeafe"></span>Түстер топтарға да бөлінеді</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:24px;font-weight:900;margin-bottom:12px">Апталық басқару</div>
+            <div class="schedule-toolbar">
+              <input id="scheduleSearch" class="input" placeholder="Іздеу: топ, мұғалім, кабинет" oninput="renderSchedule()" />
+              <select id="scheduleFilterGroup" class="select" onchange="renderSchedule()"></select>
+              <select id="scheduleFilterTeacher" class="select" onchange="renderSchedule()"></select>
+              <select id="scheduleFilterBranch" class="select" onchange="renderSchedule()"></select>
+              <input id="scheduleWeekStart" class="input" type="date" onchange="renderSchedule()" />
+              <div class="actions-inline">
+                <button class="btn secondary" onclick="shiftScheduleWeek(-7)">← Апта</button>
+                <button class="btn secondary" onclick="goCurrentWeek()">Осы апта</button>
+                <button class="btn secondary" onclick="shiftScheduleWeek(7)">Апта →</button>
+              </div>
+            </div>
+
+            <div id="scheduleSummary" class="schedule-summary"></div>
+
+            <div style="font-size:18px;font-weight:900;margin:16px 0 10px">Бүгінгі сабақтар</div>
+            <div id="scheduleTodayList" class="schedule-today-list"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div style="font-size:22px;font-weight:900">Кесте көрінісі</div>
+            <div class="muted">Сабақты ұстап апарып басқа күн/уақытқа қоя аласың.</div>
+          </div>
+
+          <div class="schedule-view-tabs">
+            <button class="schedule-view-btn active" type="button" data-sview="main" onclick="setScheduleView('main')">Апталық тор</button>
+            <button class="schedule-view-btn" type="button" data-sview="teacher" onclick="setScheduleView('teacher')">Мұғалім кестесі</button>
+            <button class="schedule-view-btn" type="button" data-sview="room" onclick="setScheduleView('room')">Кабинет кестесі</button>
+          </div>
+
+          <div id="schedulePanelMain" class="schedule-panel active" style="margin-top:16px">
+            <div class="schedule-grid-wrap">
+              <div id="scheduleBoard" class="schedule-grid"></div>
+            </div>
+            <div class="schedule-board-note">Негізгі апталық тор. Мұнда барлық сабақ көрінеді.</div>
+          </div>
+
+          <div id="schedulePanelTeacher" class="schedule-panel" style="margin-top:16px">
+            <div class="teacher-room-toolbar">
+              <select id="scheduleTeacherView" class="select" onchange="renderSchedule()"></select>
+              <div class="muted">Тек бір мұғалімнің жеке апталық кестесі.</div>
+            </div>
+            <div class="schedule-grid-wrap" style="margin-top:12px">
+              <div id="scheduleTeacherBoard" class="schedule-grid"></div>
+            </div>
+          </div>
+
+          <div id="schedulePanelRoom" class="schedule-panel" style="margin-top:16px">
+            <div class="teacher-room-toolbar">
+              <select id="scheduleRoomView" class="select" onchange="renderSchedule()"></select>
+              <div class="muted">Тек бір кабинетке байланған сабақтар.</div>
+            </div>
+            <div class="schedule-grid-wrap" style="margin-top:12px">
+              <div id="scheduleRoomBoard" class="schedule-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="font-size:22px;font-weight:900">Кесте тізімі</div>
+            <div class="muted">Редакт / өшіру төменнен жасалады</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Күні</th><th>Күн</th><th>Басталуы</th><th>Аяқталуы</th><th>Топ</th><th>Мұғалім</th><th>Кабинет</th><th>Филиал</th><th>Көрінуі</th><th>Online</th><th>Статус</th><th>Ескерту</th><th>Әрекет</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
 
       <section id="journal" class="section">
         <div class="grid g2">
@@ -735,8 +919,8 @@
       <section id="branches" class="section">
         <div class="grid g2">
           <div class="card">
-            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Орталықтың банк реквизиттері</div>
-            <div class="muted" style="margin-bottom:12px">Бұл бөлім филиалдар ішінде тұрады. Банк ссылка мен шотты осы жерден өзгертесің.</div>
+            <div style="font-size:22px;font-weight:900;margin-bottom:12px">Орталықтың банк реквизиттері</div><div class="notice" style="margin-bottom:12px">Банк ссылка мен реквизитті осы жерден толтырасың.</div>
+            <div class="muted" style="margin-bottom:12px">Бұл жерде банк ссылкасы мен шот / реквизит тұрады. Сол жерден өзгертесің.</div>
             <div class="form-grid">
               <input id="tenantBankLinkInput" class="input" placeholder="Банк ссылка" />
               <input id="tenantBankAccountInput" class="input" placeholder="Шот / Kaspi / IBAN" />
@@ -785,13 +969,13 @@
       tenants: [], subscriptions: [], profiles: [], branches: [], students: [], leads: [], groups: [],
       journal: [], progress: [], payments: [], finance: [], staffInvites: [],
       onlineStudents: [], onlineCourses: [], onlineModules: [], onlineLessons: [], onlineTests: [],
-      onlinePayments: [], onlineJournal: [], onlineProgress: [], onlineHomeworkSubmissions: [], teacherTimeLogs: []
+      onlinePayments: [], onlineJournal: [], onlineProgress: [], onlineHomeworkSubmissions: [], teacherTimeLogs: [], scheduleEntries: []
     };
 
     const tariffFeatures = {
-      econom: ['tariff','students','groups','journal','staff','branches'],
-      standard: ['tariff','leads','students','groups','journal','progress','payments','staff','branches','finance','timesheet'],
-      pro: ['tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
+      econom: ['tariff','students','groups','schedule','journal','staff','branches'],
+      standard: ['tariff','leads','students','groups','schedule','journal','progress','payments','staff','branches','finance','timesheet'],
+      pro: ['tariff','leads','students','groups','schedule','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches'],
       online: ['tariff','online-courses','online-upload','online-students','online-journal','online-payments']
     };
 
@@ -811,16 +995,16 @@
     const sections = document.querySelectorAll('.section');
     const navBtns = document.querySelectorAll('.nav-btn[data-section]');
     const roleSections = {
-      director:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
-      admin:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
-      teacher:['dashboard','students','groups','progress','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','archive'],
+      director:['dashboard','tariff','leads','students','groups','schedule','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
+      admin:['dashboard','tariff','leads','students','groups','schedule','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
+      teacher:['dashboard','students','groups','schedule','progress','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','archive'],
       accountant:['dashboard','online-payments','payments','finance','archive'],
       marketing:['dashboard','leads','archive']
     };
     const roleWriteSections = {
-      director:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
-      admin:['dashboard','tariff','leads','students','groups','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
-      teacher:['dashboard','progress','online-upload','online-journal','timesheet','archive'],
+      director:['dashboard','tariff','leads','students','groups','schedule','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
+      admin:['dashboard','tariff','leads','students','groups','schedule','journal','progress','payments','finance','online-courses','online-upload','online-students','online-journal','online-payments','timesheet','staff','branches','archive'],
+      teacher:['dashboard','progress','schedule','online-upload','online-journal','timesheet','archive'],
       accountant:['dashboard','payments','finance','online-payments','archive'],
       marketing:['dashboard','leads','archive']
     };
@@ -828,9 +1012,9 @@
 
     const LANG_KEY = 'edukz_lang_crm_fixed';
     let currentLang = localStorage.getItem(LANG_KEY) || 'kk';
-    const TITLE_MAPS = {"kk": {"dashboard": ["Басты бет", "CRM толық басқару панелі"], "tariff": ["Тариф таңдау", "Тариф таңдап, Owner-ге сұраныс жіберу"], "leads": ["CRM лидтар", "Лид басқару"], "students": ["Оқушылар", "Оқушы базасы"], "groups": ["Топтар", "Топ және кесте"], "journal": ["Журнал", "Күнтізбе және қатысу"], "progress": ["Прогресс", "Үй тапсырма, тест, пікір"], "payments": ["Төлем", "Тарих және PDF"], "finance": ["Кіріс/шығыс", "Ақша айналымы"], "online-courses": ["Онлайн курстар", "Portal ссылка"], "online-upload": ["Онлайн сабақ жүктеу", "Курс, модуль, тест"], "online-students": ["Онлайн оқушылар", "Online тізім"], "online-journal": ["Онлайн журнал", "Оқу уақыты"], "online-payments": ["Онлайн төлемдер", "Доступ ашу"], "timesheet": ["Табель / ЗП", "Мұғалім келу уақыты мен жалақы"], "staff": ["Қызметкерлер", "Рөл және филиал"], "branches": ["Филиалдар", "Филиалдар және банк реквизиттері"], "archive": ["Архив", "Архивке кеткен балалар осы бөлімде тұрады"]}, "ru": {"dashboard": ["Главная", "Полная CRM-панель управления"], "tariff": ["Выбор тарифа", "Выберите тариф и отправьте запрос Owner-у"], "leads": ["CRM лиды", "Управление лидами"], "students": ["Ученики", "База учеников"], "groups": ["Группы", "Группы и расписание"], "journal": ["Журнал", "Календарь и посещаемость"], "progress": ["Прогресс", "Домашка, тест, комментарий"], "payments": ["Платежи", "История и PDF"], "finance": ["Доход/расход", "Движение денег"], "online-courses": ["Онлайн курсы", "Ссылка на портал"], "online-upload": ["Загрузка онлайн уроков", "Курс, модуль, тест"], "online-students": ["Онлайн ученики", "Online список"], "online-journal": ["Онлайн журнал", "Время обучения"], "online-payments": ["Онлайн платежи", "Открытие доступа"], "timesheet": ["Табель / ЗП", "Время прихода и зарплата учителя"], "staff": ["Сотрудники", "Роль и филиал"], "branches": ["Филиалы", "Филиалы и банковские реквизиты"], "archive": ["Архив", "Здесь находятся архивированные ученики"]}};
-    const I18N_KK_RU = {"Кіру": "Войти", "Директор тіркелу": "Регистрация директора", "Ата-ана кіру": "Вход для родителя", "Email": "Email", "Құпия сөз": "Пароль", "Аты жөні": "ФИО", "Орталық атауы": "Название центра", "Қаласы": "Город", "Бағыты": "Направление", "Бас филиал": "Главный филиал", "Банк төлеміне ссылка": "Ссылка на оплату банка", "Тіркелу": "Регистрация", "Оқушы логин": "Логин ученика", "Пин код": "Пин-код", "Ата-ана панелі": "Панель родителя", "Оффлайн + онлайн ақпарат бір жерде": "Оффлайн + онлайн информация в одном месте", "Шығу": "Выход", "Premium version": "Премиум версия", "Орталық: —": "Центр: —", "Пайдаланушы: —": "Пользователь: —", "Рөлі: —": "Роль: —", "Басты бет": "Главная", "Тариф таңдау": "Выбор тарифа", "CRM лидтар": "CRM лиды", "Оқушылар": "Ученики", "Топтар": "Группы", "Журнал": "Журнал", "Прогресс": "Прогресс", "Төлем": "Платежи", "Кіріс/шығыс": "Доход/расход", "Онлайн курстар": "Онлайн курсы", "Онлайн сабақ жүктеу": "Загрузка онлайн уроков", "Онлайн оқушылар": "Онлайн ученики", "Онлайн журнал": "Онлайн журнал", "Онлайн төлемдер": "Онлайн платежи", "Табель / ЗП": "Табель / ЗП", "Қызметкерлер": "Сотрудники", "Филиалдар": "Филиалы", "Архив": "Архив", "CRM толық басқару панелі": "Полная CRM-панель управления", "Выбор тарифа": "Выбор тарифа", "Выберите тариф и отправьте запрос Owner-у": "Выберите тариф и отправьте запрос Owner-у", "Орталық осы бөлімнен тарифті таңдайды. Сосын": "Центр выбирает тариф в этом разделе. Затем", "доступ жіберу": "отправить запрос доступа", "батырмасын басады. Сұраныс Owner порталға түседі.": "кнопку. Запрос уходит в портал Owner.", "Owner ашқаннан кейін ғана тарифке сай бөлімдер толық ашылады.": "Только после подтверждения Owner откроются все разделы по тарифу.", "Қысқа ескерту / сұраныс": "Короткая заметка / запрос", "Доступ жіберу": "Отправить запрос", "Белсенді тариф": "Активный тариф", "Сұралған тариф": "Запрошенный тариф", "Owner статусы": "Статус Owner", "Эконом": "Эконом", "Стандарт": "Стандарт", "Про": "Про", "Онлайн орталықтар": "Онлайн центры", "Лид қосу": "Добавить лид", "Аты": "Имя", "Телефон": "Телефон", "Қайдан келгені": "Источник", "Ескерту": "Комментарий", "Сақтау": "Сохранить", "Клиент дожим хабарламасы": "Сообщение клиенту", "WhatsApp номер": "Номер WhatsApp", "Клиентке жазу мәтіні": "Текст сообщения клиенту", "WhatsApp ашу": "Открыть WhatsApp", "Лид тізімі": "Список лидов", "Іздеу": "Поиск", "Қайдан": "Источник", "Статус": "Статус", "Өшіру": "Удалить", "Әрекет": "Действие", "Оқушы тіркеу": "Регистрация ученика", "Ата ана": "Родитель", "Email (міндетті емес)": "Email (необязательно)", "Оқушы коды": "Код ученика", "Оқушы пин коды": "Пин ученика", "Жасы автоматом": "Возраст автоматически", "Айлық төлем сумма": "Сумма ежемесячной оплаты", "Оқушылар тізімі": "Список учеников", "Тақырыптар": "Темы", "Тақырып": "Тема", "Топ қосу": "Добавить группу", "Топ атауы": "Название группы", "Кесте": "Расписание", "Аудитория": "Аудитория", "Топ тізімі": "Список групп", "Іздеу: топ, бағыт, мұғалім": "Поиск: группа, направление, учитель", "Журнал жазу": "Запись в журнал", "Келді": "Был", "Келмеді": "Не был", "Себепті": "По уважительной причине", "Күнтізбе бойынша қатысу": "Посещаемость по календарю", "Күнді таңдап, төменнен сол күнгі жазбаларды қарай аласың.": "Выберите дату и ниже увидите записи за этот день.", "Журнал тізімі": "Список журнала", "Іздеу: топ, оқушы, тақырып": "Поиск: группа, ученик, тема", "Журнал бос": "Журнал пуст", "Күні": "Дата", "Топ": "Группа", "Оқушы": "Ученик", "Прогресс еңгізу": "Внести прогресс", "Үй тапсырма": "Домашнее задание", "Мұғалім пікірі": "Комментарий учителя", "Оценка ручной": "Оценка вручную", "Тест %": "Тест %", "Апта нәтижесі": "Результат недели", "Ай нәтижесі": "Результат месяца", "Прогресс тізімі": "Список прогресса", "Іздеу: оқушы, тест, пікір": "Поиск: ученик, тест, комментарий", "Прогресс жоқ": "Прогресс отсутствует", "Төлем еңгізу": "Внести платеж", "Төлем суммасы": "Сумма платежа", "Жеңілдік": "Скидка", "Төлемді сақтау": "Сохранить платеж", "Ата анаға хабарлама": "Сообщение родителю", "Төлем уақыт келді / қарыз қалды": "Срок оплаты пришёл / остался долг", "Төлем тарихы": "История платежей", "PDF жүктеу / Басып шығару": "Скачать PDF / Печать", "Соңғы төлем": "Последний платеж", "Келесі төлеу": "Следующая оплата", "Сумма": "Сумма", "Суммасы": "Сумма", "Source": "Источник", "Тарих": "История", "Оқушы жоқ": "Нет учеников", "Төленді": "Оплачено", "Қарыз": "Долг", "Күтілуде": "Ожидается", "Кіріс / Шығыс / Жалақы": "Доход / расход / зарплата", "Есеп жүйесі": "Сводка", "Қаржы тізімі": "Список финансов", "Кіріс": "Доход", "Шығыс": "Расход", "Жалақы": "Зарплата", "Сомасы": "Сумма", "Кімге/неге/кімнен": "Кому/за что/от кого", "Категория": "Категория", "Жазба жоқ": "Записей нет", "Түрі": "Тип", "Portal ссылка ашу": "Открыть ссылку портала", "Курс жасау": "Создать курс", "Курс атауы": "Название курса", "Бағасы": "Цена", "Сипаттамасы": "Описание", "Модуль және жүктеу": "Модуль и загрузка", "Курс таңда": "Выбери курс", "Модуль": "Модуль", "Модуль қосу": "Добавить модуль", "Модуль таңда": "Выбери модуль", "Сабақ атауы": "Название урока", "Ұзақтығы": "Длительность", "YouTube ссылка": "Ссылка YouTube", "Ссылка / file url": "Ссылка / file url", "Материал атауы": "Название материала", "Құжат": "Документ", "Материал ссылка / url": "Ссылка на материал / url", "Үй тапсырмасы": "Домашнее задание", "Сабақ қосу": "Добавить урок", "Файл режимінде телефоннан не ноутбуктан видеоны тікелей жүктей аласың. Материал мен үй тапсырмасын да осында қосасың.": "В файловом режиме можно загружать видео напрямую с телефона или ноутбука. Материал и домашнее задание тоже добавляются здесь.", "Онлайн курс жоқ": "Нет онлайн курсов", "КУРС": "КУРС", "МҰҒАЛІМ": "УЧИТЕЛЬ", "БАҒАСЫ": "ЦЕНА", "МОДУЛЬ САНЫ": "КОЛИЧЕСТВО МОДУЛЕЙ", "Тест жасау": "Создать тест", "Сабақты таңда": "Выбери урок", "Сұрақ": "Вопрос", "Жауап 1": "Ответ 1", "Жауап 2": "Ответ 2", "Жауап 3": "Ответ 3", "Жауап 4": "Ответ 4", "Дұрыс жауапты таңда": "Выбери правильный ответ", "Тест сұрақ қосу": "Добавить тестовый вопрос", "Оқушы жіберген үй тапсырмалары": "Домашние задания, отправленные учеником", "Іздеу: оқушы, сабақ, статус": "Поиск: ученик, урок, статус", "Үй тапсырмасы жіберілмеген": "Домашние задания не отправлены", "САБАҚ": "УРОК", "ЕСКЕРТПЕ": "ПРИМЕЧАНИЕ", "ФАЙЛ": "ФАЙЛ", "СТАТУС": "СТАТУС", "Оқу уақыты": "Время обучения", "Іздеу: оқушы, сабақ, күн": "Поиск: ученик, урок, день", "Online журнал бос": "Онлайн журнал пуст", "УАҚЫТЫ": "ВРЕМЯ", "Доступ ашу": "Открыть доступ", "Іздеу: оқушы, курс, статус": "Поиск: ученик, курс, статус", "Онлайн төлем жоқ": "Нет онлайн платежей", "Курс": "Курс", "Дата": "Дата", "ДЕЙСТВИЕ": "ДЕЙСТВИЕ", "ДАТА": "ДАТА", "Оқушы тақырыптары": "Темы ученика", "Қай күні қай тақырып өтті, келді ме келмеді ме": "Какая тема была в какой день, был или не был", "Жабу": "Закрыть", "Тақырыптар жоқ": "Нет тем", "Архивтегі оқушылар": "Ученики в архиве", "Архивтегі онлайн оқушылар": "Онлайн ученики в архиве", "Архив бос": "Архив пуст", "Қайтару": "Вернуть", "Толық өшіру": "Полностью удалить", "Орталықтың банк реквизиттері": "Банковские реквизиты центра", "Бұл бөлім дәл осы жерде тұрсын: филиалдар ішінде. Барлық орталық өз банк ссылкасы мен шотын осы жерден өзгерте алады.": "Этот блок находится внутри раздела филиалов. Каждый центр может менять банковскую ссылку и счёт здесь.", "Банк ссылка": "Ссылка банка", "Шот / Kaspi / IBAN": "Счёт / Kaspi / IBAN", "Филиал қосу": "Добавить филиал", "Филиал аты": "Название филиала", "Қала": "Город", "Адрес": "Адрес", "Филиалдар тізімі": "Список филиалов", "Филиал жоқ": "Нет филиалов", "Филиал": "Филиал", "Филиалдар және банк реквизиттері": "Филиалы и банковские реквизиты", "Табель тіркеу": "Отметить табель", "Келген күн": "Дата прихода", "Келгені": "Время прихода", "Кеткені": "Время ухода", "Уақытында": "Вовремя", "Кешікті": "Опоздал", "Ерте кетті": "Ушёл рано", "Табель тізімі": "Список табеля", "Менің ЗП / Табель": "Моя ЗП / табель", "Табель бос": "Табель пуст", "Директор": "Директор", "Админ": "Админ", "Мұғалім": "Учитель", "Бухгалтер": "Бухгалтер", "Маркетинг": "Маркетинг", "Жылдам шолу": "Быстрый обзор", "Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.": "Это премиум версия CRM. Разделы открываются по активному тарифу, подтверждённому Owner.", "Айлық төлем": "Ежемесячный платеж", "Онлайн курс": "Онлайн курс", "Орталық": "Центр", "Орталық ақпараты": "Информация о центре", "Бала туралы": "О ребёнке", "Код / PIN": "Код / PIN", "Төлем ақпараты": "Информация об оплате", "Жоспар": "План", "Апта/Ай": "Неделя/месяц", "Онлайн оқу": "Онлайн обучение", "Редакт": "Редактировать", "Жіберілген үй тапсырмалар": "Отправленные домашние задания", "Жіберілген файл жоқ": "Файл не отправлен", "Файл ашу": "Открыть файл", "Курсы": "Курсы", "Курс, сабақ, online төлем": "Курс, урок, online платеж", "Тек online модульдер": "Только online модули", "Барлық CRM": "Весь CRM", "Лид жоқ": "Нет лидов", "Топ жоқ": "Нет групп", "Қызметкер шақыру": "Пригласить сотрудника", "Қызметкерлер тізімі": "Список сотрудников", "Қызметкер жоқ": "Нет сотрудников", "Мекенжай": "Адрес", "Пайдаланушы": "Пользователь", "Рөл": "Роль", "Сұраныс: жоқ": "Запрос: нет", "Тариф: —": "Тариф: —", "Оқушы таңда": "Выберите ученика", "Модульдер": "Модули", "Модуль саны": "Количество модулей", "Бұл бөлім филиалдар ішінде тұрады. Банк ссылка мен шотты осы жерден өзгертесің.": "Этот блок находится внутри раздела филиалов. Ссылку банка и счёт меняешь здесь.", "Төлемдер": "Платежи", "Сотрудники": "Сотрудники", "Филиалы": "Филиалы"};
-    const I18N_RU_KK = {"Войти": "Кіру", "Регистрация директора": "Директор тіркелу", "Вход для родителя": "Ата-ана кіру", "Email": "Email", "Пароль": "Құпия сөз", "ФИО": "Аты жөні", "Название центра": "Орталық атауы", "Город": "Қала", "Направление": "Бағыты", "Главный филиал": "Бас филиал", "Ссылка на оплату банка": "Банк төлеміне ссылка", "Регистрация": "Тіркелу", "Логин ученика": "Оқушы логин", "Пин-код": "Пин код", "Панель родителя": "Ата-ана панелі", "Оффлайн + онлайн информация в одном месте": "Оффлайн + онлайн ақпарат бір жерде", "Выход": "Шығу", "Премиум версия": "Premium version", "Центр: —": "Орталық: —", "Пользователь: —": "Пайдаланушы: —", "Роль: —": "Рөлі: —", "Главная": "Басты бет", "Выбор тарифа": "Выбор тарифа", "CRM лиды": "CRM лидтар", "Ученики": "Оқушылар", "Группы": "Топтар", "Журнал": "Журнал", "Прогресс": "Прогресс", "Платежи": "Төлемдер", "Доход/расход": "Кіріс/шығыс", "Онлайн курсы": "Онлайн курстар", "Загрузка онлайн уроков": "Онлайн сабақ жүктеу", "Онлайн ученики": "Онлайн оқушылар", "Онлайн журнал": "Онлайн журнал", "Онлайн платежи": "Онлайн төлемдер", "Табель / ЗП": "Табель / ЗП", "Сотрудники": "Сотрудники", "Филиалы": "Филиалы", "Архив": "Архив", "Полная CRM-панель управления": "CRM толық басқару панелі", "Выберите тариф и отправьте запрос Owner-у": "Выберите тариф и отправьте запрос Owner-у", "Центр выбирает тариф в этом разделе. Затем": "Орталық осы бөлімнен тарифті таңдайды. Сосын", "отправить запрос доступа": "доступ жіберу", "кнопку. Запрос уходит в портал Owner.": "батырмасын басады. Сұраныс Owner порталға түседі.", "Только после подтверждения Owner откроются все разделы по тарифу.": "Owner ашқаннан кейін ғана тарифке сай бөлімдер толық ашылады.", "Короткая заметка / запрос": "Қысқа ескерту / сұраныс", "Отправить запрос": "Доступ жіберу", "Активный тариф": "Белсенді тариф", "Запрошенный тариф": "Сұралған тариф", "Статус Owner": "Owner статусы", "Эконом": "Эконом", "Стандарт": "Стандарт", "Про": "Про", "Онлайн центры": "Онлайн орталықтар", "Добавить лид": "Лид қосу", "Имя": "Аты", "Телефон": "Телефон", "Источник": "Source", "Комментарий": "Ескерту", "Сохранить": "Сақтау", "Сообщение клиенту": "Клиент дожим хабарламасы", "Номер WhatsApp": "WhatsApp номер", "Текст сообщения клиенту": "Клиентке жазу мәтіні", "Открыть WhatsApp": "WhatsApp ашу", "Список лидов": "Лид тізімі", "Поиск": "Іздеу", "Статус": "Статус", "Удалить": "Өшіру", "Действие": "Әрекет", "Регистрация ученика": "Оқушы тіркеу", "Родитель": "Ата ана", "Email (необязательно)": "Email (міндетті емес)", "Код ученика": "Оқушы коды", "Пин ученика": "Оқушы пин коды", "Возраст автоматически": "Жасы автоматом", "Сумма ежемесячной оплаты": "Айлық төлем сумма", "Список учеников": "Оқушылар тізімі", "Темы": "Тақырыптар", "Тема": "Тақырып", "Добавить группу": "Топ қосу", "Название группы": "Топ атауы", "Расписание": "Кесте", "Аудитория": "Аудитория", "Список групп": "Топ тізімі", "Поиск: группа, направление, учитель": "Іздеу: топ, бағыт, мұғалім", "Запись в журнал": "Журнал жазу", "Был": "Келді", "Не был": "Келмеді", "По уважительной причине": "Себепті", "Посещаемость по календарю": "Күнтізбе бойынша қатысу", "Выберите дату и ниже увидите записи за этот день.": "Күнді таңдап, төменнен сол күнгі жазбаларды қарай аласың.", "Список журнала": "Журнал тізімі", "Поиск: группа, ученик, тема": "Іздеу: топ, оқушы, тақырып", "Журнал пуст": "Журнал бос", "Дата": "Дата", "Группа": "Топ", "Ученик": "Оқушы", "Внести прогресс": "Прогресс еңгізу", "Домашнее задание": "Үй тапсырмасы", "Комментарий учителя": "Мұғалім пікірі", "Оценка вручную": "Оценка ручной", "Тест %": "Тест %", "Результат недели": "Апта нәтижесі", "Результат месяца": "Ай нәтижесі", "Список прогресса": "Прогресс тізімі", "Поиск: ученик, тест, комментарий": "Іздеу: оқушы, тест, пікір", "Прогресс отсутствует": "Прогресс жоқ", "Внести платеж": "Төлем еңгізу", "Сумма платежа": "Төлем суммасы", "Скидка": "Жеңілдік", "Сохранить платеж": "Төлемді сақтау", "Сообщение родителю": "Ата анаға хабарлама", "Срок оплаты пришёл / остался долг": "Төлем уақыт келді / қарыз қалды", "История платежей": "Төлем тарихы", "Скачать PDF / Печать": "PDF жүктеу / Басып шығару", "Последний платеж": "Соңғы төлем", "Следующая оплата": "Келесі төлеу", "Сумма": "Сомасы", "История": "Тарих", "Нет учеников": "Оқушы жоқ", "Оплачено": "Төленді", "Долг": "Қарыз", "Ожидается": "Күтілуде", "Доход / расход / зарплата": "Кіріс / Шығыс / Жалақы", "Сводка": "Есеп жүйесі", "Список финансов": "Қаржы тізімі", "Доход": "Кіріс", "Расход": "Шығыс", "Зарплата": "Жалақы", "Кому/за что/от кого": "Кімге/неге/кімнен", "Категория": "Категория", "Записей нет": "Жазба жоқ", "Тип": "Түрі", "Открыть ссылку портала": "Portal ссылка ашу", "Создать курс": "Курс жасау", "Название курса": "Курс атауы", "Цена": "Бағасы", "Описание": "Сипаттамасы", "Модуль и загрузка": "Модуль және жүктеу", "Выбери курс": "Курс таңда", "Модуль": "Модуль", "Добавить модуль": "Модуль қосу", "Выбери модуль": "Модуль таңда", "Название урока": "Сабақ атауы", "Длительность": "Ұзақтығы", "Ссылка YouTube": "YouTube ссылка", "Ссылка / file url": "Ссылка / file url", "Название материала": "Материал атауы", "Документ": "Құжат", "Ссылка на материал / url": "Материал ссылка / url", "Добавить урок": "Сабақ қосу", "В файловом режиме можно загружать видео напрямую с телефона или ноутбука. Материал и домашнее задание тоже добавляются здесь.": "Файл режимінде телефоннан не ноутбуктан видеоны тікелей жүктей аласың. Материал мен үй тапсырмасын да осында қосасың.", "Нет онлайн курсов": "Онлайн курс жоқ", "КУРС": "КУРС", "УЧИТЕЛЬ": "МҰҒАЛІМ", "ЦЕНА": "БАҒАСЫ", "КОЛИЧЕСТВО МОДУЛЕЙ": "МОДУЛЬ САНЫ", "Создать тест": "Тест жасау", "Выбери урок": "Сабақты таңда", "Вопрос": "Сұрақ", "Ответ 1": "Жауап 1", "Ответ 2": "Жауап 2", "Ответ 3": "Жауап 3", "Ответ 4": "Жауап 4", "Выбери правильный ответ": "Дұрыс жауапты таңда", "Добавить тестовый вопрос": "Тест сұрақ қосу", "Домашние задания, отправленные учеником": "Оқушы жіберген үй тапсырмалары", "Поиск: ученик, урок, статус": "Іздеу: оқушы, сабақ, статус", "Домашние задания не отправлены": "Үй тапсырмасы жіберілмеген", "УРОК": "САБАҚ", "ПРИМЕЧАНИЕ": "ЕСКЕРТПЕ", "ФАЙЛ": "ФАЙЛ", "СТАТУС": "СТАТУС", "Время обучения": "Оқу уақыты", "Поиск: ученик, урок, день": "Іздеу: оқушы, сабақ, күн", "Онлайн журнал пуст": "Online журнал бос", "ВРЕМЯ": "УАҚЫТЫ", "Открыть доступ": "Доступ ашу", "Поиск: ученик, курс, статус": "Іздеу: оқушы, курс, статус", "Нет онлайн платежей": "Онлайн төлем жоқ", "Курс": "Курс", "ДЕЙСТВИЕ": "ДЕЙСТВИЕ", "ДАТА": "ДАТА", "Темы ученика": "Оқушы тақырыптары", "Какая тема была в какой день, был или не был": "Қай күні қай тақырып өтті, келді ме келмеді ме", "Закрыть": "Жабу", "Нет тем": "Тақырыптар жоқ", "Ученики в архиве": "Архивтегі оқушылар", "Онлайн ученики в архиве": "Архивтегі онлайн оқушылар", "Архив пуст": "Архив бос", "Вернуть": "Қайтару", "Полностью удалить": "Толық өшіру", "Банковские реквизиты центра": "Орталықтың банк реквизиттері", "Этот блок находится внутри раздела филиалов. Каждый центр может менять банковскую ссылку и счёт здесь.": "Бұл бөлім дәл осы жерде тұрсын: филиалдар ішінде. Барлық орталық өз банк ссылкасы мен шотын осы жерден өзгерте алады.", "Ссылка банка": "Банк ссылка", "Счёт / Kaspi / IBAN": "Шот / Kaspi / IBAN", "Добавить филиал": "Филиал қосу", "Название филиала": "Филиал аты", "Адрес": "Мекенжай", "Список филиалов": "Филиалдар тізімі", "Нет филиалов": "Филиал жоқ", "Филиал": "Филиал", "Филиалы и банковские реквизиты": "Филиалдар және банк реквизиттері", "Отметить табель": "Табель тіркеу", "Дата прихода": "Келген күн", "Время прихода": "Келгені", "Время ухода": "Кеткені", "Вовремя": "Уақытында", "Опоздал": "Кешікті", "Ушёл рано": "Ерте кетті", "Список табеля": "Табель тізімі", "Моя ЗП / табель": "Менің ЗП / Табель", "Табель пуст": "Табель бос", "Директор": "Директор", "Админ": "Админ", "Учитель": "Мұғалім", "Бухгалтер": "Бухгалтер", "Маркетинг": "Маркетинг", "Быстрый обзор": "Жылдам шолу", "Это премиум версия CRM. Разделы открываются по активному тарифу, подтверждённому Owner.": "Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.", "Ежемесячный платеж": "Айлық төлем", "Онлайн курс": "Онлайн курс", "Центр": "Орталық", "Информация о центре": "Орталық ақпараты", "О ребёнке": "Бала туралы", "Код / PIN": "Код / PIN", "Информация об оплате": "Төлем ақпараты", "План": "Жоспар", "Неделя/месяц": "Апта/Ай", "Онлайн обучение": "Онлайн оқу", "Редактировать": "Редакт", "Отправленные домашние задания": "Жіберілген үй тапсырмалар", "Файл не отправлен": "Жіберілген файл жоқ", "Открыть файл": "Файл ашу", "Курсы": "Курсы", "Курс, урок, online платеж": "Курс, сабақ, online төлем", "Только online модули": "Тек online модульдер", "Весь CRM": "Барлық CRM", "Нет лидов": "Лид жоқ", "Нет групп": "Топ жоқ", "Пригласить сотрудника": "Қызметкер шақыру", "Список сотрудников": "Қызметкерлер тізімі", "Нет сотрудников": "Қызметкер жоқ", "Пользователь": "Пайдаланушы", "Роль": "Рөл", "Запрос: нет": "Сұраныс: жоқ", "Тариф: —": "Тариф: —", "Выберите ученика": "Оқушы таңда", "Модули": "Модульдер", "Количество модулей": "Модуль саны", "Этот блок находится внутри раздела филиалов. Ссылку банка и счёт меняешь здесь.": "Бұл бөлім филиалдар ішінде тұрады. Банк ссылка мен шотты осы жерден өзгертесің."};
+    const TITLE_MAPS = {"kk": {"dashboard": ["Басты бет", "CRM толық басқару панелі"], "tariff": ["Тариф таңдау", "Тариф таңдап, Owner-ге сұраныс жіберу"], "leads": ["CRM лидтар", "Лид басқару"], "students": ["Оқушылар", "Оқушы базасы"], "groups": ["Топтар", "Топ және кесте"], "schedule": ["Кесте", "Супер апталық кесте"], "journal": ["Журнал", "Күнтізбе және қатысу"], "progress": ["Прогресс", "Үй тапсырма, тест, пікір"], "payments": ["Төлем", "Тарих және PDF"], "finance": ["Кіріс/шығыс", "Ақша айналымы"], "online-courses": ["Онлайн курстар", "Portal ссылка"], "online-upload": ["Онлайн сабақ жүктеу", "Курс, модуль, тест"], "online-students": ["Онлайн оқушылар", "Online тізім"], "online-journal": ["Онлайн журнал", "Оқу уақыты"], "online-payments": ["Онлайн төлемдер", "Доступ ашу"], "timesheet": ["Табель / ЗП", "Мұғалім келу уақыты мен жалақы"], "staff": ["Қызметкерлер", "Рөл және филиал"], "branches": ["Филиалдар", "Филиалдар және банк реквизиттері"], "archive": ["Архив", "Архивке кеткен балалар осы бөлімде тұрады"]}, "ru": {"dashboard": ["Главная", "Полная CRM-панель управления"], "tariff": ["Выбор тарифа", "Выберите тариф и отправьте запрос Owner-у"], "leads": ["CRM лиды", "Управление лидами"], "students": ["Ученики", "База учеников"], "groups": ["Группы", "Группы и расписание"], "schedule": ["Расписание", "Недельное расписание"], "journal": ["Журнал", "Календарь и посещаемость"], "progress": ["Прогресс", "Домашка, тест, комментарий"], "payments": ["Платежи", "История и PDF"], "finance": ["Доход/расход", "Движение денег"], "online-courses": ["Онлайн курсы", "Ссылка на портал"], "online-upload": ["Загрузка онлайн уроков", "Курс, модуль, тест"], "online-students": ["Онлайн ученики", "Online список"], "online-journal": ["Онлайн журнал", "Время обучения"], "online-payments": ["Онлайн платежи", "Открытие доступа"], "timesheet": ["Табель / ЗП", "Время прихода и зарплата учителя"], "staff": ["Сотрудники", "Роль и филиал"], "branches": ["Филиалы", "Филиалы и банковские реквизиты"], "archive": ["Архив", "Здесь находятся архивированные ученики"]}};
+    const I18N_KK_RU = {"Сабақ кестесі": "Расписание занятий", "Расписание занятий": "Сабақ кестесі", "Супер кесте: апталық тор, түстер, ұстап апару, мұғалім бойынша және кабинет бойынша бөлек көрініс.": "Супер-расписание: недельная сетка, цвета, drag & drop, отдельный вид по учителю и кабинету.", "Супер-расписание: недельная сетка, цвета, drag & drop, отдельный вид по учителю и кабинету.": "Супер кесте: апталық тор, түстер, ұстап апару, мұғалім бойынша және кабинет бойынша бөлек көрініс.", "Кесте көрінісі": "Вид расписания", "Вид расписания": "Кесте көрінісі", "Мұғалім кестесі": "Расписание учителя", "Расписание учителя": "Мұғалім кестесі", "Кабинет кестесі": "Расписание кабинета", "Расписание кабинета": "Кабинет кестесі", "Сабақты ұстап апарып басқа күн/уақытқа қоя аласың.": "Можно перетащить занятие на другой день/время.", "Можно перетащить занятие на другой день/время.": "Сабақты ұстап апарып басқа күн/уақытқа қоя аласың.", "Негізгі апталық тор. Мұнда барлық сабақ көрінеді.": "Основная недельная сетка. Здесь видны все занятия.", "Основная недельная сетка. Здесь видны все занятия.": "Негізгі апталық тор. Мұнда барлық сабақ көрінеді.", "Мұғалім таңда": "Выбери учителя", "Выбери учителя": "Мұғалім таңда", "Кабинет таңда": "Выбери кабинет", "Выбери кабинет": "Кабинет таңда", "Түстер топтарға да бөлінеді": "Цвета также делятся по группам", "Цвета также делятся по группам": "Түстер топтарға да бөлінеді", "Осы апта": "Эта неделя", "Эта неделя": "Осы апта", "Бүгін": "Сегодня", "Сегодня": "Бүгін", "Конфликт": "Конфликт", "Конфликт": "Конфликт", "Апта аралығы": "Диапазон недели", "Диапазон недели": "Апта аралығы", "Бүгін сабақ жоқ": "Сегодня занятий нет", "Сегодня занятий нет": "Бүгін сабақ жоқ", "Сабақ жаңа орынға жылжыды": "Занятие перенесено на новое место", "Занятие перенесено на новое место": "Сабақ жаңа орынға жылжыды", "Бұл уақытқа жылжытуға болмайды: конфликт бар": "Нельзя перенести на это время: есть конфликт", "Нельзя перенести на это время: есть конфликт": "Бұл уақытқа жылжытуға болмайды: конфликт бар", "CRM лидтары": "CRM лиды", "CRM лиды": "CRM лидтары", "Оқушылар": "Ученики", "Ученики": "Оқушылар", "Топтар": "Группы", "Группы": "Топтар", "Төлемдер": "Платежи", "Платежи": "Төлемдер", "Филиалдар": "Филиалы", "Филиалы": "Филиалдар", "Кіріс/шығыс": "Доход/расход", "Доход/расход": "Кіріс/шығыс", "Онлайн курстар": "Онлайн курсы", "Онлайн курсы": "Онлайн курстар", "Онлайн сабақ жүктеу": "Загрузка онлайн уроков", "Загрузка онлайн уроков": "Онлайн сабақ жүктеу", "Онлайн оқушылар": "Онлайн ученики", "Онлайн ученики": "Онлайн оқушылар", "Онлайн төлемдер": "Онлайн платежи", "Онлайн платежи": "Онлайн төлемдер", "Тек онлайн модульдер": "Только online модули", "Только online модули": "Тек онлайн модульдер", "Курс, сабақ, онлайн төлем": "Курс, урок, online платеж", "Курс, урок, online платеж": "Курс, сабақ, онлайн төлем", "Тек онлайн модульдер": "Тек online модульдер", "Тек online модульдер": "Тек онлайн модульдер", "Курс, сабақ, онлайн төлем": "Курс, сабақ, online төлем", "Курс, сабақ, online төлем": "Курс, сабақ, онлайн төлем", "Тариф таңдау": "Выбор тарифа", "Выбор тарифа": "Тариф таңдау", "Белсенді тариф": "Активный тариф", "Активный тариф": "Белсенді тариф", "Сұралған тариф": "Запрошенный тариф", "Запрошенный тариф": "Сұралған тариф", "Owner статусы": "Статус Owner", "Статус Owner": "Owner статусы", "Кіру": "Войти", "Директор тіркелу": "Регистрация директора", "Ата-ана кіру": "Вход для родителя", "Email": "Email", "Құпия сөз": "Пароль", "Аты жөні": "ФИО", "Орталық атауы": "Название центра", "Қаласы": "Город", "Бағыты": "Направление", "Бас филиал": "Главный филиал", "Банк төлеміне ссылка": "Ссылка на оплату банка", "Тіркелу": "Регистрация", "Оқушы логин": "Логин ученика", "Пин код": "Пин-код", "Ата-ана панелі": "Панель родителя", "Оффлайн + онлайн ақпарат бір жерде": "Оффлайн + онлайн информация в одном месте", "Шығу": "Выход", "Premium version": "Премиум версия", "Орталық: —": "Центр: —", "Пайдаланушы: —": "Пользователь: —", "Рөлі: —": "Роль: —", "Басты бет": "Главная", "Тариф таңдау": "Выбор тарифа", "CRM лидтар": "CRM лиды", "Оқушылар": "Ученики", "Топтар": "Группы", "Журнал": "Журнал", "Прогресс": "Прогресс", "Төлем": "Платежи", "Кіріс/шығыс": "Доход/расход", "Онлайн курстар": "Онлайн курсы", "Онлайн сабақ жүктеу": "Загрузка онлайн уроков", "Онлайн оқушылар": "Онлайн ученики", "Онлайн журнал": "Онлайн журнал", "Онлайн төлемдер": "Онлайн платежи", "Табель / ЗП": "Табель / ЗП", "Қызметкерлер": "Сотрудники", "Филиалдар": "Филиалы", "Архив": "Архив", "CRM толық басқару панелі": "Полная CRM-панель управления", "Выбор тарифа": "Выбор тарифа", "Выберите тариф и отправьте запрос Owner-у": "Выберите тариф и отправьте запрос Owner-у", "Орталық осы бөлімнен тарифті таңдайды. Сосын": "Центр выбирает тариф в этом разделе. Затем", "доступ жіберу": "отправить запрос доступа", "батырмасын басады. Сұраныс Owner порталға түседі.": "кнопку. Запрос уходит в портал Owner.", "Owner ашқаннан кейін ғана тарифке сай бөлімдер толық ашылады.": "Только после подтверждения Owner откроются все разделы по тарифу.", "Қысқа ескерту / сұраныс": "Короткая заметка / запрос", "Доступ жіберу": "Отправить запрос", "Белсенді тариф": "Активный тариф", "Сұралған тариф": "Запрошенный тариф", "Owner статусы": "Статус Owner", "Эконом": "Эконом", "Стандарт": "Стандарт", "Про": "Про", "Онлайн орталықтар": "Онлайн центры", "Лид қосу": "Добавить лид", "Аты": "Имя", "Телефон": "Телефон", "Қайдан келгені": "Источник", "Ескерту": "Комментарий", "Сақтау": "Сохранить", "Клиент дожим хабарламасы": "Сообщение клиенту", "WhatsApp номер": "Номер WhatsApp", "Клиентке жазу мәтіні": "Текст сообщения клиенту", "WhatsApp ашу": "Открыть WhatsApp", "Лид тізімі": "Список лидов", "Іздеу": "Поиск", "Қайдан": "Источник", "Статус": "Статус", "Өшіру": "Удалить", "Әрекет": "Действие", "Оқушы тіркеу": "Регистрация ученика", "Ата ана": "Родитель", "Email (міндетті емес)": "Email (необязательно)", "Оқушы коды": "Код ученика", "Оқушы пин коды": "Пин ученика", "Жасы автоматом": "Возраст автоматически", "Айлық төлем сумма": "Сумма ежемесячной оплаты", "Оқушылар тізімі": "Список учеников", "Тақырыптар": "Темы", "Тақырып": "Тема", "Топ қосу": "Добавить группу", "Топ атауы": "Название группы", "Кесте": "Расписание", "Аудитория": "Аудитория", "Топ тізімі": "Список групп", "Іздеу: топ, бағыт, мұғалім": "Поиск: группа, направление, учитель", "Журнал жазу": "Запись в журнал", "Келді": "Был", "Келмеді": "Не был", "Себепті": "По уважительной причине", "Күнтізбе бойынша қатысу": "Посещаемость по календарю", "Күнді таңдап, төменнен сол күнгі жазбаларды қарай аласың.": "Выберите дату и ниже увидите записи за этот день.", "Журнал тізімі": "Список журнала", "Іздеу: топ, оқушы, тақырып": "Поиск: группа, ученик, тема", "Журнал бос": "Журнал пуст", "Күні": "Дата", "Топ": "Группа", "Оқушы": "Ученик", "Прогресс еңгізу": "Внести прогресс", "Үй тапсырма": "Домашнее задание", "Мұғалім пікірі": "Комментарий учителя", "Оценка ручной": "Оценка вручную", "Тест %": "Тест %", "Апта нәтижесі": "Результат недели", "Ай нәтижесі": "Результат месяца", "Прогресс тізімі": "Список прогресса", "Іздеу: оқушы, тест, пікір": "Поиск: ученик, тест, комментарий", "Прогресс жоқ": "Прогресс отсутствует", "Төлем еңгізу": "Внести платеж", "Төлем суммасы": "Сумма платежа", "Жеңілдік": "Скидка", "Төлемді сақтау": "Сохранить платеж", "Ата анаға хабарлама": "Сообщение родителю", "Төлем уақыт келді / қарыз қалды": "Срок оплаты пришёл / остался долг", "Төлем тарихы": "История платежей", "PDF жүктеу / Басып шығару": "Скачать PDF / Печать", "Соңғы төлем": "Последний платеж", "Келесі төлеу": "Следующая оплата", "Сумма": "Сумма", "Суммасы": "Сумма", "Source": "Источник", "Тарих": "История", "Оқушы жоқ": "Нет учеников", "Төленді": "Оплачено", "Қарыз": "Долг", "Күтілуде": "Ожидается", "Кіріс / Шығыс / Жалақы": "Доход / расход / зарплата", "Есеп жүйесі": "Сводка", "Қаржы тізімі": "Список финансов", "Кіріс": "Доход", "Шығыс": "Расход", "Жалақы": "Зарплата", "Сомасы": "Сумма", "Кімге/неге/кімнен": "Кому/за что/от кого", "Категория": "Категория", "Жазба жоқ": "Записей нет", "Түрі": "Тип", "Portal ссылка ашу": "Открыть ссылку портала", "Курс жасау": "Создать курс", "Курс атауы": "Название курса", "Бағасы": "Цена", "Сипаттамасы": "Описание", "Модуль және жүктеу": "Модуль и загрузка", "Курс таңда": "Выбери курс", "Модуль": "Модуль", "Модуль қосу": "Добавить модуль", "Модуль таңда": "Выбери модуль", "Сабақ атауы": "Название урока", "Ұзақтығы": "Длительность", "YouTube ссылка": "Ссылка YouTube", "Ссылка / file url": "Ссылка / file url", "Материал атауы": "Название материала", "Құжат": "Документ", "Материал ссылка / url": "Ссылка на материал / url", "Үй тапсырмасы": "Домашнее задание", "Сабақ қосу": "Добавить урок", "Файл режимінде телефоннан не ноутбуктан видеоны тікелей жүктей аласың. Материал мен үй тапсырмасын да осында қосасың.": "В файловом режиме можно загружать видео напрямую с телефона или ноутбука. Материал и домашнее задание тоже добавляются здесь.", "Онлайн курс жоқ": "Нет онлайн курсов", "КУРС": "КУРС", "МҰҒАЛІМ": "УЧИТЕЛЬ", "БАҒАСЫ": "ЦЕНА", "МОДУЛЬ САНЫ": "КОЛИЧЕСТВО МОДУЛЕЙ", "Тест жасау": "Создать тест", "Сабақты таңда": "Выбери урок", "Сұрақ": "Вопрос", "Жауап 1": "Ответ 1", "Жауап 2": "Ответ 2", "Жауап 3": "Ответ 3", "Жауап 4": "Ответ 4", "Дұрыс жауапты таңда": "Выбери правильный ответ", "Тест сұрақ қосу": "Добавить тестовый вопрос", "Оқушы жіберген үй тапсырмалары": "Домашние задания, отправленные учеником", "Іздеу: оқушы, сабақ, статус": "Поиск: ученик, урок, статус", "Үй тапсырмасы жіберілмеген": "Домашние задания не отправлены", "САБАҚ": "УРОК", "ЕСКЕРТПЕ": "ПРИМЕЧАНИЕ", "ФАЙЛ": "ФАЙЛ", "СТАТУС": "СТАТУС", "Оқу уақыты": "Время обучения", "Іздеу: оқушы, сабақ, күн": "Поиск: ученик, урок, день", "Online журнал бос": "Онлайн журнал пуст", "УАҚЫТЫ": "ВРЕМЯ", "Доступ ашу": "Открытие доступа", "Іздеу: оқушы, курс, статус": "Поиск: ученик, курс, статус", "Онлайн төлем жоқ": "Нет онлайн платежей", "Курс": "Курс", "Дата": "Дата", "ДЕЙСТВИЕ": "ДЕЙСТВИЕ", "ДАТА": "ДАТА", "Оқушы тақырыптары": "Темы ученика", "Қай күні қай тақырып өтті, келді ме келмеді ме": "Какая тема была в какой день, был или не был", "Жабу": "Закрыть", "Тақырыптар жоқ": "Нет тем", "Архивтегі оқушылар": "Ученики в архиве", "Архивтегі онлайн оқушылар": "Онлайн ученики в архиве", "Архив бос": "Архив пуст", "Қайтару": "Вернуть", "Толық өшіру": "Полностью удалить", "Орталықтың банк реквизиттері": "Банковские реквизиты центра", "Бұл бөлім дәл осы жерде тұрсын: филиалдар ішінде. Барлық орталық өз банк ссылкасы мен шотын осы жерден өзгерте алады.": "Этот блок находится внутри раздела филиалов. Каждый центр может менять банковскую ссылку и счёт здесь.", "Банк ссылка": "Ссылка банка", "Шот / Kaspi / IBAN": "Счёт / Kaspi / IBAN", "Филиал қосу": "Добавить филиал", "Филиал аты": "Название филиала", "Қала": "Город", "Адрес": "Адрес", "Филиалдар тізімі": "Список филиалов", "Филиал жоқ": "Нет филиалов", "Филиал": "Филиал", "Филиалдар және банк реквизиттері": "Филиалы и банковские реквизиты", "Табель тіркеу": "Отметить табель", "Келген күн": "Дата прихода", "Келгені": "Время прихода", "Кеткені": "Время ухода", "Уақытында": "Вовремя", "Кешікті": "Опоздал", "Ерте кетті": "Ушёл рано", "Табель тізімі": "Список табеля", "Менің ЗП / Табель": "Моя ЗП / табель", "Табель бос": "Табель пуст", "Директор": "Директор", "Админ": "Админ", "Мұғалім": "Учитель", "Бухгалтер": "Бухгалтер", "Маркетинг": "Маркетинг", "Жылдам шолу": "Быстрый обзор", "Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.": "Это премиум версия CRM. Разделы открываются по активному тарифу, подтверждённому Owner.", "Айлық төлем": "Ежемесячный платеж", "Онлайн курс": "Онлайн курс", "Орталық": "Центр", "Орталық ақпараты": "Информация о центре", "Бала туралы": "О ребёнке", "Код / PIN": "Код / PIN", "Төлем ақпараты": "Информация об оплате", "Жоспар": "План", "Апта/Ай": "Неделя/месяц", "Онлайн оқу": "Онлайн обучение", "Редакт": "Редактировать", "Жіберілген үй тапсырмалар": "Отправленные домашние задания", "Жіберілген файл жоқ": "Файл не отправлен", "Файл ашу": "Открыть файл", "Курсы": "Курсы", "Курс, сабақ, online төлем": "Курс, урок, online платеж", "Тек online модульдер": "Только online модули", "Барлық CRM": "Вся CRM", "Лид жоқ": "Нет лидов", "Топ жоқ": "Нет групп", "Қызметкер шақыру": "Пригласить сотрудника", "Қызметкерлер тізімі": "Список сотрудников", "Қызметкер жоқ": "Нет сотрудников", "Мекенжай": "Адрес", "Пайдаланушы": "Пользователь", "Рөл": "Роль", "Сұраныс: жоқ": "Запрос: нет", "Тариф: —": "Тариф: —", "Оқушы таңда": "Выбери ученика", "Модульдер": "Модули", "Модуль саны": "Количество модулей", "Бұл бөлім филиалдар ішінде тұрады. Банк ссылка мен шотты осы жерден өзгертесің.": "Этот блок находится внутри раздела филиалов. Ссылку банка и счёт меняешь здесь.", "Төлемдер": "Платежи", "Сотрудники": "Сотрудники", "Филиалы": "Филиалы", "Расписание": "Расписание", "Апталық кесте": "Недельное расписание", "Расписание / Кесте": "Расписание / Кесте", "Күн таңда": "Выбери день", "Дүйсенбі": "Понедельник", "Сейсенбі": "Вторник", "Сәрсенбі": "Среда", "Бейсенбі": "Четверг", "Жұма": "Пятница", "Сенбі": "Суббота", "Жексенбі": "Воскресенье", "Аудитория / кабинет": "Аудитория / кабинет", "Ескерту / комментарий": "Комментарий / заметка", "Апталық көрініс": "Вид на неделю", "Бұл бөлімде топтың күні, уақыты, мұғалімі және кабинет көрсетіледі.": "В этом разделе показываются день, время, учитель и кабинет группы.", "Іздеу: күн, топ, мұғалім, кабинет": "Поиск: день, группа, учитель, кабинет", "Басталуы": "Начало", "Аяқталуы": "Окончание", "Кабинет": "Кабинет", "Расписание жоқ": "Нет расписания", "Расписание сақталды": "Расписание сохранено", "Расписание жаңартылды": "Расписание обновлено", "Расписание өшірілді": "Расписание удалено", "Расписание формасы толтырылды": "Форма расписания заполнена", "модульдер": "модули", "сабақ": "урок", "төлем": "платеж", "Portal ссылка": "Ссылка на портал", "Мұғалім таңда": "Выбери учителя", "Топ таңда": "Выбери группу"};
+    const I18N_RU_KK = {"Войти": "Кіру", "Регистрация директора": "Директор тіркелу", "Вход для родителя": "Ата-ана кіру", "Email": "Email", "Пароль": "Құпия сөз", "ФИО": "Аты жөні", "Название центра": "Орталық атауы", "Город": "Қала", "Направление": "Бағыты", "Главный филиал": "Бас филиал", "Ссылка на оплату банка": "Банк төлеміне ссылка", "Регистрация": "Тіркелу", "Логин ученика": "Оқушы логин", "Пин-код": "Пин код", "Панель родителя": "Ата-ана панелі", "Оффлайн + онлайн информация в одном месте": "Оффлайн + онлайн ақпарат бір жерде", "Выход": "Шығу", "Премиум версия": "Premium version", "Центр: —": "Орталық: —", "Пользователь: —": "Пайдаланушы: —", "Роль: —": "Рөлі: —", "Главная": "Басты бет", "Выбор тарифа": "Выбор тарифа", "CRM лиды": "CRM лидтар", "Ученики": "Оқушылар", "Группы": "Топтар", "Журнал": "Журнал", "Прогресс": "Прогресс", "Платежи": "Төлемдер", "Доход/расход": "Кіріс/шығыс", "Онлайн курсы": "Онлайн курстар", "Загрузка онлайн уроков": "Онлайн сабақ жүктеу", "Онлайн ученики": "Онлайн оқушылар", "Онлайн журнал": "Онлайн журнал", "Онлайн платежи": "Онлайн төлемдер", "Табель / ЗП": "Табель / ЗП", "Сотрудники": "Сотрудники", "Филиалы": "Филиалы", "Архив": "Архив", "Полная CRM-панель управления": "CRM толық басқару панелі", "Выберите тариф и отправьте запрос Owner-у": "Выберите тариф и отправьте запрос Owner-у", "Центр выбирает тариф в этом разделе. Затем": "Орталық осы бөлімнен тарифті таңдайды. Сосын", "отправить запрос доступа": "доступ жіберу", "кнопку. Запрос уходит в портал Owner.": "батырмасын басады. Сұраныс Owner порталға түседі.", "Только после подтверждения Owner откроются все разделы по тарифу.": "Owner ашқаннан кейін ғана тарифке сай бөлімдер толық ашылады.", "Короткая заметка / запрос": "Қысқа ескерту / сұраныс", "Отправить запрос": "Доступ жіберу", "Активный тариф": "Белсенді тариф", "Запрошенный тариф": "Сұралған тариф", "Статус Owner": "Owner статусы", "Эконом": "Эконом", "Стандарт": "Стандарт", "Про": "Про", "Онлайн центры": "Онлайн орталықтар", "Добавить лид": "Лид қосу", "Имя": "Аты", "Телефон": "Телефон", "Источник": "Source", "Комментарий": "Ескерту", "Сохранить": "Сақтау", "Сообщение клиенту": "Клиент дожим хабарламасы", "Номер WhatsApp": "WhatsApp номер", "Текст сообщения клиенту": "Клиентке жазу мәтіні", "Открыть WhatsApp": "WhatsApp ашу", "Список лидов": "Лид тізімі", "Поиск": "Іздеу", "Статус": "Статус", "Удалить": "Өшіру", "Действие": "Әрекет", "Регистрация ученика": "Оқушы тіркеу", "Родитель": "Ата ана", "Email (необязательно)": "Email (міндетті емес)", "Код ученика": "Оқушы коды", "Пин ученика": "Оқушы пин коды", "Возраст автоматически": "Жасы автоматом", "Сумма ежемесячной оплаты": "Айлық төлем сумма", "Список учеников": "Оқушылар тізімі", "Темы": "Тақырыптар", "Тема": "Тақырып", "Добавить группу": "Топ қосу", "Название группы": "Топ атауы", "Расписание": "Расписание", "Аудитория": "Аудитория", "Список групп": "Топ тізімі", "Поиск: группа, направление, учитель": "Іздеу: топ, бағыт, мұғалім", "Запись в журнал": "Журнал жазу", "Был": "Келді", "Не был": "Келмеді", "По уважительной причине": "Себепті", "Посещаемость по календарю": "Күнтізбе бойынша қатысу", "Выберите дату и ниже увидите записи за этот день.": "Күнді таңдап, төменнен сол күнгі жазбаларды қарай аласың.", "Список журнала": "Журнал тізімі", "Поиск: группа, ученик, тема": "Іздеу: топ, оқушы, тақырып", "Журнал пуст": "Журнал бос", "Дата": "Дата", "Группа": "Топ", "Ученик": "Оқушы", "Внести прогресс": "Прогресс еңгізу", "Домашнее задание": "Үй тапсырмасы", "Комментарий учителя": "Мұғалім пікірі", "Оценка вручную": "Оценка ручной", "Тест %": "Тест %", "Результат недели": "Апта нәтижесі", "Результат месяца": "Ай нәтижесі", "Список прогресса": "Прогресс тізімі", "Поиск: ученик, тест, комментарий": "Іздеу: оқушы, тест, пікір", "Прогресс отсутствует": "Прогресс жоқ", "Внести платеж": "Төлем еңгізу", "Сумма платежа": "Төлем суммасы", "Скидка": "Жеңілдік", "Сохранить платеж": "Төлемді сақтау", "Сообщение родителю": "Ата анаға хабарлама", "Срок оплаты пришёл / остался долг": "Төлем уақыт келді / қарыз қалды", "История платежей": "Төлем тарихы", "Скачать PDF / Печать": "PDF жүктеу / Басып шығару", "Последний платеж": "Соңғы төлем", "Следующая оплата": "Келесі төлеу", "Сумма": "Сомасы", "История": "Тарих", "Нет учеников": "Оқушы жоқ", "Оплачено": "Төленді", "Долг": "Қарыз", "Ожидается": "Күтілуде", "Доход / расход / зарплата": "Кіріс / Шығыс / Жалақы", "Сводка": "Есеп жүйесі", "Список финансов": "Қаржы тізімі", "Доход": "Кіріс", "Расход": "Шығыс", "Зарплата": "Жалақы", "Кому/за что/от кого": "Кімге/неге/кімнен", "Категория": "Категория", "Записей нет": "Жазба жоқ", "Тип": "Түрі", "Открыть ссылку портала": "Portal ссылка ашу", "Создать курс": "Курс жасау", "Название курса": "Курс атауы", "Цена": "Бағасы", "Описание": "Сипаттамасы", "Модуль и загрузка": "Модуль және жүктеу", "Выбери курс": "Курс таңда", "Модуль": "Модуль", "Добавить модуль": "Модуль қосу", "Выбери модуль": "Модуль таңда", "Название урока": "Сабақ атауы", "Длительность": "Ұзақтығы", "Ссылка YouTube": "YouTube ссылка", "Ссылка / file url": "Ссылка / file url", "Название материала": "Материал атауы", "Документ": "Құжат", "Ссылка на материал / url": "Материал ссылка / url", "Добавить урок": "Сабақ қосу", "В файловом режиме можно загружать видео напрямую с телефона или ноутбука. Материал и домашнее задание тоже добавляются здесь.": "Файл режимінде телефоннан не ноутбуктан видеоны тікелей жүктей аласың. Материал мен үй тапсырмасын да осында қосасың.", "Нет онлайн курсов": "Онлайн курс жоқ", "КУРС": "КУРС", "УЧИТЕЛЬ": "МҰҒАЛІМ", "ЦЕНА": "БАҒАСЫ", "КОЛИЧЕСТВО МОДУЛЕЙ": "МОДУЛЬ САНЫ", "Создать тест": "Тест жасау", "Выбери урок": "Сабақты таңда", "Вопрос": "Сұрақ", "Ответ 1": "Жауап 1", "Ответ 2": "Жауап 2", "Ответ 3": "Жауап 3", "Ответ 4": "Жауап 4", "Выбери правильный ответ": "Дұрыс жауапты таңда", "Добавить тестовый вопрос": "Тест сұрақ қосу", "Домашние задания, отправленные учеником": "Оқушы жіберген үй тапсырмалары", "Поиск: ученик, урок, статус": "Іздеу: оқушы, сабақ, статус", "Домашние задания не отправлены": "Үй тапсырмасы жіберілмеген", "УРОК": "САБАҚ", "ПРИМЕЧАНИЕ": "ЕСКЕРТПЕ", "ФАЙЛ": "ФАЙЛ", "СТАТУС": "СТАТУС", "Время обучения": "Оқу уақыты", "Поиск: ученик, урок, день": "Іздеу: оқушы, сабақ, күн", "Онлайн журнал пуст": "Online журнал бос", "ВРЕМЯ": "УАҚЫТЫ", "Открыть доступ": "Доступ ашу", "Поиск: ученик, курс, статус": "Іздеу: оқушы, курс, статус", "Нет онлайн платежей": "Онлайн төлем жоқ", "Курс": "Курс", "ДЕЙСТВИЕ": "ДЕЙСТВИЕ", "ДАТА": "ДАТА", "Темы ученика": "Оқушы тақырыптары", "Какая тема была в какой день, был или не был": "Қай күні қай тақырып өтті, келді ме келмеді ме", "Закрыть": "Жабу", "Нет тем": "Тақырыптар жоқ", "Ученики в архиве": "Архивтегі оқушылар", "Онлайн ученики в архиве": "Архивтегі онлайн оқушылар", "Архив пуст": "Архив бос", "Вернуть": "Қайтару", "Полностью удалить": "Толық өшіру", "Банковские реквизиты центра": "Орталықтың банк реквизиттері", "Этот блок находится внутри раздела филиалов. Каждый центр может менять банковскую ссылку и счёт здесь.": "Бұл бөлім дәл осы жерде тұрсын: филиалдар ішінде. Барлық орталық өз банк ссылкасы мен шотын осы жерден өзгерте алады.", "Ссылка банка": "Банк ссылка", "Счёт / Kaspi / IBAN": "Шот / Kaspi / IBAN", "Добавить филиал": "Филиал қосу", "Название филиала": "Филиал аты", "Адрес": "Мекенжай", "Список филиалов": "Филиалдар тізімі", "Нет филиалов": "Филиал жоқ", "Филиал": "Филиал", "Филиалы и банковские реквизиты": "Филиалдар және банк реквизиттері", "Отметить табель": "Табель тіркеу", "Дата прихода": "Келген күн", "Время прихода": "Келгені", "Время ухода": "Кеткені", "Вовремя": "Уақытында", "Опоздал": "Кешікті", "Ушёл рано": "Ерте кетті", "Список табеля": "Табель тізімі", "Моя ЗП / табель": "Менің ЗП / Табель", "Табель пуст": "Табель бос", "Директор": "Директор", "Админ": "Админ", "Учитель": "Мұғалім", "Бухгалтер": "Бухгалтер", "Маркетинг": "Маркетинг", "Быстрый обзор": "Жылдам шолу", "Это премиум версия CRM. Разделы открываются по активному тарифу, подтверждённому Owner.": "Бұл премиум CRM нұсқасы. Бөлімдер Owner бекіткен белсенді тарифке сай ашылады.", "Ежемесячный платеж": "Айлық төлем", "Онлайн курс": "Онлайн курс", "Центр": "Орталық", "Информация о центре": "Орталық ақпараты", "О ребёнке": "Бала туралы", "Код / PIN": "Код / PIN", "Информация об оплате": "Төлем ақпараты", "План": "Жоспар", "Неделя/месяц": "Апта/Ай", "Онлайн обучение": "Онлайн оқу", "Редактировать": "Редакт", "Отправленные домашние задания": "Жіберілген үй тапсырмалар", "Файл не отправлен": "Жіберілген файл жоқ", "Открыть файл": "Файл ашу", "Курсы": "Курсы", "Курс, урок, online платеж": "Курс, сабақ, online төлем", "Только online модули": "Тек online модульдер", "Весь CRM": "Барлық CRM", "Нет лидов": "Лид жоқ", "Нет групп": "Топ жоқ", "Пригласить сотрудника": "Қызметкер шақыру", "Список сотрудников": "Қызметкерлер тізімі", "Нет сотрудников": "Қызметкер жоқ", "Пользователь": "Пайдаланушы", "Роль": "Рөл", "Запрос: нет": "Сұраныс: жоқ", "Тариф: —": "Тариф: —", "Выберите ученика": "Оқушы таңда", "Модули": "Модульдер", "Количество модулей": "Модуль саны", "Этот блок находится внутри раздела филиалов. Ссылку банка и счёт меняешь здесь.": "Бұл бөлім филиалдар ішінде тұрады. Банк ссылка мен шотты осы жерден өзгертесің.", "Недельное расписание": "Апталық кесте", "Расписание / Кесте": "Расписание / Кесте", "Выбери день": "Күн таңда", "Понедельник": "Дүйсенбі", "Вторник": "Сейсенбі", "Среда": "Сәрсенбі", "Четверг": "Бейсенбі", "Пятница": "Жұма", "Суббота": "Сенбі", "Воскресенье": "Жексенбі", "Аудитория / кабинет": "Аудитория / кабинет", "Комментарий / заметка": "Ескерту / комментарий", "Вид на неделю": "Апталық көрініс", "В этом разделе показываются день, время, учитель и кабинет группы.": "Бұл бөлімде топтың күні, уақыты, мұғалімі және кабинет көрсетіледі.", "Поиск: день, группа, учитель, кабинет": "Іздеу: күн, топ, мұғалім, кабинет", "Начало": "Басталуы", "Окончание": "Аяқталуы", "Кабинет": "Кабинет", "Нет расписания": "Расписание жоқ", "Расписание сохранено": "Расписание сақталды", "Расписание обновлено": "Расписание жаңартылды", "Расписание удалено": "Расписание өшірілді", "Форма расписания заполнена": "Расписание формасы толтырылды", "Вся CRM": "Барлық CRM", "модули": "модульдер", "урок": "сабақ", "платеж": "төлем", "Ссылка на портал": "Portal ссылка", "Открытие доступа": "Доступ ашу", "Выбери учителя": "Мұғалім таңда", "Выбери группу": "Топ таңда", "Выбери ученика": "Оқушы таңда"};
     let translateLock = false;
     let translateTimer = null;
 
@@ -850,16 +1034,16 @@
       if(currentLang === 'ru'){
         wrap.innerHTML = `
           <div class="plan" data-plan="econom"><div style="font-size:24px;font-weight:900">Эконом</div><ul><li>Ученики</li><li>Группы</li><li>Журнал</li><li>Сотрудники</li><li>Филиалы</li></ul></div>
-          <div class="plan" data-plan="standard"><div style="font-size:24px;font-weight:900">Стандарт</div><ul><li>CRM лиды</li><li>Ученики</li><li>Группы</li><li>Журнал</li><li>Прогресс</li><li>Платежи</li><li>Табель / ЗП</li><li>Сотрудники</li><li>Филиалы</li><li>Доход/расход</li></ul></div>
+          <div class="plan" data-plan="standard"><div style="font-size:24px;font-weight:900">Стандарт</div><ul><li>CRM лиды</li><li>Ученики</li><li>Группы</li><li>Журнал</li><li>Прогресс</li><li>Платежи</li><li>Табель / ЗП</li><li>Сотрудники</li><li>Филиалы</li><li>Доход / расход</li></ul></div>
           <div class="plan" data-plan="pro"><div style="font-size:24px;font-weight:900">Про</div><ul><li>Весь CRM</li><li>Онлайн курсы</li><li>Загрузка онлайн уроков</li><li>Онлайн ученики</li><li>Онлайн журнал</li><li>Онлайн платежи</li><li>Табель / ЗП</li></ul></div>
-          <div class="plan" data-plan="online"><div style="font-size:24px;font-weight:900">Онлайн центры</div><ul><li>Только online модули</li><li>Курс, урок, online платеж</li></ul></div>
+          <div class="plan" data-plan="online"><div style="font-size:24px;font-weight:900">Онлайн центры</div><ul><li>Только онлайн модули</li><li>Курс, урок, онлайн платеж</li></ul></div>
         `;
       } else {
         wrap.innerHTML = `
           <div class="plan" data-plan="econom"><div style="font-size:24px;font-weight:900">Эконом</div><ul><li>Оқушылар</li><li>Топтар</li><li>Журнал</li><li>Қызметкерлер</li><li>Филиалдар</li></ul></div>
-          <div class="plan" data-plan="standard"><div style="font-size:24px;font-weight:900">Стандарт</div><ul><li>CRM лидтар</li><li>Оқушылар</li><li>Топтар</li><li>Журнал</li><li>Прогресс</li><li>Төлемдер</li><li>Табель / ЗП</li><li>Қызметкерлер</li><li>Филиалдар</li><li>Кіріс/шығыс</li></ul></div>
+          <div class="plan" data-plan="standard"><div style="font-size:24px;font-weight:900">Стандарт</div><ul><li>CRM лидтар</li><li>Оқушылар</li><li>Топтар</li><li>Журнал</li><li>Прогресс</li><li>Төлем</li><li>Табель / ЗП</li><li>Қызметкерлер</li><li>Филиалдар</li><li>Кіріс / шығыс</li></ul></div>
           <div class="plan" data-plan="pro"><div style="font-size:24px;font-weight:900">Про</div><ul><li>Барлық CRM</li><li>Онлайн курстар</li><li>Онлайн сабақ жүктеу</li><li>Онлайн оқушылар</li><li>Онлайн журнал</li><li>Онлайн төлемдер</li><li>Табель / ЗП</li></ul></div>
-          <div class="plan" data-plan="online"><div style="font-size:24px;font-weight:900">Онлайн орталықтар</div><ul><li>Тек online модульдер</li><li>Курс, сабақ, online төлем</li></ul></div>
+          <div class="plan" data-plan="online"><div style="font-size:24px;font-weight:900">Онлайн орталықтар</div><ul><li>Тек онлайн модульдер</li><li>Курс, сабақ, онлайн төлем</li></ul></div>
         `;
       }
       document.querySelectorAll('.plan').forEach(p=>p.classList.toggle('active', p.dataset.plan === requestedTariff()));
@@ -867,14 +1051,14 @@
 
 function preserveTranslate(raw){
       if(raw == null) return raw;
-      const s = String(raw);
-      const trimmed = s.trim();
-      if(!trimmed) return s;
-      const translated = tr(trimmed);
-      if(translated === trimmed) return s;
-      const left = s.match(/^\s*/)[0];
-      const right = s.match(/\s*$/)[0];
-      return left + translated + right;
+      let s = String(raw);
+      const map = currentLang === 'ru' ? I18N_KK_RU : I18N_RU_KK;
+      const keys = Object.keys(map).sort((a,b)=>b.length-a.length);
+      for(const key of keys){
+        if(!key) continue;
+        s = s.split(key).join(map[key]);
+      }
+      return s;
     }
     function translateOptionTexts(){
       document.querySelectorAll('option').forEach(opt=>{
@@ -947,13 +1131,40 @@ function preserveTranslate(raw){
         translatePlaceholders();
         translateOptionTexts();
         translateStaticTextNodes(document.body);
+        const navMap = {
+          dashboard:{kk:'Басты бет',ru:'Главная'},
+          tariff:{kk:'Тариф таңдау',ru:'Выбор тарифа'},
+          leads:{kk:'CRM лидтар',ru:'CRM лиды'},
+          students:{kk:'Оқушылар',ru:'Ученики'},
+          groups:{kk:'Топтар',ru:'Группы'},
+          journal:{kk:'Журнал',ru:'Журнал'},
+          progress:{kk:'Прогресс',ru:'Прогресс'},
+          payments:{kk:'Төлем',ru:'Платежи'},
+          finance:{kk:'Кіріс/шығыс',ru:'Доход/расход'},
+          'online-courses':{kk:'Онлайн курстар',ru:'Онлайн курсы'},
+          'online-upload':{kk:'Онлайн сабақ жүктеу',ru:'Загрузка онлайн уроков'},
+          'online-students':{kk:'Онлайн оқушылар',ru:'Онлайн ученики'},
+          'online-journal':{kk:'Онлайн журнал',ru:'Онлайн журнал'},
+          'online-payments':{kk:'Онлайн төлемдер',ru:'Онлайн платежи'},
+          timesheet:{kk:'Табель / ЗП',ru:'Табель / ЗП'},
+          staff:{kk:'Қызметкерлер',ru:'Сотрудники'},
+          branches:{kk:'Филиалдар',ru:'Филиалы'},
+          archive:{kk:'Архив',ru:'Архив'}
+        };
+        document.querySelectorAll('.nav-btn[data-section]').forEach(btn=>{
+          const key = btn.dataset.section;
+          const row = navMap[key];
+          if(row) btn.textContent = currentLang === 'ru' ? row.ru : row.kk;
+        });
+        const logoutBtn = document.getElementById('logoutNavBtn');
+        if(logoutBtn) logoutBtn.textContent = currentLang === 'ru' ? 'Выход' : 'Шығу';
         translatePrefixes();
         const tm = getTitleMap();
         if(typeof activeSection !== 'undefined' && tm[activeSection]) {
           const t = document.getElementById('pageTitle'); if(t) t.textContent = tm[activeSection][0];
           const s = document.getElementById('pageSub'); if(s) s.textContent = tm[activeSection][1];
         }
-        document.title = currentLang==='ru' ? 'EdukZ CRM Портал' : 'EdukZ CRM Portal';
+        if(activeSection === 'branches') renderBranches();
       } finally {
         translateLock = false;
       }
@@ -965,8 +1176,14 @@ function preserveTranslate(raw){
     function setLang(lang){
       currentLang = lang;
       localStorage.setItem(LANG_KEY, lang);
+      try{
+        if(document.getElementById('portalView') && !document.getElementById('portalView').classList.contains('hidden')){
+          renderAll();
+        }
+      }catch(e){}
       scheduleTranslate();
     }
+    window.setLang = setLang;
     function backToAuth(){
       parentStudent = null;
       document.getElementById('parentView').classList.add('hidden');
@@ -974,6 +1191,7 @@ function preserveTranslate(raw){
       document.getElementById('authView').classList.remove('hidden');
       scheduleTranslate();
     }
+    window.backToAuth = backToAuth;
     async function logout(){
       try{ await sb.auth.signOut(); }catch(e){}
       profile = null;
@@ -984,8 +1202,8 @@ function preserveTranslate(raw){
       document.getElementById('authView').classList.remove('hidden');
       scheduleTranslate();
     }
-    const mo = new MutationObserver(()=>scheduleTranslate());
-    window.addEventListener('DOMContentLoaded', ()=>{ mo.observe(document.body, {childList:true, subtree:true}); scheduleTranslate(); });
+    window.logout = logout;
+    window.addEventListener('DOMContentLoaded', ()=>{ scheduleTranslate(); });
 
 
     function archiveStorageKey(kind){ return `edukz_archive_${kind}_${profile?.tenant_id || 'guest'}`; }
@@ -1055,6 +1273,9 @@ function preserveTranslate(raw){
         setSection(btn.dataset.section);
       });
     });
+    document.getElementById('archiveNavBtn')?.addEventListener('click', ()=>setSection('archive'));
+    document.getElementById('logoutNavBtn')?.addEventListener('click', ()=>logout());
+
 
     function setSection(id){
       activeSection = id;
@@ -1093,6 +1314,20 @@ function preserveTranslate(raw){
       const text = parts.filter(Boolean).join(' ').toLowerCase();
       return !q || text.includes(q);
     }
+
+    function normalizeProfileUuid(ref){
+      if(!ref) return null;
+      const value = String(ref);
+      if(value.startsWith('profile:')) return value.split(':')[1] || null;
+      if(value.includes(':')) return null;
+      return value;
+    }
+
+    function getTeacherNameByProfileId(id){
+      const teacher = state.profiles.find(p=>p.id===id) || state.staffInvites.find(p=>p.id===id);
+      return teacher?.full_name || teacher?.email || '';
+    }
+
 
     async function uploadBucketFile(file, folder='misc'){
       if(!file) return { publicUrl: null };
@@ -1148,20 +1383,33 @@ function preserveTranslate(raw){
         state.branches.map(b => `<option value="${b.id}">${esc(b.name)}${b.city ? ' — ' + esc(b.city) : ''}</option>`)
       ).join('');
 
-      ['studentBranch','groupBranch','staffBranch','timesheetBranch'].forEach(id=>{
+      ['studentBranch','groupBranch','staffBranch','timesheetBranch','scheduleBranch','scheduleFilterBranch'].forEach(id=>{
         const el = document.getElementById(id);
         if(el) el.innerHTML = branchOpts;
       });
 
       const teacherProfileOpts = state.profiles.filter(p => ['teacher','director','admin'].includes(p.role));
       const teacherInviteOpts = state.staffInvites.filter(p => p.role === 'teacher');
+      const teacherProfileOnlyOpts = ['<option value="">Мұғалім таңда</option>'].concat(
+        teacherProfileOpts.map(p => `<option value="${p.id}">${esc(p.full_name || p.email || p.role)}</option>`)
+      ).join('');
       const teacherOpts = ['<option value="">Мұғалім таңда</option>'].concat(
         teacherProfileOpts.map(p => `<option value="profile:${p.id}">${esc(p.full_name || p.email || p.role)}</option>`)
       ).concat(
         teacherInviteOpts.map(p => `<option value="invite:${p.id}">${esc(p.full_name || p.email || p.role)}</option>`)
       ).join('');
       const groupTeacher = document.getElementById('groupTeacher');
-      if(groupTeacher) groupTeacher.innerHTML = teacherOpts;
+      if(groupTeacher) groupTeacher.innerHTML = teacherProfileOnlyOpts;
+      const scheduleTeacher = document.getElementById('scheduleTeacher');
+      if(scheduleTeacher) scheduleTeacher.innerHTML = teacherProfileOnlyOpts;
+      const scheduleFilterTeacher = document.getElementById('scheduleFilterTeacher');
+      if(scheduleFilterTeacher) scheduleFilterTeacher.innerHTML = ['<option value="">Барлық мұғалім</option>'].concat(
+        teacherProfileOpts.map(p => `<option value="${p.id}">${esc(p.full_name || p.email || p.role)}</option>`)
+      ).join('');
+      const scheduleTeacherView = document.getElementById('scheduleTeacherView');
+      if(scheduleTeacherView) scheduleTeacherView.innerHTML = ['<option value="">Мұғалім таңда</option>'].concat(
+        teacherProfileOpts.map(p => `<option value="${p.id}">${esc(p.full_name || p.email || p.role)}</option>`)
+      ).join('');
       const timesheetTeacher = document.getElementById('timesheetTeacher');
       if(timesheetTeacher) timesheetTeacher.innerHTML = teacherOpts;
 
@@ -1178,6 +1426,12 @@ function preserveTranslate(raw){
       ).join('');
       const journalGroup = document.getElementById('journalGroup');
       if(journalGroup) journalGroup.innerHTML = groupOpts;
+      const scheduleGroup = document.getElementById('scheduleGroup');
+      if(scheduleGroup) scheduleGroup.innerHTML = groupOpts;
+      const scheduleFilterGroup = document.getElementById('scheduleFilterGroup');
+      if(scheduleFilterGroup) scheduleFilterGroup.innerHTML = ['<option value="">Барлық топ</option>'].concat(
+        state.groups.map(g => `<option value="${g.id}">${esc(g.title)}${g.direction ? ' — ' + esc(g.direction) : ''}</option>`)
+      ).join('');
 
       const courseSelect = document.getElementById('onlineCourseSelect');
       const courseOpts = ['<option value="">Курс таңда</option>'].concat(
@@ -1212,12 +1466,37 @@ function preserveTranslate(raw){
       ).join('');
       if(lessonSelect) lessonSelect.innerHTML = lessonOpts;
 
+      const scheduleOnlineCourse = document.getElementById('scheduleOnlineCourse');
+      const scheduleCourseCurrent = scheduleOnlineCourse?.value || '';
+      const scheduleCourseOpts = ['<option value="">Online курс таңда</option>'].concat(
+        state.onlineCourses.map(c => `<option value="${c.id}">${esc(c.title)}</option>`)
+      ).join('');
+      if(scheduleOnlineCourse){
+        scheduleOnlineCourse.innerHTML = scheduleCourseOpts;
+        if(scheduleCourseCurrent && state.onlineCourses.some(c=>c.id===scheduleCourseCurrent)) scheduleOnlineCourse.value = scheduleCourseCurrent;
+      }
+
+      const chosenScheduleCourse = document.getElementById('scheduleOnlineCourse')?.value || '';
+      const scheduleLessonSelect = document.getElementById('scheduleOnlineLesson');
+      const modulesForSchedule = state.onlineModules.filter(m => !chosenScheduleCourse || m.course_id === chosenScheduleCourse).map(m => m.id);
+      const scheduleLessonCurrent = scheduleLessonSelect?.value || '';
+      const scheduleLessonOpts = ['<option value="">Online сабақ таңда</option>'].concat(
+        state.onlineLessons
+          .filter(l => modulesForSchedule.length ? modulesForSchedule.includes(l.module_id) : true)
+          .map(l => `<option value="${l.id}">${esc(l.title)}</option>`)
+      ).join('');
+      if(scheduleLessonSelect){
+        scheduleLessonSelect.innerHTML = scheduleLessonOpts;
+        if(scheduleLessonCurrent && state.onlineLessons.some(l=>l.id===scheduleLessonCurrent)) scheduleLessonSelect.value = scheduleLessonCurrent;
+      }
+
       preferredCourseId = '';
       preferredModuleId = '';
       refreshCorrectAnswerOptions();
     }
 
     document.getElementById('onlineCourseSelect')?.addEventListener('change', ()=>fillSelects());
+    document.getElementById('scheduleOnlineCourse')?.addEventListener('change', ()=>fillSelects());
     ['testA1','testA2','testA3','testA4'].forEach(id=>{
       document.getElementById(id)?.addEventListener('input', refreshCorrectAnswerOptions);
     });
@@ -1563,12 +1842,13 @@ async function parentLogin(){
         sb.from('online_progress').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
         sb.from('online_homework_submissions').select('*').eq('tenant_id', tenantId).order('created_at', {ascending:false}),
         sb.from('teacher_time_logs').select('*').eq('tenant_id', tenantId).order('work_date', {ascending:false}),
+        sb.from('schedule_entries').select('*').eq('tenant_id', tenantId).order('schedule_date', {ascending:true}).order('start_time', {ascending:true}),
       ]);
       [
         state.tenants, state.subscriptions, state.profiles, state.branches, state.students, state.leads,
         state.groups, state.journal, state.progress, state.payments, state.finance, state.staffInvites,
         state.onlineStudents, state.onlineCourses, state.onlineModules, state.onlineLessons, state.onlineTests,
-        state.onlinePayments, state.onlineJournal, state.onlineProgress, state.onlineHomeworkSubmissions, state.teacherTimeLogs
+        state.onlinePayments, state.onlineJournal, state.onlineProgress, state.onlineHomeworkSubmissions, state.teacherTimeLogs, state.scheduleEntries
       ] = results.map(r=>r.data || []);
       fillSelects();
       applyTariffVisual();
@@ -1942,7 +2222,7 @@ async function parentLogin(){
         tenant_id: profile.tenant_id,
         title: document.getElementById('groupTitle').value.trim(),
         direction: document.getElementById('groupDirection').value.trim(),
-        teacher_profile_id: document.getElementById('groupTeacher').value || null,
+        teacher_profile_id: normalizeProfileUuid(document.getElementById('groupTeacher').value),
         schedule_text: document.getElementById('groupSchedule').value.trim(),
         room: document.getElementById('groupRoom').value.trim(),
         branch_id: document.getElementById('groupBranch').value || null
@@ -2594,13 +2874,13 @@ async function saveStaffInvite(){
     function renderGroups(){
       const q = (document.getElementById('groupSearch')?.value || '').trim().toLowerCase();
       const rows = state.groups.filter(x=>{
-        const teacher = state.profiles.find(p=>p.id === x.teacher_profile_id);
+        const teacher = state.profiles.find(p=>p.id === x.teacher_profile_id) || state.staffInvites.find(p=>p.id === x.teacher_profile_id);
         const branch = state.branches.find(b=>b.id === x.branch_id);
         return qmatch([x.title, x.direction, teacher?.full_name, teacher?.email, x.schedule_text, x.room, branch?.name], q);
       });
       const canDelete = canWrite('groups');
       document.getElementById('groupRows').innerHTML = rows.map(x=>{
-        const teacher = state.profiles.find(p=>p.id === x.teacher_profile_id);
+        const teacher = state.profiles.find(p=>p.id === x.teacher_profile_id) || state.staffInvites.find(p=>p.id === x.teacher_profile_id);
         const branch = state.branches.find(b=>b.id === x.branch_id);
         return `<tr>
           <td>${esc(x.title)}</td>
@@ -2872,12 +3152,405 @@ async function saveStaffInvite(){
       }
     }
 
+
+    
+    
+    const SCHEDULE_DAYS = ['Дүйсенбі','Сейсенбі','Сәрсенбі','Бейсенбі','Жұма','Сенбі','Жексенбі'];
+    const SCHEDULE_DAY_INDEX = {'Дүйсенбі':0,'Сейсенбі':1,'Сәрсенбі':2,'Бейсенбі':3,'Жұма':4,'Сенбі':5,'Жексенбі':6};
+    let currentScheduleView = 'main';
+    let draggingScheduleId = null;
+
+    function deriveDayNameFromDate(dateStr){
+      if(!dateStr) return '';
+      const d = new Date(dateStr + 'T00:00:00');
+      const js = d.getDay();
+      return SCHEDULE_DAYS[(js + 6) % 7] || '';
+    }
+    function scheduleDayOf(row){ return row.day_name || deriveDayNameFromDate(row.schedule_date); }
+    function toMinutes(t){
+      if(!t) return null;
+      const [h,m] = String(t).split(':').map(Number);
+      return (h||0)*60 + (m||0);
+    }
+    function minutesToTime(v){
+      const h = Math.floor(v/60);
+      const m = v % 60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    }
+    function overlaps(aStart, aEnd, bStart, bEnd){
+      const as = toMinutes(aStart), ae = toMinutes(aEnd), bs = toMinutes(bStart), be = toMinutes(bEnd);
+      if([as,ae,bs,be].some(v => v == null)) return false;
+      return Math.max(as, bs) < Math.min(ae, be);
+    }
+    function getWeekStart(dateStr){
+      const base = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+      const js = base.getDay();
+      const mondayOffset = js === 0 ? -6 : 1 - js;
+      base.setDate(base.getDate() + mondayOffset);
+      return base;
+    }
+    function fmtDate(d){
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+    function plusDays(d, n){
+      const c = new Date(d);
+      c.setDate(c.getDate()+n);
+      return c;
+    }
+    function scheduleContext(row){
+      const group = state.groups.find(y=>y.id===row.group_id);
+      const branch = state.branches.find(y=>y.id===row.branch_id);
+      const teacher = state.profiles.find(y=>y.id===row.teacher_profile_id) || state.staffInvites.find(y=>y.id===row.teacher_profile_id);
+      const course = state.onlineCourses.find(y=>y.id===row.course_id);
+      const lesson = state.onlineLessons.find(y=>y.id===row.lesson_id);
+      return {group, branch, teacher, course, lesson};
+    }
+    function scheduleMainLabel(row){
+      const ctx = scheduleContext(row);
+      if(ctx.group?.title) return ctx.group.title;
+      if(ctx.course?.title && ctx.lesson?.title) return `${ctx.course.title} / ${ctx.lesson.title}`;
+      if(ctx.course?.title) return ctx.course.title;
+      if(ctx.lesson?.title) return ctx.lesson.title;
+      return 'Сабақ';
+    }
+    function scheduleStatusClass(status){
+      const s = String(status || '').toLowerCase();
+      if(s.includes('ауысты') || s.includes('moved')) return 'status-moved';
+      if(s.includes('отмена') || s.includes('cancel')) return 'status-cancel';
+      return 'status-active';
+    }
+    function scheduleAudienceClass(audience){
+      const a = String(audience || 'crm').toLowerCase();
+      if(a === 'online') return 'a-online';
+      if(a === 'both') return 'a-both';
+      return '';
+    }
+    function scheduleAudienceBadge(audience){
+      const a = String(audience || 'crm').toLowerCase();
+      if(a === 'online') return '<span class="table-audience-badge online">Online</span>';
+      if(a === 'both') return '<span class="table-audience-badge both">CRM + Online</span>';
+      return '<span class="table-audience-badge crm">CRM</span>';
+    }
+    function scheduleGroupClass(row){
+      const ids = [...new Set((state.scheduleEntries||[]).map(x=>x.group_id).filter(Boolean))];
+      const idx = Math.max(0, ids.indexOf(row.group_id)) % 4;
+      return `g${idx+1}`;
+    }
+    function getFilteredScheduleEntries(){
+      const q = (document.getElementById('scheduleSearch')?.value || '').trim().toLowerCase();
+      const filterGroup = document.getElementById('scheduleFilterGroup')?.value || '';
+      const filterTeacher = document.getElementById('scheduleFilterTeacher')?.value || '';
+      const filterBranch = document.getElementById('scheduleFilterBranch')?.value || '';
+      return (state.scheduleEntries || []).filter(x=>{
+        const {group, branch, teacher} = scheduleContext(x);
+        const text = [x.schedule_date, scheduleDayOf(x), x.start_time, x.end_time, x.room, x.note, x.status, group?.title, teacher?.full_name, teacher?.email, branch?.name].join(' ').toLowerCase();
+        return (!q || text.includes(q))
+          && (!filterGroup || x.group_id === filterGroup)
+          && (!filterTeacher || x.teacher_profile_id === filterTeacher)
+          && (!filterBranch || x.branch_id === filterBranch);
+      });
+    }
+    function detectScheduleConflicts(candidate, skipId=null){
+      return (state.scheduleEntries || []).filter(x=>{
+        if(skipId && x.id === skipId) return false;
+        const sameDay = scheduleDayOf(x) === scheduleDayOf(candidate) && (!candidate.schedule_date || !x.schedule_date || x.schedule_date === candidate.schedule_date || scheduleDayOf(x) === candidate.day_name);
+        if(!sameDay) return false;
+        if(!overlaps(x.start_time, x.end_time, candidate.start_time, candidate.end_time)) return false;
+        const sameTeacher = candidate.teacher_profile_id && x.teacher_profile_id && candidate.teacher_profile_id === x.teacher_profile_id;
+        const sameRoom = candidate.room && x.room && candidate.room.trim().toLowerCase() === x.room.trim().toLowerCase();
+        return sameTeacher || sameRoom;
+      });
+    }
+    function clearScheduleForm(){
+      editState.scheduleId = null;
+      ['scheduleDate','scheduleDay','scheduleStart','scheduleEnd','scheduleGroup','scheduleTeacher','scheduleRoom','scheduleBranch','scheduleAudience','scheduleOnlineCourse','scheduleOnlineLesson','scheduleMeetingUrl','scheduleStatus','scheduleNote'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = '';
+      });
+      const statusEl = document.getElementById('scheduleStatus');
+      if(statusEl) statusEl.value = 'Белсенді';
+      const audienceEl = document.getElementById('scheduleAudience');
+      if(audienceEl) audienceEl.value = 'crm';
+    }
+    function shiftScheduleWeek(deltaDays){
+      const el = document.getElementById('scheduleWeekStart');
+      const current = getWeekStart(el?.value || fmtDate(new Date()));
+      const moved = plusDays(current, deltaDays);
+      if(el) el.value = fmtDate(moved);
+      renderSchedule();
+    }
+    function goCurrentWeek(){
+      const el = document.getElementById('scheduleWeekStart');
+      if(el) el.value = fmtDate(getWeekStart());
+      renderSchedule();
+    }
+    function setScheduleView(view){
+      currentScheduleView = view;
+      document.querySelectorAll('.schedule-view-btn').forEach(btn=>btn.classList.toggle('active', btn.dataset.sview===view));
+      document.querySelectorAll('.schedule-panel').forEach(p=>p.classList.remove('active'));
+      const map = {main:'schedulePanelMain', teacher:'schedulePanelTeacher', room:'schedulePanelRoom'};
+      document.getElementById(map[view])?.classList.add('active');
+    }
+    async function moveScheduleEntry(id, dayName, hour, exactDate){
+      const row = (state.scheduleEntries || []).find(x=>x.id===id);
+      if(!row) return;
+      const duration = Math.max(30, (toMinutes(row.end_time) || 0) - (toMinutes(row.start_time) || 0));
+      const newStart = `${hour}:00`;
+      const newEnd = minutesToTime(toMinutes(newStart) + duration);
+      const payload = {
+        schedule_date: exactDate,
+        day_name: dayName,
+        start_time: newStart,
+        end_time: newEnd
+      };
+      const conflicts = detectScheduleConflicts({...row, ...payload}, id);
+      if(conflicts.length){
+        return notice('Бұл уақытқа жылжытуға болмайды: конфликт бар', 'err');
+      }
+      const res = await sb.from('schedule_entries').update(payload).eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData();
+      notice('Сабақ жаңа орынға жылжыды');
+    }
+    function renderScheduleSummary(entries){
+      const weekStartEl = document.getElementById('scheduleWeekStart');
+      if(weekStartEl && !weekStartEl.value) weekStartEl.value = fmtDate(getWeekStart());
+      const weekStart = getWeekStart(weekStartEl?.value);
+      const weekEnd = plusDays(weekStart, 6);
+      const thisWeekEntries = entries.filter(x=>{
+        if(!x.schedule_date) return true;
+        return x.schedule_date >= fmtDate(weekStart) && x.schedule_date <= fmtDate(weekEnd);
+      });
+      const today = fmtDate(new Date());
+      const todayCount = entries.filter(x=>x.schedule_date === today || (!x.schedule_date && scheduleDayOf(x) === deriveDayNameFromDate(today))).length;
+      let conflicts = 0;
+      for(let i=0;i<thisWeekEntries.length;i++){
+        for(let j=i+1;j<thisWeekEntries.length;j++){
+          const a = thisWeekEntries[i], b = thisWeekEntries[j];
+          if(scheduleDayOf(a)!==scheduleDayOf(b)) continue;
+          if(a.schedule_date && b.schedule_date && a.schedule_date!==b.schedule_date) continue;
+          if(!overlaps(a.start_time,a.end_time,b.start_time,b.end_time)) continue;
+          if((a.teacher_profile_id && b.teacher_profile_id && a.teacher_profile_id===b.teacher_profile_id) ||
+             (a.room && b.room && a.room.trim().toLowerCase()===b.room.trim().toLowerCase())){
+            conflicts++;
+          }
+        }
+      }
+      document.getElementById('scheduleSummary').innerHTML = `
+        <div class="schedule-kpi"><div class="k">Осы апта</div><div class="v">${thisWeekEntries.length}</div></div>
+        <div class="schedule-kpi"><div class="k">Бүгін</div><div class="v">${todayCount}</div></div>
+        <div class="schedule-kpi"><div class="k">Конфликт</div><div class="v">${conflicts}</div></div>
+        <div class="schedule-kpi"><div class="k">Апта аралығы</div><div class="v" style="font-size:18px">${fmtDate(weekStart)} → ${fmtDate(weekEnd)}</div></div>
+      `;
+      const todays = entries.filter(x=>x.schedule_date === today || (!x.schedule_date && scheduleDayOf(x) === deriveDayNameFromDate(today)))
+        .sort((a,b)=>(a.start_time||'').localeCompare(b.start_time||''));
+      document.getElementById('scheduleTodayList').innerHTML = todays.map(x=>{
+        const {teacher, branch, course, lesson} = scheduleContext(x);
+        return `<div class="schedule-mini">
+          <div style="font-weight:900">${esc(x.start_time || '')} – ${esc(x.end_time || '')} | ${esc(scheduleMainLabel(x))}</div>
+          <div class="muted">${esc(teacher?.full_name || teacher?.email || 'Мұғалім жоқ')} • ${esc(branch?.name || 'Филиал жоқ')} • ${esc(x.room || 'Кабинет жоқ')}${course?.title || lesson?.title ? ' • ' + esc(course?.title || '') + (course?.title && lesson?.title ? ' / ' : '') + esc(lesson?.title || '') : ''}</div>
+        </div>`;
+      }).join('') || '<div class="schedule-mini">Бүгін сабақ жоқ</div>';
+    }
+    function renderScheduleBoardInto(targetId, entries, {teacherOnly=false, roomOnly=false}={}){
+      const board = document.getElementById(targetId);
+      if(!board) return;
+      const weekStart = getWeekStart(document.getElementById('scheduleWeekStart')?.value);
+      const hourLabels = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+      const days = SCHEDULE_DAYS;
+      let html = `<div class="head"></div>${days.map((d, idx)=>`<div class="head">${d}<div class="muted" style="font-size:11px;margin-top:4px">${fmtDate(plusDays(weekStart, idx))}</div></div>`).join('')}`;
+      for(const time of hourLabels){
+        html += `<div class="time">${time}</div>`;
+        for(let i=0;i<days.length;i++){
+          const day = days[i];
+          const exactDate = fmtDate(plusDays(weekStart, i));
+          const dayEntries = entries.filter(x=>{
+            const matchesDay = scheduleDayOf(x) === day;
+            const dateOk = !x.schedule_date || x.schedule_date === exactDate || (x.schedule_date >= fmtDate(weekStart) && x.schedule_date <= fmtDate(plusDays(weekStart,6)));
+            const inSlot = (x.start_time || '').slice(0,2) === time.slice(0,2);
+            return matchesDay && dateOk && inSlot;
+          }).sort((a,b)=>(a.start_time||'').localeCompare(b.start_time||''));
+          html += `<div class="schedule-cell schedule-drop-target" data-day="${day}" data-hour="${time.slice(0,2)}" data-date="${exactDate}">` + dayEntries.map(x=>{
+            const {teacher, branch, course, lesson} = scheduleContext(x);
+            const mainLabel = scheduleMainLabel(x);
+            const title = teacherOnly ? mainLabel : roomOnly ? mainLabel : mainLabel;
+            const extraOnline = (course?.title || lesson?.title) ? `<br>${esc(course?.title || '')}${course?.title && lesson?.title ? ' / ' : ''}${esc(lesson?.title || '')}` : '';
+            const metaTop = teacherOnly ? `${esc(x.start_time || '')} – ${esc(x.end_time || '')}<br>${esc(branch?.name || 'Филиал жоқ')} • ${esc(x.room || 'Кабинет жоқ')}${extraOnline}`
+              : roomOnly ? `${esc(x.start_time || '')} – ${esc(x.end_time || '')}<br>${esc(teacher?.full_name || teacher?.email || 'Мұғалім жоқ')} • ${esc(branch?.name || 'Филиал жоқ')}${extraOnline}`
+              : `${esc(x.start_time || '')} – ${esc(x.end_time || '')}<br>${esc(teacher?.full_name || teacher?.email || 'Мұғалім жоқ')}<br>${esc(branch?.name || 'Филиал жоқ')} • ${esc(x.room || 'Кабинет жоқ')}${extraOnline}`;
+            return `<div class="lesson-card ${scheduleStatusClass(x.status)} ${scheduleGroupClass(x)} ${scheduleAudienceClass(x.audience)}" draggable="true" data-sid="${x.id}">
+              <div class="title">${title}</div>
+              <div class="meta">${metaTop}<br>${scheduleAudienceBadge(x.audience)}</div>
+              <div class="badge">${esc(x.status || 'Белсенді')}</div>
+            </div>`;
+          }).join('') + `</div>`;
+        }
+      }
+      board.innerHTML = html;
+
+      board.querySelectorAll('.lesson-card').forEach(card=>{
+        card.addEventListener('dragstart', e=>{
+          draggingScheduleId = card.dataset.sid;
+          card.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', draggingScheduleId);
+        });
+        card.addEventListener('dragend', ()=>{
+          card.classList.remove('dragging');
+          draggingScheduleId = null;
+        });
+      });
+      board.querySelectorAll('.schedule-drop-target').forEach(cell=>{
+        cell.addEventListener('dragover', e=>{
+          e.preventDefault();
+          cell.style.background = '#eef6ff';
+        });
+        cell.addEventListener('dragleave', ()=>{ cell.style.background = ''; });
+        cell.addEventListener('drop', async e=>{
+          e.preventDefault();
+          cell.style.background = '';
+          const id = e.dataTransfer.getData('text/plain') || draggingScheduleId;
+          if(!id) return;
+          await moveScheduleEntry(id, cell.dataset.day, cell.dataset.hour, cell.dataset.date);
+        });
+      });
+    }
+    function renderScheduleBoards(entries){
+      renderScheduleBoardInto('scheduleBoard', entries);
+      const teacherId = document.getElementById('scheduleTeacherView')?.value || '';
+      const teacherEntries = teacherId ? entries.filter(x=>x.teacher_profile_id === teacherId) : [];
+      renderScheduleBoardInto('scheduleTeacherBoard', teacherEntries, {teacherOnly:true});
+
+      const rooms = [...new Set(entries.map(x=>(x.room||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      const roomSelect = document.getElementById('scheduleRoomView');
+      const roomVal = roomSelect?.value || '';
+      if(roomSelect){
+        roomSelect.innerHTML = ['<option value="">Кабинет таңда</option>'].concat(rooms.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`)).join('');
+        if(rooms.includes(roomVal)) roomSelect.value = roomVal;
+      }
+      const chosenRoom = roomSelect?.value || '';
+      const roomEntries = chosenRoom ? entries.filter(x=>(x.room||'').trim() === chosenRoom) : [];
+      renderScheduleBoardInto('scheduleRoomBoard', roomEntries, {roomOnly:true});
+    }
+    function renderSchedule(){
+      const entries = getFilteredScheduleEntries();
+      const canEdit = canWrite('schedule');
+      renderScheduleSummary(entries);
+      renderScheduleBoards(entries);
+
+      document.getElementById('scheduleRows').innerHTML = entries.sort((a,b)=>{
+        const ad = a.schedule_date || '';
+        const bd = b.schedule_date || '';
+        return ad.localeCompare(bd) || (a.start_time || '').localeCompare(b.start_time || '');
+      }).map(x=>{
+        const {branch, teacher, course, lesson} = scheduleContext(x);
+        return `<tr>
+          <td>${esc(x.schedule_date || '')}</td>
+          <td>${esc(scheduleDayOf(x) || '')}</td>
+          <td>${esc(x.start_time || '')}</td>
+          <td>${esc(x.end_time || '')}</td>
+          <td>${esc(scheduleMainLabel(x))}</td>
+          <td>${esc(teacher?.full_name || teacher?.email || '')}</td>
+          <td>${esc(x.room || '')}</td>
+          <td>${esc(branch?.name || '')}</td>
+          <td>${scheduleAudienceBadge(x.audience)}</td>
+          <td>${x.course_id || x.lesson_id ? `<span class="online-schedule-badge">${esc(course?.title || '—')}${x.lesson_id ? ' / ' + esc(lesson?.title || '—') : ''}</span>` : '—'}</td>
+          <td>${esc(x.status || 'Белсенді')}</td>
+          <td>${esc(x.note || '')}${x.meeting_url ? `<br><a href="${esc(x.meeting_url)}" target="_blank">online link</a>` : ''}</td>
+          <td>${canEdit ? `<div class="actions-inline"><button class="btn tiny secondary" onclick="editSchedule('${x.id}')">Редакт</button><button class="btn tiny danger" onclick="deleteSchedule('${x.id}')">Өшіру</button></div>` : '—'}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="13">Кесте бос</td></tr>';
+      setScheduleView(currentScheduleView);
+    }
+    async function saveSchedule(){
+      if(!requireWrite('schedule')) return;
+      const payload = {
+        tenant_id: profile.tenant_id,
+        schedule_date: document.getElementById('scheduleDate').value || null,
+        day_name: document.getElementById('scheduleDay').value || '',
+        start_time: document.getElementById('scheduleStart').value || null,
+        end_time: document.getElementById('scheduleEnd').value || null,
+        group_id: document.getElementById('scheduleGroup').value || null,
+        teacher_profile_id: normalizeProfileUuid(document.getElementById('scheduleTeacher').value),
+        room: document.getElementById('scheduleRoom').value.trim(),
+        branch_id: document.getElementById('scheduleBranch').value || null,
+        audience: document.getElementById('scheduleAudience').value || 'crm',
+        course_id: document.getElementById('scheduleOnlineCourse').value || null,
+        lesson_id: document.getElementById('scheduleOnlineLesson').value || null,
+        meeting_url: document.getElementById('scheduleMeetingUrl').value.trim() || null,
+        status: document.getElementById('scheduleStatus').value || 'Белсенді',
+        note: document.getElementById('scheduleNote').value.trim()
+      };
+      if(payload.schedule_date && !payload.day_name) payload.day_name = deriveDayNameFromDate(payload.schedule_date);
+      if(!payload.schedule_date && !payload.day_name) return notice('Күнді немесе апта күнін таңда', 'err');
+      if(!payload.group_id && !payload.course_id && !payload.lesson_id) return notice('Топ немесе online курс/сабақ таңда', 'err');
+      if(!payload.start_time || !payload.end_time) return notice('Басталу мен аяқталу уақытын толтыр', 'err');
+      if(toMinutes(payload.start_time) >= toMinutes(payload.end_time)) return notice('Аяқталу уақыты басталу уақытынан кейін болуы керек', 'err');
+
+      const editingId = editState.scheduleId || null;
+      const conflicts = detectScheduleConflicts(payload, editingId);
+      if(conflicts.length){
+        const first = conflicts[0];
+        const ctx = scheduleContext(first);
+        return notice(`Конфликт бар: ${scheduleDayOf(first)} ${first.start_time}-${first.end_time} | ${ctx.group?.title || ''} | ${ctx.teacher?.full_name || ctx.teacher?.email || ''} | ${first.room || ''}`, 'err');
+      }
+      const res = editingId
+        ? await sb.from('schedule_entries').update(payload).eq('id', editingId)
+        : await sb.from('schedule_entries').insert(payload);
+      if(res.error) return notice(res.error.message, 'err');
+
+      clearScheduleForm();
+      await loadTenantData();
+      notice(editingId ? 'Кесте жаңартылды' : 'Кесте сақталды');
+    }
+    async function deleteSchedule(id){
+      if(!requireWrite('schedule')) return;
+      const res = await sb.from('schedule_entries').delete().eq('id', id);
+      if(res.error) return notice(res.error.message, 'err');
+      await loadTenantData();
+      notice('Кесте өшірілді');
+    }
+    function editSchedule(id){
+      const row = (state.scheduleEntries || []).find(x=>x.id===id);
+      if(!row) return;
+      editState.scheduleId = id;
+      document.getElementById('scheduleDate').value = row.schedule_date || '';
+      document.getElementById('scheduleDay').value = row.day_name || '';
+      document.getElementById('scheduleStart').value = row.start_time || '';
+      document.getElementById('scheduleEnd').value = row.end_time || '';
+      document.getElementById('scheduleGroup').value = row.group_id || '';
+      document.getElementById('scheduleTeacher').value = row.teacher_profile_id || '';
+      document.getElementById('scheduleRoom').value = row.room || '';
+      document.getElementById('scheduleBranch').value = row.branch_id || '';
+      document.getElementById('scheduleAudience').value = row.audience || 'crm';
+      document.getElementById('scheduleOnlineCourse').value = row.course_id || '';
+      fillSelects();
+      document.getElementById('scheduleOnlineCourse').value = row.course_id || '';
+      fillSelects();
+      document.getElementById('scheduleOnlineLesson').value = row.lesson_id || '';
+      document.getElementById('scheduleMeetingUrl').value = row.meeting_url || '';
+      document.getElementById('scheduleStatus').value = row.status || 'Белсенді';
+      document.getElementById('scheduleNote').value = row.note || '';
+      notice('Кесте формасы толтырылды');
+      setSection('schedule');
+    }
+    window.shiftScheduleWeek = shiftScheduleWeek;
+    window.goCurrentWeek = goCurrentWeek;
+    window.clearScheduleForm = clearScheduleForm;
+    window.setScheduleView = setScheduleView;
+
     function renderAll(){
+
+
       applyTariffVisual();
       renderDashboard();
       renderLeads();
       renderStudents();
       renderGroups();
+      renderSchedule();
       renderJournal();
       renderProgress();
       renderPayments();
