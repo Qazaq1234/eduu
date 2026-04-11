@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="favicon.ico">
   <title>EdukZ CRM Live</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=kdG0lVRegIQrOinZlZx3Yix9jjHOabmYXmwEeB8iffu9e2GAWLN87I9Wi-Kmb5kTvzTZVOTRjUyY0iXU-D2nZ2G7Pw-Kb6yoqVhlBbPTJ8btdMDM5s4V-3QYyw4-KenMydhUAQe66zgeciAKgJXnHK0Y1kCBgq8KUqATeLiM0Y6JGfS5TNrnPmgw2pyBNnq_pOgNgGhlUIbJNI-fhRkxKhpD8AqqjQQLml77OdgrT4oUWbh_efhYqwuYrzH5Su5tCXGKFRgiZi7ltNvbXw8Hnw" charset="UTF-8"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;700;800&display=swap");
 
@@ -2374,6 +2374,15 @@ async function parentLogin(){
       if(!studentId) return notice('Оқушыны таңда', 'err');
       if(!payload.amount || payload.amount <= 0) return notice('Төлем суммасын дұрыс енгіз', 'err');
       if(payload.paid_at && payload.due_date && payload.due_date < payload.paid_at) return notice('Келесі төлеу күні соңғы төлем күнінен ерте болмауы керек', 'err');
+      const duplicate = (state.payments || []).find(x =>
+        x.student_id === studentId &&
+        x.paid_at === payload.paid_at &&
+        !x.deleted_at &&
+        String(x.status || '').toLowerCase() !== 'deleted'
+      );
+      if(duplicate){
+        return notice('Бұл балаға осы күнге төлем бұрыннан енгізілген', 'err');
+      }
 
       // 1) full insert
       let res = await sb.from('payments').insert(payload).select().single();
@@ -3750,4 +3759,3 @@ async function saveStaffInvite(){
 </div>
 <div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
-    
