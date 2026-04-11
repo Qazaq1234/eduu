@@ -1555,6 +1555,8 @@ function preserveTranslate(raw){
 
     document.getElementById('onlineCourseSelect')?.addEventListener('change', ()=>fillSelects());
     document.getElementById('scheduleOnlineCourse')?.addEventListener('change', ()=>fillSelects());
+    document.getElementById('paymentStudent')?.addEventListener('change', ()=>syncPaymentStudentSelectors('paymentStudent','paymentMsgStudent'));
+    document.getElementById('paymentMsgStudent')?.addEventListener('change', ()=>syncPaymentStudentSelectors('paymentMsgStudent','paymentStudent'));
     document.getElementById('scheduleOnlineLesson')?.addEventListener('change', ()=>{
       const lessonId = document.getElementById('scheduleOnlineLesson')?.value || '';
       const topicEl = document.getElementById('scheduleTopic');
@@ -2356,10 +2358,11 @@ async function parentLogin(){
       if(!requireWrite('payments')) return;
       const studentId = document.getElementById('paymentStudent').value || null;
       const student = state.students.find(s=>s.id === studentId);
+      const fullName = student?.full_name || student?.name || '';
       const payload = {
         tenant_id: profile.tenant_id,
         student_id: studentId,
-        full_name: student?.full_name || '',
+        full_name: fullName,
         paid_at: document.getElementById('paymentPaidAt').value || null,
         due_date: document.getElementById('paymentDueDate').value || null,
         amount: Number(document.getElementById('paymentAmount').value || 0),
@@ -2368,21 +2371,81 @@ async function parentLogin(){
         note: document.getElementById('paymentNote').value.trim(),
         source: 'offline'
       };
-      if(!studentId) return;
-      const res = await sb.from('payments').insert(payload).select().single();
-      if(res.error) return notice(res.error.message, 'err');
-      await sb.from('finance_entries').insert({
+      if(!studentId) return notice('Оқушыны таңда', 'err');
+      if(!payload.amount || payload.amount <= 0) return notice('Төлем суммасын дұрыс енгіз', 'err');
+      if(payload.paid_at && payload.due_date && payload.due_date < payload.paid_at) return notice('Келесі төлеу күні соңғы төлем күнінен ерте болмауы керек', 'err');
+
+      // 1) full insert
+      let res = await sb.from('payments').insert(payload).select().single();
+
+      // 2) fallback: some DBs may not have discount/source/full_name columns exactly as expected
+      if(res.error){
+        const minimalPayload = {
+          tenant_id: profile.tenant_id,
+          student_id: studentId,
+          paid_at: payload.paid_at,
+          due_date: payload.due_date,
+          amount: payload.amount,
+          status: payload.status,
+          note: payload.note
+        };
+        if(fullName) minimalPayload.full_name = fullName;
+        res = await sb.from('payments').insert(minimalPayload).select().single();
+      }
+
+      // 3) second fallback: if full_name column is absent too
+      if(res.error){
+        const ultraPayload = {
+          tenant_id: profile.tenant_id,
+          student_id: studentId,
+          paid_at: payload.paid_at,
+          due_date: payload.due_date,
+          amount: payload.amount,
+          status: payload.status,
+          note: payload.note
+        };
+        res = await sb.from('payments').insert(ultraPayload).select().single();
+      }
+
+      if(res.error){
+        console.error('PAYMENT_SAVE_ERROR', res.error, payload);
+        return notice('Төлем сақталмады: ' + res.error.message, 'err');
+      }
+
+      // finance entry optional
+      let financeRes = await sb.from('finance_entries').insert({
         tenant_id: profile.tenant_id,
         entry_type: 'Кіріс',
         amount: payload.amount,
         entry_date: payload.paid_at || today(),
-        subject_name: payload.full_name,
+        subject_name: fullName,
         category: 'Оқушы төлемі',
         note: payload.note,
         auto_generated: true,
         linked_payment_id: res.data.id
       });
+
+      if(financeRes?.error){
+        // retry minimal finance insert
+        financeRes = await sb.from('finance_entries').insert({
+          tenant_id: profile.tenant_id,
+          amount: payload.amount,
+          entry_date: payload.paid_at || today(),
+          linked_payment_id: res.data.id
+        });
+      }
+
       await loadTenantData();
+
+      ['paymentAmount','paymentDiscount','paymentNote'].forEach(id=>{
+        const el = document.getElementById(id); if(el) el.value='';
+      });
+
+      if(financeRes?.error){
+        console.error('FINANCE_AUTO_ERROR', financeRes.error);
+        return notice('Төлем сақталды, бірақ кіріс/шығысқа автомат жазба түспеді: ' + financeRes.error.message, 'err');
+      }
+
       notice('Төлем сақталды');
     }
     async function deletePayment(id){
@@ -2402,6 +2465,12 @@ async function parentLogin(){
       document.getElementById('paymentHistoryModal').classList.remove('hidden');
     }
     function closePaymentHistory(){ document.getElementById('paymentHistoryModal').classList.add('hidden'); }
+
+    function syncPaymentStudentSelectors(fromId, toId){
+      const from = document.getElementById(fromId);
+      const to = document.getElementById(toId);
+      if(from && to && from.value && !to.value) to.value = from.value;
+    }
 
     function openPaymentWhatsApp(){
       const studentId = document.getElementById('paymentMsgStudent').value;
@@ -3681,3 +3750,4 @@ async function saveStaffInvite(){
 </div>
 <div id="paymentHistoryModal" class="modal-backdrop hidden"><div class="modal"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div id="paymentModalTitle" style="font-size:24px;font-weight:900">Төлем тарихы</div><div class="muted">Таңдалған оқушының төлемдері</div></div><button class="btn secondary" onclick="closePaymentHistory()">Жабу</button></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Күні</th><th>Төлеу керек күні</th><th>Сома</th><th>Статус</th><th>Source</th><th>Курс</th></tr></thead><tbody id="paymentHistoryRows"></tbody></table></div></div></div></body>
 </html>
+    
