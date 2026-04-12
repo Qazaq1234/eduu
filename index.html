@@ -361,6 +361,17 @@
 }
 </style>
 
+
+<style>
+  /* v43 exclusive view guard */
+  body.portal-active #authView{display:none !important;}
+  body.portal-active #parentView{display:none !important;}
+  body.parent-active #authView{display:none !important;}
+  body.parent-active #portalView{display:none !important;}
+  body.auth-active #portalView{display:none !important;}
+  body.auth-active #parentView{display:none !important;}
+</style>
+
 </head>
 <body>
 
@@ -1330,13 +1341,12 @@ function preserveTranslate(raw){
         }
       }catch(e){}
       scheduleTranslate();
+      syncExclusiveViews();
     }
     window.setLang = setLang;
     function backToAuth(){
       parentStudent = null;
-      document.getElementById('parentView').classList.add('hidden');
-      document.getElementById('portalView').classList.add('hidden');
-      document.getElementById('authView').classList.remove('hidden');
+      syncExclusiveViews('auth');
       scheduleTranslate();
       updateMenuButton();
     }
@@ -1346,9 +1356,7 @@ function preserveTranslate(raw){
       profile = null;
       session = null;
       parentStudent = null;
-      document.getElementById('portalView').classList.add('hidden');
-      document.getElementById('parentView').classList.add('hidden');
-      document.getElementById('authView').classList.remove('hidden');
+      syncExclusiveViews('auth');
       scheduleTranslate();
       updateMenuButton();
     }
