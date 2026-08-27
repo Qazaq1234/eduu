@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="favicon.ico">
   <title>EdukZ CRM Live</title>
+  <!-- EdukZ unified build: password reset + parent panel + staff login + Pro timesheet/salary -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;700;800&display=swap");
@@ -418,6 +419,7 @@ body.parent-hard #portalView{display:none !important;}
           <input id="loginPassword" class="input" type="password" placeholder="Құпия сөз" />
         </div>
         <button class="btn primary" style="margin-top:12px" onclick="staffLogin()">Кіру</button>
+        <button class="btn secondary" style="margin-top:12px;margin-left:8px" onclick="forgotPassword()">Құпия сөзді ұмыттыңыз ба?</button>
       </div>
 
       <div id="registerBox" class="hidden">
@@ -1790,7 +1792,39 @@ function preserveTranslate(raw){
     }
 
     
-async function staffLogin(){
+async function forgotPassword(){
+      clearAuthNotice();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      if(!email) return authNotice('Алдымен Email жазыңыз', 'err');
+
+      // Real Supabase Auth account: secure reset link by email.
+      const redirectTo = window.location.origin + window.location.pathname;
+      const res = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if(res.error) return authNotice(res.error.message, 'err');
+
+      // staff_invites fallback accounts are managed by the center director/admin.
+      const inv = await sb.from('staff_invites').select('id').eq('email', email).limit(1).maybeSingle();
+      if(inv.data){
+        return authNotice('Бұл қызметкер аккаунты. Парольді директор/админ «Қызметкерлер → Редакт» арқылы жаңарта алады. Егер Auth аккаунты да бар болса, email-ға қалпына келтіру сілтемесі жіберілді.', 'ok');
+      }
+      authNotice('Құпия сөзді қалпына келтіру сілтемесі email-ға жіберілді.', 'ok');
+    }
+
+    async function completePasswordRecovery(){
+      const newPassword = prompt('Жаңа құпия сөзді енгізіңіз (кемінде 6 таңба)');
+      if(newPassword===null) return;
+      if(String(newPassword).length < 6) return authNotice('Құпия сөз кемінде 6 таңба болсын', 'err');
+      const res = await sb.auth.updateUser({ password: String(newPassword) });
+      if(res.error) return authNotice(res.error.message, 'err');
+      authNotice('Құпия сөз жаңартылды. Енді жаңа парольмен кіре аласыз.', 'ok');
+      await sb.auth.signOut();
+    }
+
+    sb.auth.onAuthStateChange((event) => {
+      if(event === 'PASSWORD_RECOVERY') setTimeout(completePasswordRecovery, 50);
+    });
+
+    async function staffLogin(){
       clearAuthNotice();
       const email = document.getElementById('loginEmail').value.trim().toLowerCase();
       const password = document.getElementById('loginPassword').value.trim();
@@ -2869,24 +2903,69 @@ async function parentLogin(){
     
 async function saveStaffInvite(){
       if(!requireWrite('staff')) return;
+
+      const full_name = document.getElementById('staffName').value.trim();
+      const email = document.getElementById('staffEmail').value.trim().toLowerCase();
+      const role = document.getElementById('staffRole').value;
+      const password = document.getElementById('staffPassword').value.trim();
+      const branch_id = document.getElementById('staffBranch').value || null;
+
+      if(!full_name || !email || !password) return notice('Аты, email, пароль толтыр', 'err');
+      if(password.length < 6) return notice('Құпия сөз кемінде 6 таңба болсын', 'err');
+
+      const exists = await sb.from('staff_invites')
+        .select('id')
+        .eq('tenant_id', profile.tenant_id)
+        .eq('email', email)
+        .limit(1)
+        .maybeSingle();
+
+      if(exists.data) return notice('Бұл email бұрыннан бар', 'err');
+
+      // 1) Негізгі қауіпсіз жол: Supabase Edge Function нақты Auth аккаунт жасайды.
+      // README-дегі create-staff функциясы deploy болса, қызметкер бірден Auth арқылы кіреді.
+      try{
+        const edgeRes = await sb.functions.invoke('create-staff', {
+          body: {
+            tenant_id: profile.tenant_id,
+            branch_id,
+            full_name,
+            email,
+            password,
+            role
+          }
+        });
+
+        if(!edgeRes.error){
+          await loadTenantData();
+          notice('Қызметкердің нақты аккаунты жасалды. Енді email/парольмен кіре алады.');
+          document.getElementById('staffPassword').value = '';
+          return;
+        }
+
+        console.warn('create-staff Edge Function unavailable, fallback enabled:', edgeRes.error);
+      }catch(edgeError){
+        console.warn('create-staff Edge Function error, fallback enabled:', edgeError);
+      }
+
+      // 2) Уақытша fallback: бұрынғы CRM логикасын бұзбайды.
+      // Edge Function орнатылғаннан кейін жаңа қызметкерлер қауіпсіз Auth жолымен жасалады.
       const payload = {
         tenant_id: profile.tenant_id,
-        full_name: document.getElementById('staffName').value.trim(),
-        email: document.getElementById('staffEmail').value.trim().toLowerCase(),
-        role: document.getElementById('staffRole').value,
-        password_plain: document.getElementById('staffPassword').value.trim(),
-        branch_id: document.getElementById('staffBranch').value || null,
+        full_name,
+        email,
+        role,
+        password_plain: password,
+        branch_id,
         status: 'created'
       };
-      if(!payload.full_name || !payload.email || !payload.password_plain) return notice('Аты, email, пароль толтыр', 'err');
-
-      const exists = await sb.from('staff_invites').select('id').eq('tenant_id', profile.tenant_id).eq('email', payload.email).limit(1).maybeSingle();
-      if(exists.data) return notice('Бұл email already бар', 'err');
 
       const res = await sb.from('staff_invites').insert(payload);
       if(res.error) return notice(res.error.message, 'err');
+
       await loadTenantData();
-      notice('Қызметкер сақталды. Енді сол email/парольмен кіре алады.');
+      document.getElementById('staffPassword').value = '';
+      notice('Қызметкер сақталды. create-staff Edge Function орнатылмағандықтан уақытша fallback қолданылды.');
     }
     async function deleteStaffInvite(id){
       if(!requireWrite('staff')) return;
@@ -3053,7 +3132,10 @@ async function saveStaffInvite(){
       const full_name = prompt('Аты', row.full_name || ''); if(full_name===null) return;
       const role = prompt('Рөлі', row.role || ''); if(role===null) return;
       const email = prompt('Email', row.email || ''); if(email===null) return;
-      const res = await sb.from('staff_invites').update({full_name, role, email}).eq('id', id);
+      const newPassword = prompt('Жаңа пароль (өзгертпесеңіз бос қалдырыңыз)', ''); if(newPassword===null) return;
+      const patch = {full_name, role, email: String(email).trim().toLowerCase()};
+      if(String(newPassword).trim()) patch.password_plain = String(newPassword).trim();
+      const res = await sb.from('staff_invites').update(patch).eq('id', id);
       if(res.error) return notice(res.error.message, 'err');
       await loadTenantData(); notice('Қызметкер жаңартылды');
     }
@@ -3998,3 +4080,4 @@ async function saveStaffInvite(){
 
 </body>
 </html>
+
